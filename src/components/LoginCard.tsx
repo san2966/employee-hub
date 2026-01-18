@@ -7,12 +7,13 @@ interface LoginCardProps {
   icon: LucideIcon;
   role: string;
   delay?: number;
+  customPath?: string;
 }
 
-const LoginCard = ({ title, description, icon: Icon, role, delay = 0 }: LoginCardProps) => {
+const LoginCard = ({ title, description, icon: Icon, role, delay = 0, customPath }: LoginCardProps) => {
   return (
     <Link
-      to={`/login/${role}`}
+      to={customPath || `/login/${role}`}
       className="card-corporate p-6 group cursor-pointer animate-slide-up"
       style={{ animationDelay: `${delay}ms` }}
     >
