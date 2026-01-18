@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { 
   Crown, 
   Users, 
@@ -16,6 +17,7 @@ const loginOptions = [
     description: "Access executive reports and strategic insights",
     icon: Crown,
     role: "director",
+    customPath: "/login/director",
   },
   {
     title: "HR Login",

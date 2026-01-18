@@ -8,7 +8,20 @@ import Login from "./pages/Login";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Help from "./pages/Help";
-import DirectorDashboard from "./pages/dashboards/DirectorDashboard";
+
+// Director Module
+import DirectorLogin from "./pages/director/DirectorLogin";
+import DirectorDashboard from "./pages/director/DirectorDashboard";
+import TaskManager from "./pages/director/TaskManager";
+import Reports from "./pages/director/Reports";
+import Notices from "./pages/director/Notices";
+import LeaveManager from "./pages/director/LeaveManager";
+import Requirements from "./pages/director/Requirements";
+import ProductManager from "./pages/director/ProductManager";
+import Contacts from "./pages/director/Contacts";
+import Settings from "./pages/director/Settings";
+
+// Other Dashboards
 import HRDashboard from "./pages/dashboards/HRDashboard";
 import AccountsDashboard from "./pages/dashboards/AccountsDashboard";
 import EmployeeDashboard from "./pages/dashboards/EmployeeDashboard";
@@ -30,12 +43,26 @@ const App = () => (
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/help" element={<Help />} />
-          <Route path="/dashboard/director" element={<DirectorDashboard />} />
+          
+          {/* Director Routes */}
+          <Route path="/login/director" element={<DirectorLogin />} />
+          <Route path="/director/dashboard" element={<DirectorDashboard />} />
+          <Route path="/director/tasks" element={<TaskManager />} />
+          <Route path="/director/reports" element={<Reports />} />
+          <Route path="/director/notices" element={<Notices />} />
+          <Route path="/director/leaves" element={<LeaveManager />} />
+          <Route path="/director/requirements" element={<Requirements />} />
+          <Route path="/director/products" element={<ProductManager />} />
+          <Route path="/director/contacts" element={<Contacts />} />
+          <Route path="/director/settings" element={<Settings />} />
+          
+          {/* Other Dashboards */}
           <Route path="/dashboard/hr" element={<HRDashboard />} />
           <Route path="/dashboard/accounts" element={<AccountsDashboard />} />
           <Route path="/dashboard/employee" element={<EmployeeDashboard />} />
           <Route path="/dashboard/admin" element={<AdminDashboard />} />
           <Route path="/dashboard/ithead" element={<ITHeadDashboard />} />
+          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
