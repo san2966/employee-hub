@@ -24,6 +24,7 @@ const loginOptions = [
     description: "Manage employee profiles and recruitment",
     icon: Users,
     role: "hr",
+    customPath: "/login/hr",
   },
   {
     title: "Accounts Login",
