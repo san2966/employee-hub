@@ -31,6 +31,7 @@ const loginOptions = [
     description: "Handle payroll and financial operations",
     icon: Calculator,
     role: "accounts",
+    customPath: "/login/accounts",
   },
   {
     title: "Employee Login",

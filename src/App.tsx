@@ -28,6 +28,12 @@ import EmployeeAdd from "./pages/hr/EmployeeAdd";
 import ManageEmployee from "./pages/hr/ManageEmployee";
 import HRSettings from "./pages/hr/HRSettings";
 
+// Accounts Module
+import AccountsLogin from "./pages/accounts/AccountsLogin";
+import AccountsDashboardPage from "./pages/accounts/AccountsDashboard";
+import Vouchers from "./pages/accounts/Vouchers";
+import AccountsSettings from "./pages/accounts/AccountsSettings";
+
 // Other Dashboards
 import HRDashboard from "./pages/dashboards/HRDashboard";
 import AccountsDashboard from "./pages/dashboards/AccountsDashboard";
@@ -69,6 +75,12 @@ const App = () => (
           <Route path="/hr/employee-add" element={<EmployeeAdd />} />
           <Route path="/hr/manage-employee" element={<ManageEmployee />} />
           <Route path="/hr/settings" element={<HRSettings />} />
+          
+          {/* Accounts Routes */}
+          <Route path="/login/accounts" element={<AccountsLogin />} />
+          <Route path="/accounts/dashboard" element={<AccountsDashboardPage />} />
+          <Route path="/accounts/vouchers" element={<Vouchers />} />
+          <Route path="/accounts/settings" element={<AccountsSettings />} />
           
           {/* Other Dashboards */}
           <Route path="/dashboard/hr" element={<HRDashboard />} />
