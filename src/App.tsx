@@ -21,6 +21,13 @@ import ProductManager from "./pages/director/ProductManager";
 import Contacts from "./pages/director/Contacts";
 import Settings from "./pages/director/Settings";
 
+// HR Module
+import HRLogin from "./pages/hr/HRLogin";
+import HRDashboardPage from "./pages/hr/HRDashboard";
+import EmployeeAdd from "./pages/hr/EmployeeAdd";
+import ManageEmployee from "./pages/hr/ManageEmployee";
+import HRSettings from "./pages/hr/HRSettings";
+
 // Other Dashboards
 import HRDashboard from "./pages/dashboards/HRDashboard";
 import AccountsDashboard from "./pages/dashboards/AccountsDashboard";
@@ -55,6 +62,13 @@ const App = () => (
           <Route path="/director/products" element={<ProductManager />} />
           <Route path="/director/contacts" element={<Contacts />} />
           <Route path="/director/settings" element={<Settings />} />
+          
+          {/* HR Routes */}
+          <Route path="/login/hr" element={<HRLogin />} />
+          <Route path="/hr/dashboard" element={<HRDashboardPage />} />
+          <Route path="/hr/employee-add" element={<EmployeeAdd />} />
+          <Route path="/hr/manage-employee" element={<ManageEmployee />} />
+          <Route path="/hr/settings" element={<HRSettings />} />
           
           {/* Other Dashboards */}
           <Route path="/dashboard/hr" element={<HRDashboard />} />
