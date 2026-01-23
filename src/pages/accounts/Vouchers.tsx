@@ -155,12 +155,12 @@ const Vouchers = () => {
                 
                 <div className="w-48">
                   <Label className="text-sm text-muted-foreground mb-2 block">Employee</Label>
-                  <Select value={voucherEmployee} onValueChange={setVoucherEmployee}>
+                <Select value={voucherEmployee || "all"} onValueChange={(val) => setVoucherEmployee(val === "all" ? "" : val)}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Employees" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Employees</SelectItem>
+                      <SelectItem value="all">All Employees</SelectItem>
                       {employees.map((emp) => (
                         <SelectItem key={emp} value={emp}>{emp}</SelectItem>
                       ))}
@@ -170,12 +170,12 @@ const Vouchers = () => {
 
                 <div className="w-32">
                   <Label className="text-sm text-muted-foreground mb-2 block">Year</Label>
-                  <Select value={voucherYear} onValueChange={setVoucherYear}>
+                <Select value={voucherYear || "all"} onValueChange={(val) => setVoucherYear(val === "all" ? "" : val)}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Years" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Years</SelectItem>
+                      <SelectItem value="all">All Years</SelectItem>
                       {years.map((year) => (
                         <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
                       ))}
@@ -185,12 +185,12 @@ const Vouchers = () => {
 
                 <div className="w-40">
                   <Label className="text-sm text-muted-foreground mb-2 block">Month</Label>
-                  <Select value={voucherMonth} onValueChange={setVoucherMonth}>
+                <Select value={voucherMonth || "all"} onValueChange={(val) => setVoucherMonth(val === "all" ? "" : val)}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Months" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Months</SelectItem>
+                      <SelectItem value="all">All Months</SelectItem>
                       {MONTHS.map((month) => (
                         <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
                       ))}
@@ -289,12 +289,12 @@ const Vouchers = () => {
                 
                 <div className="w-48">
                   <Label className="text-sm text-muted-foreground mb-2 block">Employee</Label>
-                  <Select value={travelEmployee} onValueChange={setTravelEmployee}>
+                <Select value={travelEmployee || "all"} onValueChange={(val) => setTravelEmployee(val === "all" ? "" : val)}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Employees" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Employees</SelectItem>
+                      <SelectItem value="all">All Employees</SelectItem>
                       {employees.map((emp) => (
                         <SelectItem key={emp} value={emp}>{emp}</SelectItem>
                       ))}
@@ -304,12 +304,12 @@ const Vouchers = () => {
 
                 <div className="w-32">
                   <Label className="text-sm text-muted-foreground mb-2 block">Year</Label>
-                  <Select value={travelYear} onValueChange={setTravelYear}>
+                <Select value={travelYear || "all"} onValueChange={(val) => setTravelYear(val === "all" ? "" : val)}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Years" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Years</SelectItem>
+                      <SelectItem value="all">All Years</SelectItem>
                       {years.map((year) => (
                         <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
                       ))}
@@ -319,12 +319,12 @@ const Vouchers = () => {
 
                 <div className="w-40">
                   <Label className="text-sm text-muted-foreground mb-2 block">Month</Label>
-                  <Select value={travelMonth} onValueChange={setTravelMonth}>
+                <Select value={travelMonth || "all"} onValueChange={(val) => setTravelMonth(val === "all" ? "" : val)}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Months" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Months</SelectItem>
+                      <SelectItem value="all">All Months</SelectItem>
                       {MONTHS.map((month) => (
                         <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
                       ))}
