@@ -34,6 +34,18 @@ import AccountsDashboardPage from "./pages/accounts/AccountsDashboard";
 import Vouchers from "./pages/accounts/Vouchers";
 import AccountsSettings from "./pages/accounts/AccountsSettings";
 
+// Employee Module
+import EmployeeLogin from "./pages/employee/EmployeeLogin";
+import EmployeeDashboardPage from "./pages/employee/EmployeeDashboard";
+import EmployeeTaskManager from "./pages/employee/EmployeeTaskManager";
+import EmployeeContacts from "./pages/employee/EmployeeContacts";
+import EmployeeRequirements from "./pages/employee/EmployeeRequirements";
+import EmployeePayments from "./pages/employee/EmployeePayments";
+import EmployeeNotice from "./pages/employee/EmployeeNotice";
+import EmployeeLeaveManager from "./pages/employee/EmployeeLeaveManager";
+import EmployeeReports from "./pages/employee/EmployeeReports";
+import EmployeeSettings from "./pages/employee/EmployeeSettings";
+
 // Other Dashboards
 import HRDashboard from "./pages/dashboards/HRDashboard";
 import AccountsDashboard from "./pages/dashboards/AccountsDashboard";
@@ -81,6 +93,18 @@ const App = () => (
           <Route path="/accounts/dashboard" element={<AccountsDashboardPage />} />
           <Route path="/accounts/vouchers" element={<Vouchers />} />
           <Route path="/accounts/settings" element={<AccountsSettings />} />
+          
+          {/* Employee Routes */}
+          <Route path="/login/employee" element={<EmployeeLogin />} />
+          <Route path="/employee/dashboard" element={<EmployeeDashboardPage />} />
+          <Route path="/employee/tasks" element={<EmployeeTaskManager />} />
+          <Route path="/employee/contacts" element={<EmployeeContacts />} />
+          <Route path="/employee/requirements" element={<EmployeeRequirements />} />
+          <Route path="/employee/payments" element={<EmployeePayments />} />
+          <Route path="/employee/notices" element={<EmployeeNotice />} />
+          <Route path="/employee/leaves" element={<EmployeeLeaveManager />} />
+          <Route path="/employee/reports" element={<EmployeeReports />} />
+          <Route path="/employee/settings" element={<EmployeeSettings />} />
           
           {/* Other Dashboards */}
           <Route path="/dashboard/hr" element={<HRDashboard />} />
