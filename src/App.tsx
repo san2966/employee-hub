@@ -46,6 +46,18 @@ import EmployeeLeaveManager from "./pages/employee/EmployeeLeaveManager";
 import EmployeeReports from "./pages/employee/EmployeeReports";
 import EmployeeSettings from "./pages/employee/EmployeeSettings";
 
+// Admin Module
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminDashboardPage from "./pages/admin/AdminDashboard";
+import AdminPayments from "./pages/admin/AdminPayments";
+import AdminTasks from "./pages/admin/AdminTasks";
+import AdminVisitors from "./pages/admin/AdminVisitors";
+import AdminUserManagement from "./pages/admin/AdminUserManagement";
+import AdminInwardOutward from "./pages/admin/AdminInwardOutward";
+import AdminAssets from "./pages/admin/AdminAssets";
+import AdminVehicles from "./pages/admin/AdminVehicles";
+import AdminSettings from "./pages/admin/AdminSettings";
+
 // Other Dashboards
 import HRDashboard from "./pages/dashboards/HRDashboard";
 import AccountsDashboard from "./pages/dashboards/AccountsDashboard";
@@ -105,6 +117,18 @@ const App = () => (
           <Route path="/employee/leaves" element={<EmployeeLeaveManager />} />
           <Route path="/employee/reports" element={<EmployeeReports />} />
           <Route path="/employee/settings" element={<EmployeeSettings />} />
+          
+          {/* Admin Routes */}
+          <Route path="/login/admin" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+          <Route path="/admin/payments" element={<AdminPayments />} />
+          <Route path="/admin/tasks" element={<AdminTasks />} />
+          <Route path="/admin/visitors" element={<AdminVisitors />} />
+          <Route path="/admin/users" element={<AdminUserManagement />} />
+          <Route path="/admin/inward-outward" element={<AdminInwardOutward />} />
+          <Route path="/admin/assets" element={<AdminAssets />} />
+          <Route path="/admin/vehicles" element={<AdminVehicles />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
           
           {/* Other Dashboards */}
           <Route path="/dashboard/hr" element={<HRDashboard />} />
