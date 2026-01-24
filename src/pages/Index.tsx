@@ -44,6 +44,7 @@ const loginOptions = [
     description: "System configuration and user management",
     icon: Shield,
     role: "admin",
+    customPath: "/login/admin",
   },
   {
     title: "IT Head Login",
