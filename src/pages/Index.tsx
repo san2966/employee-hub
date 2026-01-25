@@ -51,6 +51,7 @@ const loginOptions = [
     description: "Manage infrastructure and support tickets",
     icon: Server,
     role: "ithead",
+    customPath: "/login/ithead",
   },
 ];
 
