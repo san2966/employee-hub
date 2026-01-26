@@ -84,6 +84,11 @@ export interface LeaveRequest {
   type: "paid" | "medical" | "exchange";
   status: "pending" | "approved" | "rejected";
   rejectionReason?: string;
+  medicalCertificate?: string;
+  workingDate?: string;
+  workingReason?: string;
+  isAddLeave?: boolean; // For exchange leave - true if adding leave, false if taking
+  createdAt?: string;
 }
 
 export interface Notice {
@@ -154,6 +159,14 @@ export const useDirectorData = () => {
     setLeaves(getStoredData(STORAGE_KEYS.leaves, []));
     setNotices(getStoredData(STORAGE_KEYS.notices, []));
     setRequirements(getStoredData(STORAGE_KEYS.requirements, []));
+  }, []);
+
+  // Real-time refresh for leaves
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLeaves(getStoredData(STORAGE_KEYS.leaves, []));
+    }, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   // Event methods
@@ -299,11 +312,21 @@ export const useDirectorData = () => {
     setStoredData(STORAGE_KEYS.contacts, updated);
   };
 
-  // Leave methods
+  // Leave methods - Director can approve/reject all leave types
   const updateLeave = (id: string, status: "approved" | "rejected", rejectionReason?: string) => {
-    const updated = leaves.map(l => l.id === id ? { ...l, status, rejectionReason } : l);
+    const currentLeaves: LeaveRequest[] = getStoredData(STORAGE_KEYS.leaves, []);
+    const updated = currentLeaves.map(l => l.id === id ? { ...l, status, rejectionReason } : l);
     setLeaves(updated);
     setStoredData(STORAGE_KEYS.leaves, updated);
+  };
+
+  // Get leave statistics
+  const getLeaveStats = () => {
+    const pending = leaves.filter(l => l.status === "pending").length;
+    const approved = leaves.filter(l => l.status === "approved").length;
+    const rejected = leaves.filter(l => l.status === "rejected").length;
+    
+    return { pending, approved, rejected, total: leaves.length };
   };
 
   // Notice methods
@@ -347,6 +370,11 @@ export const useDirectorData = () => {
     return years.map(year => ({ year, sales: salesByYear[year] }));
   };
 
+  // Refresh leaves from storage
+  const refreshLeaves = () => {
+    setLeaves(getStoredData(STORAGE_KEYS.leaves, []));
+  };
+
   return {
     events, addEvent, updateEvent, deleteEvent,
     notes, addNote, updateNote, deleteNote,
@@ -355,7 +383,7 @@ export const useDirectorData = () => {
     tasks, addTask, updateTask, deleteTask, getTasksPerDay,
     products, addProduct, sellProduct, deleteProduct, getProductSalesPerYear,
     contacts, addContact, deleteContact,
-    leaves, updateLeave, setLeaves,
+    leaves, updateLeave, setLeaves, getLeaveStats, refreshLeaves,
     notices, addNotice,
     requirements, setRequirements,
   };

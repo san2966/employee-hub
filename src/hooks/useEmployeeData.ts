@@ -87,6 +87,7 @@ export interface LeaveRequest {
   workingDate?: string;
   workingReason?: string;
   createdAt: string;
+  isAddLeave?: boolean; // For exchange leave - true if adding leave, false if taking leave
 }
 
 export interface Report {
@@ -125,7 +126,7 @@ export const useEmployeeData = (employeeId: string) => {
   const [miscPayments, setMiscPayments] = useState<MiscPayment[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
-  const [leaveBalance, setLeaveBalance] = useState({ paid: 12, medical: 6, exchange: 3 });
+  const [leaveBalance, setLeaveBalance] = useState({ paid: 12, medical: 6, exchange: 0 }); // Exchange starts at 0
 
   // Load employee-specific data
   useEffect(() => {
@@ -145,7 +146,7 @@ export const useEmployeeData = (employeeId: string) => {
     setMiscPayments(loadData("misc_payments", []));
     setLeaveRequests(loadData("leave_requests", []));
     setReports(loadData("reports", []));
-    setLeaveBalance(loadData("leave_balance", { paid: 12, medical: 6, exchange: 3 }));
+    setLeaveBalance(loadData("leave_balance", { paid: 12, medical: 6, exchange: 0 }));
   }, [employeeId]);
 
   const saveData = <T>(key: string, data: T) => {
@@ -307,10 +308,6 @@ export const useEmployeeData = (employeeId: string) => {
     const accountsVouchers = JSON.parse(localStorage.getItem("accounts_vouchers") || "[]");
     localStorage.setItem("accounts_vouchers", JSON.stringify([...accountsVouchers, newPayment]));
     
-    // Also sync to accounts payments
-    const accountsPayments = JSON.parse(localStorage.getItem("accounts_payments") || "[]");
-    localStorage.setItem("accounts_payments", JSON.stringify([...accountsPayments, newPayment]));
-    
     return newPayment;
   }, [miscPayments, employeeId]);
 
@@ -323,6 +320,7 @@ export const useEmployeeData = (employeeId: string) => {
     medicalCertificate?: string;
     workingDate?: string;
     workingReason?: string;
+    isAddLeave?: boolean; // For exchange leave
   }) => {
     const newLeave: LeaveRequest = {
       id: crypto.randomUUID(),
@@ -335,6 +333,7 @@ export const useEmployeeData = (employeeId: string) => {
       medicalCertificate: leave.medicalCertificate,
       workingDate: leave.workingDate,
       workingReason: leave.workingReason,
+      isAddLeave: leave.isAddLeave,
       createdAt: new Date().toISOString(),
     };
     
@@ -348,6 +347,38 @@ export const useEmployeeData = (employeeId: string) => {
     
     return newLeave;
   }, [leaveRequests, employeeId]);
+
+  // Add Exchange Leave (work extra day to earn leave)
+  const addExchangeLeave = useCallback((data: {
+    workingDate: string;
+    workingReason: string;
+    employeeName: string;
+  }) => {
+    return requestLeave({
+      date: data.workingDate,
+      reason: `Worked on ${data.workingDate}: ${data.workingReason}`,
+      type: "exchange",
+      employeeName: data.employeeName,
+      workingDate: data.workingDate,
+      workingReason: data.workingReason,
+      isAddLeave: true,
+    });
+  }, [requestLeave]);
+
+  // Take Exchange Leave (consume earned leave)
+  const takeExchangeLeave = useCallback((data: {
+    leaveDate: string;
+    leaveReason: string;
+    employeeName: string;
+  }) => {
+    return requestLeave({
+      date: data.leaveDate,
+      reason: data.leaveReason,
+      type: "exchange",
+      employeeName: data.employeeName,
+      isAddLeave: false,
+    });
+  }, [requestLeave]);
 
   // Reports
   const addReport = useCallback((report: {
@@ -421,21 +452,51 @@ export const useEmployeeData = (employeeId: string) => {
     return directorLeaves.filter(l => l.employeeId === employeeId);
   }, [employeeId]);
 
+  // Calculate exchange leave balance from approved add/take requests
+  const calculateExchangeBalance = useCallback(() => {
+    const allLeaves = getUpdatedLeaveRequests();
+    const exchangeLeaves = allLeaves.filter(l => l.type === "exchange" && l.status === "approved");
+    
+    let balance = 0;
+    exchangeLeaves.forEach(leave => {
+      if (leave.isAddLeave) {
+        balance++; // Earned a leave
+      } else {
+        balance--; // Used a leave
+      }
+    });
+    
+    return Math.max(0, balance);
+  }, [getUpdatedLeaveRequests]);
+
   // Update leave balance based on approved leaves
   const updateLeaveBalanceFromApproved = useCallback(() => {
     const approvedLeaves = getUpdatedLeaveRequests().filter(l => l.status === "approved");
-    const balance = { paid: 12, medical: 6, exchange: 3 };
+    const balance = { paid: 12, medical: 6, exchange: 0 };
     
+    // Calculate paid and medical used
     approvedLeaves.forEach(leave => {
-      if (leave.type === "paid" && balance.paid > 0) balance.paid--;
-      if (leave.type === "medical" && balance.medical > 0) balance.medical--;
-      if (leave.type === "exchange" && balance.exchange > 0) balance.exchange--;
+      if (leave.type === "paid") balance.paid--;
+      if (leave.type === "medical") balance.medical--;
     });
+    
+    // Calculate exchange balance
+    balance.exchange = calculateExchangeBalance();
+    
+    // Ensure non-negative
+    balance.paid = Math.max(0, balance.paid);
+    balance.medical = Math.max(0, balance.medical);
     
     setLeaveBalance(balance);
     saveData("leave_balance", balance);
     return balance;
-  }, [getUpdatedLeaveRequests, employeeId]);
+  }, [getUpdatedLeaveRequests, calculateExchangeBalance, employeeId]);
+
+  // Get pending exchange add requests (for showing earned but not approved)
+  const getPendingExchangeAdds = useCallback(() => {
+    const allLeaves = getUpdatedLeaveRequests();
+    return allLeaves.filter(l => l.type === "exchange" && l.isAddLeave && l.status === "pending").length;
+  }, [getUpdatedLeaveRequests]);
 
   return {
     // Calendar
@@ -455,6 +516,8 @@ export const useEmployeeData = (employeeId: string) => {
     // Leaves
     leaveRequests, requestLeave, getUpdatedLeaveRequests, 
     leaveBalance, updateLeaveBalanceFromApproved,
+    addExchangeLeave, takeExchangeLeave,
+    calculateExchangeBalance, getPendingExchangeAdds,
     // Reports
     reports, addReport,
     // Notices

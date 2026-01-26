@@ -27,6 +27,7 @@ import HRDashboardPage from "./pages/hr/HRDashboard";
 import EmployeeAdd from "./pages/hr/EmployeeAdd";
 import ManageEmployee from "./pages/hr/ManageEmployee";
 import HRSettings from "./pages/hr/HRSettings";
+import HRLeaveManager from "./pages/hr/HRLeaveManager";
 
 // Accounts Module
 import AccountsLogin from "./pages/accounts/AccountsLogin";
@@ -106,6 +107,7 @@ const App = () => (
           <Route path="/hr/dashboard" element={<HRDashboardPage />} />
           <Route path="/hr/employee-add" element={<EmployeeAdd />} />
           <Route path="/hr/manage-employee" element={<ManageEmployee />} />
+          <Route path="/hr/leaves" element={<HRLeaveManager />} />
           <Route path="/hr/settings" element={<HRSettings />} />
           
           {/* Accounts Routes */}

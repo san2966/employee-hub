@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import AccountsLayout from "@/components/accounts/AccountsLayout";
 import { useAccountsData } from "@/hooks/useAccountsData";
 import { 
@@ -17,33 +17,41 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from "@/components/ui/pagination";
-import { FileText, DollarSign, Receipt, TrendingUp } from "lucide-react";
-import { useState } from "react";
+import { FileText, DollarSign, Receipt, TrendingUp, RefreshCcw, Plane } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const AccountsDashboard = () => {
-  const { payments, syncEmployeeSubmissions } = useAccountsData();
+  const { vouchers, travelExpenses, refresh, getTotalVoucherAmount, getTotalTravelAmount } = useAccountsData();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Auto-refresh every 3 seconds
   useEffect(() => {
-    // Sync on mount and periodically
-    syncEmployeeSubmissions();
-    const interval = setInterval(syncEmployeeSubmissions, 5000);
+    const interval = setInterval(refresh, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [refresh]);
 
-  const totalPages = Math.ceil(payments.length / itemsPerPage);
-  const paginatedPayments = payments.slice(
+  const allRecords = [...vouchers, ...travelExpenses.map(t => ({
+    ...t,
+    type: "travel" as const,
+    receiptUrl: t.receiptUrl,
+    purpose: `${t.from} → ${t.to}`,
+  }))].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+  const totalPages = Math.ceil(allRecords.length / itemsPerPage);
+  const paginatedRecords = allRecords.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
+  const totalVoucherAmount = getTotalVoucherAmount(vouchers);
+  const totalTravelAmount = getTotalTravelAmount(travelExpenses);
+  const totalAmount = totalVoucherAmount + totalTravelAmount;
 
   const stats = [
     { 
-      title: "Total Payments", 
-      value: payments.length.toString(), 
+      title: "Total Records", 
+      value: allRecords.length.toString(), 
       icon: Receipt,
       color: "text-primary"
     },
@@ -54,19 +62,15 @@ const AccountsDashboard = () => {
       color: "text-success"
     },
     { 
-      title: "Pending Review", 
-      value: payments.filter(p => p.type === "reimbursement").length.toString(), 
+      title: "Vouchers", 
+      value: `₹${totalVoucherAmount.toLocaleString()}`, 
       icon: FileText,
       color: "text-warning"
     },
     { 
-      title: "This Month", 
-      value: payments.filter(p => {
-        const date = new Date(p.date);
-        const now = new Date();
-        return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-      }).length.toString(), 
-      icon: TrendingUp,
+      title: "Travel Expenses", 
+      value: `₹${totalTravelAmount.toLocaleString()}`, 
+      icon: Plane,
       color: "text-info"
     },
   ];
@@ -75,9 +79,15 @@ const AccountsDashboard = () => {
     <AccountsLayout title="Dashboard">
       <div className="space-y-6">
         {/* Welcome Banner */}
-        <div className="gradient-primary rounded-xl p-6 text-primary-foreground">
-          <h2 className="text-2xl font-bold mb-2">Payment Records</h2>
-          <p className="opacity-90">View and manage all employee payment submissions</p>
+        <div className="gradient-primary rounded-xl p-6 text-primary-foreground flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold mb-2">Payment Records</h2>
+            <p className="opacity-90">View all employee payment submissions in real-time</p>
+          </div>
+          <Button variant="secondary" onClick={refresh} className="gap-2">
+            <RefreshCcw className="h-4 w-4" />
+            Refresh
+          </Button>
         </div>
 
         {/* Stats Grid */}
@@ -97,11 +107,11 @@ const AccountsDashboard = () => {
           ))}
         </div>
 
-        {/* Payments Table */}
+        {/* Records Table */}
         <div className="card-corporate p-6">
           <h3 className="text-lg font-semibold mb-4">All Payment Records</h3>
           
-          {payments.length === 0 ? (
+          {allRecords.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No payment records yet</p>
@@ -117,30 +127,36 @@ const AccountsDashboard = () => {
                       <TableHead>Amount</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Type</TableHead>
+                      <TableHead>Purpose</TableHead>
                       <TableHead>Receipt</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedPayments.map((payment) => (
-                      <TableRow key={payment.id}>
-                        <TableCell className="font-medium">{payment.employeeName}</TableCell>
+                    {paginatedRecords.map((record: any) => (
+                      <TableRow key={record.id}>
+                        <TableCell className="font-medium">{record.employeeName}</TableCell>
                         <TableCell className="text-success font-semibold">
-                          ₹{payment.amount.toLocaleString()}
+                          ₹{(record.amount || 0).toLocaleString()}
                         </TableCell>
-                        <TableCell>{new Date(payment.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{new Date(record.date).toLocaleDateString()}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            payment.type === "payment" 
-                              ? "bg-primary/10 text-primary" 
+                            record.type === "travel" 
+                              ? "bg-info/10 text-info" 
+                              : record.source === "admin"
+                              ? "bg-primary/10 text-primary"
                               : "bg-warning/10 text-warning"
                           }`}>
-                            {payment.type === "payment" ? "Payment" : "Reimbursement"}
+                            {record.type === "travel" ? "Travel" : record.source === "admin" ? "Admin" : "Voucher"}
                           </span>
                         </TableCell>
+                        <TableCell className="max-w-xs truncate">
+                          {record.purpose || "-"}
+                        </TableCell>
                         <TableCell>
-                          {payment.receiptUrl ? (
+                          {record.receiptUrl ? (
                             <a 
-                              href={payment.receiptUrl} 
+                              href={record.receiptUrl} 
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="text-primary hover:underline flex items-center gap-1"
@@ -169,7 +185,7 @@ const AccountsDashboard = () => {
                           className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                         />
                       </PaginationItem>
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((page) => (
                         <PaginationItem key={page}>
                           <PaginationLink
                             onClick={() => setCurrentPage(page)}

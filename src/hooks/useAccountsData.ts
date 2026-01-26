@@ -1,13 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export interface PaymentRecord {
   id: string;
   employeeName: string;
   amount: number;
   date: string;
-  receiptUrl: string;
-  type: "payment" | "reimbursement";
+  receiptUrl?: string;
+  purpose?: string;
+  type: "payment" | "reimbursement" | "admin";
   timestamp: string;
+  source?: "employee" | "admin";
 }
 
 export interface VoucherRecord {
@@ -15,8 +17,10 @@ export interface VoucherRecord {
   employeeName: string;
   amount: number;
   date: string;
-  receiptUrl: string;
+  receiptUrl?: string;
+  purpose?: string;
   timestamp: string;
+  source?: "employee" | "admin";
 }
 
 export interface TravelExpense {
@@ -26,127 +30,127 @@ export interface TravelExpense {
   to: string;
   date: string;
   amount: number;
-  receiptUrl: string;
+  receiptUrl?: string;
+  purpose?: string;
   timestamp: string;
 }
 
 export const useAccountsData = () => {
-  const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [vouchers, setVouchers] = useState<VoucherRecord[]>([]);
   const [travelExpenses, setTravelExpenses] = useState<TravelExpense[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Load data from localStorage on mount
-  useEffect(() => {
-    const savedPayments = localStorage.getItem("accountsPayments");
-    const savedVouchers = localStorage.getItem("accountsVouchers");
-    const savedTravelExpenses = localStorage.getItem("accountsTravelExpenses");
+  // Real-time sync function - polls every 2 seconds for new data
+  const syncAllData = useCallback(() => {
+    // Aggregate vouchers from multiple sources
+    const employeeVouchers: VoucherRecord[] = JSON.parse(localStorage.getItem("accounts_vouchers") || "[]");
+    const adminPayments = JSON.parse(localStorage.getItem("admin_payments") || "[]");
+    
+    // Transform admin payments to voucher format
+    const adminVouchers: VoucherRecord[] = adminPayments.map((p: any) => ({
+      id: p.id,
+      employeeName: p.employeeName || "Admin",
+      amount: typeof p.amount === "number" ? p.amount : parseFloat(p.amount) || 0,
+      date: p.date,
+      receiptUrl: p.document || p.receiptUrl,
+      purpose: p.purpose,
+      timestamp: p.createdAt || p.timestamp || new Date().toISOString(),
+      source: "admin" as const,
+    }));
 
-    if (savedPayments) setPayments(JSON.parse(savedPayments));
-    if (savedVouchers) setVouchers(JSON.parse(savedVouchers));
-    if (savedTravelExpenses) setTravelExpenses(JSON.parse(savedTravelExpenses));
+    // Merge and deduplicate vouchers
+    const allVouchersMap = new Map<string, VoucherRecord>();
+    [...employeeVouchers, ...adminVouchers].forEach(v => {
+      if (!allVouchersMap.has(v.id)) {
+        allVouchersMap.set(v.id, v);
+      }
+    });
+    const mergedVouchers = Array.from(allVouchersMap.values()).sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+    setVouchers(mergedVouchers);
 
-    // Also check for employee submissions
-    syncEmployeeSubmissions();
+    // Aggregate travel expenses
+    const accountsTravelExpenses: TravelExpense[] = JSON.parse(localStorage.getItem("accounts_travel_expenses") || "[]");
+    const sortedTravel = [...accountsTravelExpenses].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+    setTravelExpenses(sortedTravel);
   }, []);
 
-  // Sync employee submissions from Employee Login module
-  const syncEmployeeSubmissions = () => {
-    const employeePayments = localStorage.getItem("employeePayments");
-    const employeeVouchers = localStorage.getItem("employeeVouchers");
-    const employeeTravelExpenses = localStorage.getItem("employeeTravelExpenses");
+  // Initial load and periodic sync
+  useEffect(() => {
+    syncAllData();
 
-    if (employeePayments) {
-      const parsed = JSON.parse(employeePayments);
-      setPayments(prev => {
-        const existingIds = new Set(prev.map(p => p.id));
-        const newRecords = parsed.filter((p: PaymentRecord) => !existingIds.has(p.id));
-        const updated = [...prev, ...newRecords];
-        localStorage.setItem("accountsPayments", JSON.stringify(updated));
-        return updated;
-      });
-    }
+    // Real-time polling every 2 seconds
+    const interval = setInterval(() => {
+      syncAllData();
+    }, 2000);
 
-    if (employeeVouchers) {
-      const parsed = JSON.parse(employeeVouchers);
-      setVouchers(prev => {
-        const existingIds = new Set(prev.map(v => v.id));
-        const newRecords = parsed.filter((v: VoucherRecord) => !existingIds.has(v.id));
-        const updated = [...prev, ...newRecords];
-        localStorage.setItem("accountsVouchers", JSON.stringify(updated));
-        return updated;
-      });
-    }
+    return () => clearInterval(interval);
+  }, [syncAllData, refreshKey]);
 
-    if (employeeTravelExpenses) {
-      const parsed = JSON.parse(employeeTravelExpenses);
-      setTravelExpenses(prev => {
-        const existingIds = new Set(prev.map(t => t.id));
-        const newRecords = parsed.filter((t: TravelExpense) => !existingIds.has(t.id));
-        const updated = [...prev, ...newRecords];
-        localStorage.setItem("accountsTravelExpenses", JSON.stringify(updated));
-        return updated;
-      });
-    }
-  };
+  // Manual refresh trigger
+  const refresh = useCallback(() => {
+    setRefreshKey(prev => prev + 1);
+  }, []);
 
   // Filter functions
-  const filterByEmployeeAndDate = (
+  const filterByEmployeeAndDate = useCallback((
     records: any[],
     employeeName?: string,
     year?: number,
     month?: number
   ) => {
     return records.filter(record => {
-      const matchesEmployee = !employeeName || record.employeeName.toLowerCase().includes(employeeName.toLowerCase());
+      const matchesEmployee = !employeeName || 
+        record.employeeName?.toLowerCase().includes(employeeName.toLowerCase());
       const recordDate = new Date(record.date);
       const matchesYear = !year || recordDate.getFullYear() === year;
       const matchesMonth = !month || recordDate.getMonth() + 1 === month;
       return matchesEmployee && matchesYear && matchesMonth;
     });
-  };
+  }, []);
 
-  const getFilteredVouchers = (employeeName?: string, year?: number, month?: number) => {
+  const getFilteredVouchers = useCallback((employeeName?: string, year?: number, month?: number) => {
     return filterByEmployeeAndDate(vouchers, employeeName, year, month);
-  };
+  }, [vouchers, filterByEmployeeAndDate]);
 
-  const getFilteredTravelExpenses = (employeeName?: string, year?: number, month?: number) => {
+  const getFilteredTravelExpenses = useCallback((employeeName?: string, year?: number, month?: number) => {
     return filterByEmployeeAndDate(travelExpenses, employeeName, year, month);
-  };
+  }, [travelExpenses, filterByEmployeeAndDate]);
 
-  const getTotalVoucherAmount = (filteredVouchers: VoucherRecord[]) => {
-    return filteredVouchers.reduce((sum, v) => sum + v.amount, 0);
-  };
+  const getTotalVoucherAmount = useCallback((filteredVouchers: VoucherRecord[]) => {
+    return filteredVouchers.reduce((sum, v) => sum + (v.amount || 0), 0);
+  }, []);
 
-  const getTotalTravelAmount = (filteredExpenses: TravelExpense[]) => {
-    return filteredExpenses.reduce((sum, t) => sum + t.amount, 0);
-  };
+  const getTotalTravelAmount = useCallback((filteredExpenses: TravelExpense[]) => {
+    return filteredExpenses.reduce((sum, t) => sum + (t.amount || 0), 0);
+  }, []);
 
   // Get unique employee names for filters
-  const getUniqueEmployees = () => {
+  const getUniqueEmployees = useCallback(() => {
     const allNames = [
-      ...payments.map(p => p.employeeName),
       ...vouchers.map(v => v.employeeName),
       ...travelExpenses.map(t => t.employeeName)
-    ];
-    return [...new Set(allNames)];
-  };
+    ].filter(Boolean);
+    return [...new Set(allNames)].sort();
+  }, [vouchers, travelExpenses]);
 
   // Get available years from records
-  const getAvailableYears = () => {
+  const getAvailableYears = useCallback(() => {
     const allDates = [
-      ...payments.map(p => new Date(p.date).getFullYear()),
       ...vouchers.map(v => new Date(v.date).getFullYear()),
       ...travelExpenses.map(t => new Date(t.date).getFullYear())
-    ];
+    ].filter(y => !isNaN(y));
     const uniqueYears = [...new Set(allDates)].sort((a, b) => b - a);
     return uniqueYears.length > 0 ? uniqueYears : [new Date().getFullYear()];
-  };
+  }, [vouchers, travelExpenses]);
 
   return {
-    payments,
     vouchers,
     travelExpenses,
-    syncEmployeeSubmissions,
+    refresh,
     getFilteredVouchers,
     getFilteredTravelExpenses,
     getTotalVoucherAmount,
