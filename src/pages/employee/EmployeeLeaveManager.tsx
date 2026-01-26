@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Download, Briefcase, HeartPulse, RefreshCcw } from "lucide-react";
+import { Calendar, Briefcase, HeartPulse, RefreshCcw, Plus, Minus } from "lucide-react";
 
 const EmployeeLeaveManager = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
@@ -16,24 +16,32 @@ const EmployeeLeaveManager = () => {
   const employeeName = session.employeeName || "";
   
   const { 
-    requestLeave, 
     getUpdatedLeaveRequests, 
     leaveBalance, 
-    updateLeaveBalanceFromApproved 
+    updateLeaveBalanceFromApproved,
+    requestLeave,
+    addExchangeLeave,
+    takeExchangeLeave,
+    calculateExchangeBalance,
+    getPendingExchangeAdds,
   } = useEmployeeData(employeeId);
   
   const { toast } = useToast();
   
   const [paidDialog, setPaidDialog] = useState(false);
   const [medicalDialog, setMedicalDialog] = useState(false);
-  const [exchangeDialog, setExchangeDialog] = useState(false);
+  const [addExchangeDialog, setAddExchangeDialog] = useState(false);
+  const [takeExchangeDialog, setTakeExchangeDialog] = useState(false);
   
   const [paidForm, setPaidForm] = useState({ date: "", reason: "" });
   const [medicalForm, setMedicalForm] = useState({ date: "", reason: "", certificate: "" });
-  const [exchangeForm, setExchangeForm] = useState({ workingDate: "", workingReason: "", leaveDate: "" });
+  const [addExchangeForm, setAddExchangeForm] = useState({ workingDate: "", workingReason: "" });
+  const [takeExchangeForm, setTakeExchangeForm] = useState({ leaveDate: "", leaveReason: "" });
   
   const leaveRequests = getUpdatedLeaveRequests();
   const [balance, setBalance] = useState(leaveBalance);
+  const exchangeBalance = calculateExchangeBalance();
+  const pendingAdds = getPendingExchangeAdds();
   
   useEffect(() => {
     const updatedBalance = updateLeaveBalanceFromApproved();
@@ -43,6 +51,8 @@ const EmployeeLeaveManager = () => {
   const paidLeaves = leaveRequests.filter(l => l.type === "paid");
   const medicalLeaves = leaveRequests.filter(l => l.type === "medical");
   const exchangeLeaves = leaveRequests.filter(l => l.type === "exchange");
+  const exchangeAdds = exchangeLeaves.filter(l => l.isAddLeave);
+  const exchangeTakes = exchangeLeaves.filter(l => !l.isAddLeave);
   
   const handlePaidLeave = () => {
     if (!paidForm.date || !paidForm.reason) {
@@ -57,7 +67,7 @@ const EmployeeLeaveManager = () => {
       employeeName 
     });
     
-    toast({ title: "Leave request submitted" });
+    toast({ title: "Leave request submitted", description: "Waiting for Director approval" });
     setPaidDialog(false);
     setPaidForm({ date: "", reason: "" });
   };
@@ -76,29 +86,48 @@ const EmployeeLeaveManager = () => {
       medicalCertificate: medicalForm.certificate,
     });
     
-    toast({ title: "Medical leave request submitted" });
+    toast({ title: "Medical leave request submitted", description: "Waiting for Director approval" });
     setMedicalDialog(false);
     setMedicalForm({ date: "", reason: "", certificate: "" });
   };
   
-  const handleExchangeLeave = () => {
-    if (!exchangeForm.workingDate || !exchangeForm.workingReason || !exchangeForm.leaveDate) {
+  const handleAddExchangeLeave = () => {
+    if (!addExchangeForm.workingDate || !addExchangeForm.workingReason) {
       toast({ variant: "destructive", title: "Error", description: "Please fill all fields" });
       return;
     }
     
-    requestLeave({ 
-      date: exchangeForm.leaveDate, 
-      reason: `Working on ${exchangeForm.workingDate}: ${exchangeForm.workingReason}`, 
-      type: "exchange", 
+    addExchangeLeave({ 
+      workingDate: addExchangeForm.workingDate,
+      workingReason: addExchangeForm.workingReason,
       employeeName,
-      workingDate: exchangeForm.workingDate,
-      workingReason: exchangeForm.workingReason,
     });
     
-    toast({ title: "Exchange leave request submitted" });
-    setExchangeDialog(false);
-    setExchangeForm({ workingDate: "", workingReason: "", leaveDate: "" });
+    toast({ title: "Exchange leave added", description: "Waiting for Director approval to earn the leave" });
+    setAddExchangeDialog(false);
+    setAddExchangeForm({ workingDate: "", workingReason: "" });
+  };
+
+  const handleTakeExchangeLeave = () => {
+    if (!takeExchangeForm.leaveDate || !takeExchangeForm.leaveReason) {
+      toast({ variant: "destructive", title: "Error", description: "Please fill all fields" });
+      return;
+    }
+
+    if (exchangeBalance <= 0) {
+      toast({ variant: "destructive", title: "Error", description: "No exchange leaves available. Add working days first." });
+      return;
+    }
+    
+    takeExchangeLeave({ 
+      leaveDate: takeExchangeForm.leaveDate,
+      leaveReason: takeExchangeForm.leaveReason,
+      employeeName,
+    });
+    
+    toast({ title: "Exchange leave request submitted", description: "Waiting for Director approval" });
+    setTakeExchangeDialog(false);
+    setTakeExchangeForm({ leaveDate: "", leaveReason: "" });
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,9 +143,11 @@ const EmployeeLeaveManager = () => {
     <div className="p-4 rounded-lg border bg-card">
       <div className="flex items-start justify-between">
         <div>
-          <p className="font-medium">Leave on {new Date(leave.date).toLocaleDateString()}</p>
+          <p className="font-medium">
+            {leave.isAddLeave ? "Worked on" : "Leave on"} {new Date(leave.date).toLocaleDateString()}
+          </p>
           <p className="text-sm text-muted-foreground mt-1">{leave.reason}</p>
-          {leave.workingDate && (
+          {leave.workingDate && !leave.isAddLeave && (
             <p className="text-xs text-muted-foreground mt-1">
               Working Date: {new Date(leave.workingDate).toLocaleDateString()}
             </p>
@@ -130,6 +161,11 @@ const EmployeeLeaveManager = () => {
           }`}>
             {leave.status}
           </span>
+          {leave.isAddLeave && (
+            <span className="ml-2 px-2 py-1 rounded text-xs font-medium bg-primary/10 text-primary">
+              +1 Leave
+            </span>
+          )}
           {leave.status === "rejected" && leave.rejectionReason && (
             <p className="text-xs text-destructive mt-1">
               Reason: {leave.rejectionReason}
@@ -166,9 +202,12 @@ const EmployeeLeaveManager = () => {
           <Card className="card-corporate bg-warning/5 border-warning/20">
             <CardContent className="pt-6 text-center">
               <RefreshCcw className="h-8 w-8 mx-auto mb-2 text-warning" />
-              <p className="text-3xl font-bold text-warning">{balance.exchange}</p>
-              <p className="text-sm text-muted-foreground">Exchange Leaves</p>
-              <p className="text-xs text-muted-foreground mt-1">(Work extra, take off later)</p>
+              <p className="text-3xl font-bold text-warning">{exchangeBalance}</p>
+              <p className="text-sm text-muted-foreground">Exchange Leaves Available</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                (Starts at 0 • Earn by working extra)
+                {pendingAdds > 0 && <span className="text-primary"> • {pendingAdds} pending</span>}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -282,51 +321,113 @@ const EmployeeLeaveManager = () => {
               <RefreshCcw className="h-5 w-5 text-warning" />
               Exchange Leave
             </CardTitle>
-            <Dialog open={exchangeDialog} onOpenChange={setExchangeDialog}>
-              <DialogTrigger asChild>
-                <Button>Take Leave</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Request Exchange Leave</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Date of Working (Extra day you worked)</Label>
-                    <Input 
-                      type="date"
-                      value={exchangeForm.workingDate} 
-                      onChange={e => setExchangeForm({ ...exchangeForm, workingDate: e.target.value })} 
-                    />
+            <div className="flex gap-2">
+              {/* Add Leave Button */}
+              <Dialog open={addExchangeDialog} onOpenChange={setAddExchangeDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="gap-1">
+                    <Plus className="h-4 w-4" />
+                    Add Leave
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add Exchange Leave (Work Extra Day)</DialogTitle>
+                  </DialogHeader>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Record an extra day you worked to earn an exchange leave. 
+                    Once approved by Director, you'll earn +1 exchange leave.
+                  </p>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Date of Working</Label>
+                      <Input 
+                        type="date"
+                        value={addExchangeForm.workingDate} 
+                        onChange={e => setAddExchangeForm({ ...addExchangeForm, workingDate: e.target.value })} 
+                      />
+                    </div>
+                    <div>
+                      <Label>Reason for Working</Label>
+                      <Textarea 
+                        placeholder="Describe why you worked on this day..."
+                        value={addExchangeForm.workingReason} 
+                        onChange={e => setAddExchangeForm({ ...addExchangeForm, workingReason: e.target.value })} 
+                      />
+                    </div>
+                    <Button className="w-full" onClick={handleAddExchangeLeave}>Submit for Approval</Button>
                   </div>
-                  <div>
-                    <Label>Reason for Working</Label>
-                    <Textarea 
-                      value={exchangeForm.workingReason} 
-                      onChange={e => setExchangeForm({ ...exchangeForm, workingReason: e.target.value })} 
-                    />
+                </DialogContent>
+              </Dialog>
+
+              {/* Take Leave Button */}
+              <Dialog open={takeExchangeDialog} onOpenChange={setTakeExchangeDialog}>
+                <DialogTrigger asChild>
+                  <Button disabled={exchangeBalance <= 0} className="gap-1">
+                    <Minus className="h-4 w-4" />
+                    Take Leave
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Take Exchange Leave</DialogTitle>
+                  </DialogHeader>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Use one of your earned exchange leaves. You have {exchangeBalance} available.
+                  </p>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Date of Leave</Label>
+                      <Input 
+                        type="date"
+                        value={takeExchangeForm.leaveDate} 
+                        onChange={e => setTakeExchangeForm({ ...takeExchangeForm, leaveDate: e.target.value })} 
+                      />
+                    </div>
+                    <div>
+                      <Label>Reason for Leave</Label>
+                      <Textarea 
+                        placeholder="Describe why you need this leave..."
+                        value={takeExchangeForm.leaveReason} 
+                        onChange={e => setTakeExchangeForm({ ...takeExchangeForm, leaveReason: e.target.value })} 
+                      />
+                    </div>
+                    <Button className="w-full" onClick={handleTakeExchangeLeave}>Submit Request</Button>
                   </div>
-                  <div>
-                    <Label>Date of Leave Taken</Label>
-                    <Input 
-                      type="date"
-                      value={exchangeForm.leaveDate} 
-                      onChange={e => setExchangeForm({ ...exchangeForm, leaveDate: e.target.value })} 
-                    />
-                  </div>
-                  <Button className="w-full" onClick={handleExchangeLeave}>Submit Request</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            </div>
           </CardHeader>
           <CardContent>
-            {exchangeLeaves.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground">No exchange leave requests</p>
-            ) : (
-              <div className="space-y-3">
-                {exchangeLeaves.map(leave => <LeaveCard key={leave.id} leave={leave} />)}
+            <div className="space-y-6">
+              {/* Earned Leaves Section */}
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                  <Plus className="h-4 w-4" /> Earned Leaves (Worked Extra)
+                </h4>
+                {exchangeAdds.length === 0 ? (
+                  <p className="text-center py-4 text-muted-foreground text-sm">No earned exchange leaves yet</p>
+                ) : (
+                  <div className="space-y-2">
+                    {exchangeAdds.map(leave => <LeaveCard key={leave.id} leave={leave} />)}
+                  </div>
+                )}
               </div>
-            )}
+
+              {/* Taken Leaves Section */}
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                  <Minus className="h-4 w-4" /> Used Leaves
+                </h4>
+                {exchangeTakes.length === 0 ? (
+                  <p className="text-center py-4 text-muted-foreground text-sm">No exchange leaves used yet</p>
+                ) : (
+                  <div className="space-y-2">
+                    {exchangeTakes.map(leave => <LeaveCard key={leave.id} leave={leave} />)}
+                  </div>
+                )}
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

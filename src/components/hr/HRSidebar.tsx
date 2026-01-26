@@ -7,7 +7,8 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -15,6 +16,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/hr/dashboard" },
   { icon: UserPlus, label: "Employee Add", path: "/hr/employee-add" },
   { icon: Users, label: "Manage Employee", path: "/hr/manage-employee" },
+  { icon: Calendar, label: "Leave Manager", path: "/hr/leaves" },
   { icon: Settings, label: "Settings", path: "/hr/settings" },
 ];
 
