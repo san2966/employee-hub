@@ -14,7 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      tickets: {
+        Row: {
+          created_at: string
+          description: string
+          email: string
+          id: string
+          name: string
+          problem_cause: string | null
+          resolution_image_url: string | null
+          resolved_at: string | null
+          solution_provided: string | null
+          status: string
+          subject: string
+          ticket_number: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          email: string
+          id?: string
+          name: string
+          problem_cause?: string | null
+          resolution_image_url?: string | null
+          resolved_at?: string | null
+          solution_provided?: string | null
+          status?: string
+          subject: string
+          ticket_number: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          email?: string
+          id?: string
+          name?: string
+          problem_cause?: string | null
+          resolution_image_url?: string | null
+          resolved_at?: string | null
+          solution_provided?: string | null
+          status?: string
+          subject?: string
+          ticket_number?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
