@@ -69,6 +69,7 @@ import NotFound from "./pages/NotFound";
 // IT Head Module
 import ITHeadLogin from "./pages/ithead/ITHeadLogin";
 import ITHeadDashboard from "./pages/ithead/ITHeadDashboard";
+import ITHeadTickets from "./pages/ithead/ITHeadTickets";
 import ITHeadAssets from "./pages/ithead/ITHeadAssets";
 import ITHeadPasswords from "./pages/ithead/ITHeadPasswords";
 import ITHeadNetwork from "./pages/ithead/ITHeadNetwork";
@@ -143,6 +144,7 @@ const App = () => (
           {/* IT Head Routes */}
           <Route path="/login/ithead" element={<ITHeadLogin />} />
           <Route path="/ithead/dashboard" element={<ITHeadDashboard />} />
+          <Route path="/ithead/tickets" element={<ITHeadTickets />} />
           <Route path="/ithead/assets" element={<ITHeadAssets />} />
           <Route path="/ithead/passwords" element={<ITHeadPasswords />} />
           <Route path="/ithead/network" element={<ITHeadNetwork />} />

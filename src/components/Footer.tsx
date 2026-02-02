@@ -62,9 +62,9 @@ const Footer = () => {
           <div>
             <h4 className="font-medium text-foreground mb-4">Contact</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>support@company.com</li>
-              <li>+1 (555) 123-4567</li>
-              <li>123 Corporate Drive</li>
+              <li>it.headvmcc@gmail.com</li>
+              <li>8956663054</li>
+              <li>2nd Floor, Lohia Jain Avenue</li>
             </ul>
           </div>
         </div>
