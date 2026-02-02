@@ -8,6 +8,7 @@ import {
   Settings, 
   LogOut,
   Menu,
+  Ticket,
   X
 } from "lucide-react";
 import { useState } from "react";
@@ -16,6 +17,7 @@ import { cn } from "@/lib/utils";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/ithead/dashboard" },
+  { icon: Ticket, label: "Ticket Management", path: "/ithead/tickets" },
   { icon: HardDrive, label: "Asset Management", path: "/ithead/assets" },
   { icon: Key, label: "Password Management", path: "/ithead/passwords" },
   { icon: Network, label: "Network Management", path: "/ithead/network" },
