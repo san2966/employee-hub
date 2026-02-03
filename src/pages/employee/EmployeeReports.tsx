@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Plus } from "lucide-react";
+import { ExportButtons } from "@/components/ExportButtons";
+import { EXPORT_COLUMNS } from "@/lib/exportUtils";
 
 const EmployeeReports = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
@@ -49,75 +51,83 @@ const EmployeeReports = () => {
     <EmployeeLayout title="Reports">
       <div className="space-y-6">
         {/* Header */}
-        <div className="gradient-primary rounded-xl p-6 text-primary-foreground flex justify-between items-center">
+        <div className="gradient-primary rounded-xl p-6 text-primary-foreground flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h2 className="text-2xl font-bold mb-2">My Reports</h2>
             <p className="opacity-90">Submit and track your daily reports</p>
           </div>
-          <Dialog open={dialog} onOpenChange={setDialog}>
-            <DialogTrigger asChild>
-              <Button variant="secondary">
-                <Plus className="h-4 w-4 mr-2" /> Add Report
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>New Report</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+          <div className="flex gap-2">
+            <ExportButtons
+              portal="Employee"
+              type="Reports"
+              columns={EXPORT_COLUMNS.reports}
+              data={reports.map(r => ({ ...r, employeeName }))}
+            />
+            <Dialog open={dialog} onOpenChange={setDialog}>
+              <DialogTrigger asChild>
+                <Button variant="secondary">
+                  <Plus className="h-4 w-4 mr-2" /> Add Report
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>New Report</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Date *</Label>
+                      <Input 
+                        type="date"
+                        value={form.date} 
+                        onChange={e => setForm({ ...form, date: e.target.value })} 
+                      />
+                    </div>
+                    <div>
+                      <Label>Office/Department *</Label>
+                      <Input 
+                        value={form.department} 
+                        onChange={e => setForm({ ...form, department: e.target.value })} 
+                      />
+                    </div>
+                  </div>
                   <div>
-                    <Label>Date *</Label>
+                    <Label>Task *</Label>
                     <Input 
-                      type="date"
-                      value={form.date} 
-                      onChange={e => setForm({ ...form, date: e.target.value })} 
+                      value={form.task} 
+                      onChange={e => setForm({ ...form, task: e.target.value })} 
+                      placeholder="Task name or title"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="completed"
+                      checked={form.status === "completed"}
+                      onCheckedChange={(checked) => setForm({ ...form, status: checked ? "completed" : "pending" })}
+                    />
+                    <Label htmlFor="completed">Mark as Completed</Label>
+                  </div>
+                  <div>
+                    <Label>Description *</Label>
+                    <Textarea 
+                      rows={3}
+                      value={form.description} 
+                      onChange={e => setForm({ ...form, description: e.target.value })} 
                     />
                   </div>
                   <div>
-                    <Label>Office/Department *</Label>
-                    <Input 
-                      value={form.department} 
-                      onChange={e => setForm({ ...form, department: e.target.value })} 
+                    <Label>Additional Info (Optional)</Label>
+                    <Textarea 
+                      rows={2}
+                      value={form.additionalInfo} 
+                      onChange={e => setForm({ ...form, additionalInfo: e.target.value })} 
                     />
                   </div>
+                  <Button className="w-full" onClick={handleSave}>Submit Report</Button>
                 </div>
-                <div>
-                  <Label>Task *</Label>
-                  <Input 
-                    value={form.task} 
-                    onChange={e => setForm({ ...form, task: e.target.value })} 
-                    placeholder="Task name or title"
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="completed"
-                    checked={form.status === "completed"}
-                    onCheckedChange={(checked) => setForm({ ...form, status: checked ? "completed" : "pending" })}
-                  />
-                  <Label htmlFor="completed">Mark as Completed</Label>
-                </div>
-                <div>
-                  <Label>Description *</Label>
-                  <Textarea 
-                    rows={3}
-                    value={form.description} 
-                    onChange={e => setForm({ ...form, description: e.target.value })} 
-                  />
-                </div>
-                <div>
-                  <Label>Additional Info (Optional)</Label>
-                  <Textarea 
-                    rows={2}
-                    value={form.additionalInfo} 
-                    onChange={e => setForm({ ...form, additionalInfo: e.target.value })} 
-                  />
-                </div>
-                <Button className="w-full" onClick={handleSave}>Submit Report</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Reports List */}

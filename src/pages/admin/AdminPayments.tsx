@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Plus, ExternalLink, Trash2 } from "lucide-react";
 import { format } from "date-fns";
+import { ExportButtons } from "@/components/ExportButtons";
+import { EXPORT_COLUMNS } from "@/lib/exportUtils";
 
 const AdminPayments = () => {
   const { payments, addPayment, deletePayment } = useAdminData();
@@ -59,57 +61,64 @@ const AdminPayments = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Payment Records</h2>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Payment
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Payment Record</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label>Date *</Label>
-                  <Input
-                    type="date"
-                    value={form.date}
-                    onChange={(e) => setForm({ ...form, date: e.target.value })}
-                  />
+          <div className="flex gap-2">
+            <ExportButtons
+              portal="Admin"
+              type="Payments"
+              columns={EXPORT_COLUMNS.payments}
+              data={payments}
+            />
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Payment
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Payment Record</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Date *</Label>
+                    <Input
+                      type="date"
+                      value={form.date}
+                      onChange={(e) => setForm({ ...form, date: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Purpose *</Label>
+                    <Input
+                      value={form.purpose}
+                      onChange={(e) => setForm({ ...form, purpose: e.target.value })}
+                      placeholder="Enter purpose of payment"
+                    />
+                  </div>
+                  <div>
+                    <Label>Amount (₹) *</Label>
+                    <Input
+                      type="number"
+                      value={form.amount}
+                      onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                      placeholder="Enter amount"
+                    />
+                  </div>
+                  <div>
+                    <Label>Upload Document</Label>
+                    <Input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={handleFileUpload}
+                    />
+                  </div>
+                  <Button onClick={handleSubmit} className="w-full">Save Payment</Button>
                 </div>
-                <div>
-                  <Label>Purpose *</Label>
-                  <Input
-                    value={form.purpose}
-                    onChange={(e) => setForm({ ...form, purpose: e.target.value })}
-                    placeholder="Enter purpose of payment"
-                  />
-                </div>
-                <div>
-                  <Label>Amount (₹) *</Label>
-                  <Input
-                    type="number"
-                    value={form.amount}
-                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                    placeholder="Enter amount"
-                  />
-                </div>
-                <div>
-                  <Label>Upload Document</Label>
-                  <Input
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={handleFileUpload}
-                  />
-                </div>
-                <Button onClick={handleSubmit} className="w-full">Save Payment</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
-
         <div className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>

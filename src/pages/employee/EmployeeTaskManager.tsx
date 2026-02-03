@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, Plus, ListTodo, Clock } from "lucide-react";
+import { ExportButtons } from "@/components/ExportButtons";
+import { EXPORT_COLUMNS } from "@/lib/exportUtils";
 
 const EmployeeTaskManager = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
@@ -77,8 +79,14 @@ const EmployeeTaskManager = () => {
           {/* Assigned Tasks */}
           <TabsContent value="assigned">
             <Card className="card-corporate">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Tasks from Director</CardTitle>
+                <ExportButtons
+                  portal="Employee"
+                  type="AssignedTasks"
+                  columns={EXPORT_COLUMNS.tasks}
+                  data={assignedTasks.map(t => ({ ...t, employeeName }))}
+                />
               </CardHeader>
               <CardContent>
                 {assignedTasks.length === 0 ? (
@@ -158,36 +166,44 @@ const EmployeeTaskManager = () => {
             <Card className="card-corporate">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>My Personal Tasks</CardTitle>
-                <Dialog open={taskDialog} onOpenChange={setTaskDialog}>
-                  <DialogTrigger asChild>
-                    <Button size="sm">
-                      <Plus className="h-4 w-4 mr-1" /> Add Task
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>New Personal Task</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Task Name</Label>
-                        <Input 
-                          value={taskForm.subject} 
-                          onChange={e => setTaskForm({ ...taskForm, subject: e.target.value })} 
-                        />
+                <div className="flex gap-2">
+                  <ExportButtons
+                    portal="Employee"
+                    type="PersonalTasks"
+                    columns={EXPORT_COLUMNS.personalTasks}
+                    data={personalTasks}
+                  />
+                  <Dialog open={taskDialog} onOpenChange={setTaskDialog}>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-1" /> Add Task
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>New Personal Task</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Task Name</Label>
+                          <Input 
+                            value={taskForm.subject} 
+                            onChange={e => setTaskForm({ ...taskForm, subject: e.target.value })} 
+                          />
+                        </div>
+                        <div>
+                          <Label>Description</Label>
+                          <Textarea 
+                            rows={4}
+                            value={taskForm.description} 
+                            onChange={e => setTaskForm({ ...taskForm, description: e.target.value })} 
+                          />
+                        </div>
+                        <Button className="w-full" onClick={handleAddTask}>Create Task</Button>
                       </div>
-                      <div>
-                        <Label>Description</Label>
-                        <Textarea 
-                          rows={4}
-                          value={taskForm.description} 
-                          onChange={e => setTaskForm({ ...taskForm, description: e.target.value })} 
-                        />
-                      </div>
-                      <Button className="w-full" onClick={handleAddTask}>Create Task</Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardHeader>
               <CardContent>
                 {personalTasks.length === 0 ? (

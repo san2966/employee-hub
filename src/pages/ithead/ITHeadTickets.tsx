@@ -13,6 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Ticket, CheckCircle, Search, Filter } from "lucide-react";
 import { format } from "date-fns";
+import { ExportButtons } from "@/components/ExportButtons";
+import { EXPORT_COLUMNS } from "@/lib/exportUtils";
 
 interface TicketRecord {
   id: string;
@@ -237,6 +239,12 @@ const ITHeadTickets = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <ExportButtons
+                portal="ITHead"
+                type="Tickets"
+                columns={EXPORT_COLUMNS.tickets}
+                data={filteredTickets}
+              />
             </div>
           </CardContent>
         </Card>

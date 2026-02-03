@@ -21,6 +21,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { FileText, Download, Search, Filter, Receipt, Plane, X } from "lucide-react";
+import { ExportButtons } from "@/components/ExportButtons";
+import { EXPORT_COLUMNS } from "@/lib/exportUtils";
 
 const MONTHS = [
   { value: "1", label: "January" },
@@ -201,6 +203,13 @@ const Vouchers = () => {
                 <Button variant="outline" size="icon" onClick={clearVoucherFilters}>
                   <X className="h-4 w-4" />
                 </Button>
+
+                <ExportButtons
+                  portal="Accounts"
+                  type="Vouchers"
+                  columns={EXPORT_COLUMNS.vouchers}
+                  data={filteredVouchers}
+                />
               </div>
 
               {/* Table */}
@@ -335,6 +344,13 @@ const Vouchers = () => {
                 <Button variant="outline" size="icon" onClick={clearTravelFilters}>
                   <X className="h-4 w-4" />
                 </Button>
+
+                <ExportButtons
+                  portal="Accounts"
+                  type="TravelExpenses"
+                  columns={EXPORT_COLUMNS.travelExpenses}
+                  data={filteredTravelExpenses}
+                />
               </div>
 
               {/* Table */}

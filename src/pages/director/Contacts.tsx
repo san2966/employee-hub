@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Users, Mail, Phone, Building, Trash2 } from "lucide-react";
+import { ExportButtons } from "@/components/ExportButtons";
+import { EXPORT_COLUMNS } from "@/lib/exportUtils";
 
 const Contacts = () => {
   const { toast } = useToast();
@@ -92,7 +94,13 @@ const Contacts = () => {
         </div>
 
         {/* Add Contact Button */}
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          <ExportButtons
+            portal="Director"
+            type="Contacts"
+            columns={EXPORT_COLUMNS.contacts}
+            data={filteredContacts}
+          />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gradient-primary">

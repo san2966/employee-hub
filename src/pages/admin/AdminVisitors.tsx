@@ -11,6 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Trash2 } from "lucide-react";
 import { format } from "date-fns";
+import { ExportButtons } from "@/components/ExportButtons";
+import { EXPORT_COLUMNS } from "@/lib/exportUtils";
 
 const purposeOptions = ["Meeting", "Presentation", "VIP", "Business Related", "Other"];
 
@@ -101,6 +103,12 @@ const AdminVisitors = () => {
                 Add Visitor
               </Button>
             </DialogTrigger>
+          <ExportButtons
+            portal="Admin"
+            type="Visitors"
+            columns={EXPORT_COLUMNS.visitors}
+            data={filteredVisitors}
+          />
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Add Visitor - Step {step}/2</DialogTitle>
