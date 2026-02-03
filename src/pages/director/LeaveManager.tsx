@@ -29,6 +29,8 @@ import {
   Plus,
   Minus
 } from "lucide-react";
+import { ExportButtons } from "@/components/ExportButtons";
+import { EXPORT_COLUMNS } from "@/lib/exportUtils";
 
 const LeaveManager = () => {
   const { toast } = useToast();
@@ -246,6 +248,13 @@ const LeaveManager = () => {
             <RefreshCcw className="h-4 w-4" />
             Refresh
           </Button>
+
+          <ExportButtons
+            portal="Director"
+            type="Leaves"
+            columns={EXPORT_COLUMNS.leaves}
+            data={filteredLeaves}
+          />
         </div>
 
         {/* Tabs by Type */}

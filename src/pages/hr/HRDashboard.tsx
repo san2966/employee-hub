@@ -11,6 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ExportButtons } from "@/components/ExportButtons";
+import { EXPORT_COLUMNS } from "@/lib/exportUtils";
 
 const HRDashboard = () => {
   const navigate = useNavigate();
@@ -66,9 +68,17 @@ const HRDashboard = () => {
 
         {/* Employee List */}
         <div className="bg-card rounded-xl border shadow-sm">
-          <div className="p-6 border-b">
-            <h3 className="text-lg font-semibold text-foreground">Employee List</h3>
-            <p className="text-sm text-muted-foreground">Click on employee name to view details</p>
+          <div className="p-6 border-b flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">Employee List</h3>
+              <p className="text-sm text-muted-foreground">Click on employee name to view details</p>
+            </div>
+            <ExportButtons
+              portal="HR"
+              type="Employees"
+              columns={EXPORT_COLUMNS.employees}
+              data={employees}
+            />
           </div>
           
           {employees.length === 0 ? (

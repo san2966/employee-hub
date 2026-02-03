@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText } from "lucide-react";
+import { ExportButtons } from "@/components/ExportButtons";
+import { EXPORT_COLUMNS } from "@/lib/exportUtils";
 
 const Reports = () => {
   const { employees, tasks } = useDirectorData();
@@ -60,6 +62,30 @@ const Reports = () => {
 
         {/* Reports Table */}
         <div className="card-corporate overflow-hidden">
+          <div className="flex justify-between items-center p-4 border-b">
+            <h3 className="font-semibold">Reports ({filteredTasks.length})</h3>
+            <ExportButtons
+              portal="Director"
+              type="Reports"
+              columns={[
+                { key: "employeeName", header: "Employee Name" },
+                { key: "date", header: "Date" },
+                { key: "department", header: "Department" },
+                { key: "task", header: "Task" },
+                { key: "status", header: "Status" },
+                { key: "description", header: "Description" },
+              ]}
+              data={filteredTasks.map(task => ({
+                employeeName: getEmployeeName(task.employeeId),
+                date: new Date(task.createdAt).toLocaleDateString(),
+                department: getEmployeeDepartment(task.employeeId),
+                task: task.subject,
+                status: task.status.replace("-", " "),
+                description: task.description,
+              }))}
+              dateRange={{ from: filterDate || undefined }}
+            />
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-muted/50">

@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, CheckCircle, Clock, XCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { ExportButtons } from "@/components/ExportButtons";
+import { EXPORT_COLUMNS } from "@/lib/exportUtils";
 
 const TaskManager = () => {
   const { toast } = useToast();
@@ -80,9 +82,28 @@ const TaskManager = () => {
     setEditingTask(null);
   };
 
+  // Prepare export data
+  const allTasksWithEmployeeInfo = tasks.map(task => {
+    const emp = employees.find(e => e.id === task.employeeId);
+    return {
+      ...task,
+      employeeName: emp?.name || "Unknown",
+    };
+  });
+
   return (
     <DirectorLayout title="Task Manager">
       <div className="space-y-4">
+        {/* Export buttons */}
+        <div className="flex justify-end">
+          <ExportButtons
+            portal="Director"
+            type="Tasks"
+            columns={EXPORT_COLUMNS.tasks}
+            data={allTasksWithEmployeeInfo}
+          />
+        </div>
+
         {employees.length === 0 ? (
           <div className="card-corporate p-12 text-center">
             <p className="text-muted-foreground">No employees registered via HR Login</p>

@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plane, CreditCard, Plus, Download, Receipt } from "lucide-react";
+import { ExportButtons } from "@/components/ExportButtons";
+import { EXPORT_COLUMNS } from "@/lib/exportUtils";
 
 const EmployeePayments = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
@@ -76,7 +78,6 @@ const EmployeePayments = () => {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: "travel" | "misc") => {
     const file = e.target.files?.[0];
     if (file) {
-      // In production, upload to storage and get URL
       const url = URL.createObjectURL(file);
       if (type === "travel") {
         setTravelForm({ ...travelForm, receiptUrl: url });
@@ -107,72 +108,80 @@ const EmployeePayments = () => {
             <Card className="card-corporate">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Travel Expenses</CardTitle>
-                <Dialog open={travelDialog} onOpenChange={setTravelDialog}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" /> Add
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Travel Expense</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>From *</Label>
-                          <Input 
-                            value={travelForm.from} 
-                            onChange={e => setTravelForm({ ...travelForm, from: e.target.value })} 
-                            placeholder="Source location"
-                          />
+                <div className="flex gap-2">
+                  <ExportButtons
+                    portal="Employee"
+                    type="TravelExpenses"
+                    columns={EXPORT_COLUMNS.travelExpenses}
+                    data={travelExpenses.map(t => ({ ...t, employeeName }))}
+                  />
+                  <Dialog open={travelDialog} onOpenChange={setTravelDialog}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" /> Add
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add Travel Expense</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>From *</Label>
+                            <Input 
+                              value={travelForm.from} 
+                              onChange={e => setTravelForm({ ...travelForm, from: e.target.value })} 
+                              placeholder="Source location"
+                            />
+                          </div>
+                          <div>
+                            <Label>To *</Label>
+                            <Input 
+                              value={travelForm.to} 
+                              onChange={e => setTravelForm({ ...travelForm, to: e.target.value })} 
+                              placeholder="Destination"
+                            />
+                          </div>
                         </div>
                         <div>
-                          <Label>To *</Label>
-                          <Input 
-                            value={travelForm.to} 
-                            onChange={e => setTravelForm({ ...travelForm, to: e.target.value })} 
-                            placeholder="Destination"
+                          <Label>Purpose of Travelling *</Label>
+                          <Textarea 
+                            value={travelForm.purpose} 
+                            onChange={e => setTravelForm({ ...travelForm, purpose: e.target.value })} 
                           />
                         </div>
-                      </div>
-                      <div>
-                        <Label>Purpose of Travelling *</Label>
-                        <Textarea 
-                          value={travelForm.purpose} 
-                          onChange={e => setTravelForm({ ...travelForm, purpose: e.target.value })} 
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>Date *</Label>
+                            <Input 
+                              type="date"
+                              value={travelForm.date} 
+                              onChange={e => setTravelForm({ ...travelForm, date: e.target.value })} 
+                            />
+                          </div>
+                          <div>
+                            <Label>Amount (₹) *</Label>
+                            <Input 
+                              type="number"
+                              value={travelForm.amount} 
+                              onChange={e => setTravelForm({ ...travelForm, amount: e.target.value })} 
+                            />
+                          </div>
+                        </div>
                         <div>
-                          <Label>Date *</Label>
+                          <Label>Upload Document (Receipt)</Label>
                           <Input 
-                            type="date"
-                            value={travelForm.date} 
-                            onChange={e => setTravelForm({ ...travelForm, date: e.target.value })} 
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={e => handleFileUpload(e, "travel")}
                           />
                         </div>
-                        <div>
-                          <Label>Amount (₹) *</Label>
-                          <Input 
-                            type="number"
-                            value={travelForm.amount} 
-                            onChange={e => setTravelForm({ ...travelForm, amount: e.target.value })} 
-                          />
-                        </div>
+                        <Button className="w-full" onClick={handleTravelSave}>Save Expense</Button>
                       </div>
-                      <div>
-                        <Label>Upload Document (Receipt)</Label>
-                        <Input 
-                          type="file"
-                          accept="image/*,.pdf"
-                          onChange={e => handleFileUpload(e, "travel")}
-                        />
-                      </div>
-                      <Button className="w-full" onClick={handleTravelSave}>Save Expense</Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardHeader>
               <CardContent>
                 {travelExpenses.length === 0 ? (
@@ -224,52 +233,60 @@ const EmployeePayments = () => {
             <Card className="card-corporate">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Miscellaneous Payments</CardTitle>
-                <Dialog open={miscDialog} onOpenChange={setMiscDialog}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" /> Add
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Miscellaneous Payment</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Date *</Label>
-                        <Input 
-                          type="date"
-                          value={miscForm.date} 
-                          onChange={e => setMiscForm({ ...miscForm, date: e.target.value })} 
-                        />
+                <div className="flex gap-2">
+                  <ExportButtons
+                    portal="Employee"
+                    type="Payments"
+                    columns={EXPORT_COLUMNS.miscPayments}
+                    data={miscPayments}
+                  />
+                  <Dialog open={miscDialog} onOpenChange={setMiscDialog}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" /> Add
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add Miscellaneous Payment</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Date *</Label>
+                          <Input 
+                            type="date"
+                            value={miscForm.date} 
+                            onChange={e => setMiscForm({ ...miscForm, date: e.target.value })} 
+                          />
+                        </div>
+                        <div>
+                          <Label>Purpose of Payment *</Label>
+                          <Textarea 
+                            value={miscForm.purpose} 
+                            onChange={e => setMiscForm({ ...miscForm, purpose: e.target.value })} 
+                          />
+                        </div>
+                        <div>
+                          <Label>Amount (₹) *</Label>
+                          <Input 
+                            type="number"
+                            value={miscForm.amount} 
+                            onChange={e => setMiscForm({ ...miscForm, amount: e.target.value })} 
+                          />
+                        </div>
+                        <div>
+                          <Label>Upload Document</Label>
+                          <Input 
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={e => handleFileUpload(e, "misc")}
+                          />
+                        </div>
+                        <Button className="w-full" onClick={handleMiscSave}>Save Payment</Button>
                       </div>
-                      <div>
-                        <Label>Purpose of Payment *</Label>
-                        <Textarea 
-                          value={miscForm.purpose} 
-                          onChange={e => setMiscForm({ ...miscForm, purpose: e.target.value })} 
-                        />
-                      </div>
-                      <div>
-                        <Label>Amount (₹) *</Label>
-                        <Input 
-                          type="number"
-                          value={miscForm.amount} 
-                          onChange={e => setMiscForm({ ...miscForm, amount: e.target.value })} 
-                        />
-                      </div>
-                      <div>
-                        <Label>Upload Document</Label>
-                        <Input 
-                          type="file"
-                          accept="image/*,.pdf"
-                          onChange={e => handleFileUpload(e, "misc")}
-                        />
-                      </div>
-                      <Button className="w-full" onClick={handleMiscSave}>Save Payment</Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardHeader>
               <CardContent>
                 {miscPayments.length === 0 ? (

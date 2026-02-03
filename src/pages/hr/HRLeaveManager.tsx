@@ -44,6 +44,8 @@ import {
   CheckCircle,
   XCircle
 } from "lucide-react";
+import { ExportButtons } from "@/components/ExportButtons";
+import { EXPORT_COLUMNS } from "@/lib/exportUtils";
 
 const HRLeaveManager = () => {
   const { 
@@ -258,6 +260,13 @@ const HRLeaveManager = () => {
             <RefreshCcw className="h-4 w-4" />
             Refresh
           </Button>
+
+          <ExportButtons
+            portal="HR"
+            type="Leaves"
+            columns={EXPORT_COLUMNS.leaves}
+            data={filteredLeaves}
+          />
         </div>
 
         {/* Tabs */}
