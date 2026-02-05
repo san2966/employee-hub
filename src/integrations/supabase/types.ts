@@ -897,6 +897,38 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          employee_id: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          employee_id?: string | null
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          employee_id?: string | null
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicles: {
         Row: {
           assigned_to: string | null
@@ -1015,7 +1047,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_employee_id: { Args: { user_uuid: string }; Returns: string }
+      get_user_role: { Args: { user_uuid: string }; Returns: string }
+      has_role: {
+        Args: { check_role: string; user_uuid: string }
+        Returns: boolean
+      }
     }
     Enums: {
       leave_status: "pending" | "approved" | "rejected"

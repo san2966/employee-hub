@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const roleLabels: Record<string, string> = {
   director: "Director",
@@ -19,11 +20,11 @@ const Login = () => {
   const { role } = useParams<{ role: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login, isLoading } = useAuth();
   
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const roleLabel = role ? roleLabels[role] || "User" : "User";
 
@@ -62,23 +63,39 @@ const Login = () => {
       return;
     }
 
-    setIsLoading(true);
+    const result = await login(username, password, role);
 
-    // Simulate authentication delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // For demo purposes, accept any valid input
-    toast({
-      title: "Login Successful",
-      description: `Welcome back, ${roleLabel}!`,
-    });
-
-    // Store role in sessionStorage for demo
-    sessionStorage.setItem("userRole", role || "employee");
-    sessionStorage.setItem("userName", username);
-    
-    navigate(`/dashboard/${role}`);
-    setIsLoading(false);
+    if (result.success) {
+      toast({
+        title: "Login Successful",
+        description: `Welcome back, ${roleLabel}!`,
+      });
+      
+      // Navigate to appropriate dashboard based on role
+      const userRole = result.user?.role || role;
+      switch (userRole) {
+        case "director":
+          navigate("/director/dashboard");
+          break;
+        case "hr":
+          navigate("/hr/dashboard");
+          break;
+        case "accounts":
+          navigate("/accounts/dashboard");
+          break;
+        case "admin":
+          navigate("/admin/dashboard");
+          break;
+        case "ithead":
+          navigate("/ithead/dashboard");
+          break;
+        case "employee":
+          navigate("/employee/dashboard");
+          break;
+        default:
+          navigate(`/dashboard/${userRole}`);
+      }
+    }
   };
 
   return (

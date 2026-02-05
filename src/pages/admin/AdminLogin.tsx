@@ -5,20 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-
-const ADMIN_CREDENTIALS = {
-  email: "admin@vmcc-india.com",
-  password: "Admin@100",
-};
+import { useAuth } from "@/hooks/useAuth";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login, isLoading } = useAuth();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,36 +28,15 @@ const AdminLogin = () => {
       return;
     }
 
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
+    const result = await login(email, password, "admin");
 
-    if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
-      const adminData = {
-        role: "admin",
-        email,
-        firstName: "",
-        lastName: "",
-        displayName: "Administrator",
-        mobile: "",
-        designation: "System Administrator",
-        profileImage: "",
-        loginTime: new Date().toISOString(),
-      };
-      sessionStorage.setItem("adminSession", JSON.stringify(adminData));
-      
+    if (result.success) {
       toast({
         title: "Login Successful",
         description: "Welcome, Administrator!",
       });
       navigate("/admin/dashboard");
-    } else {
-      toast({
-        title: "Login Failed",
-        description: "Invalid credentials. Please try again.",
-        variant: "destructive",
-      });
     }
-    setIsLoading(false);
   };
 
   return (

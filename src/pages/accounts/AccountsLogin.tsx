@@ -5,49 +5,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-
-const VALID_CREDENTIALS = {
-  username: "accounts@vmcc-india.com",
-  password: "Account@1"
-};
+import { useAuth } from "@/hooks/useAuth";
 
 const AccountsLogin = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const result = await login(username, password, "accounts");
 
-    if (username === VALID_CREDENTIALS.username && password === VALID_CREDENTIALS.password) {
-      sessionStorage.setItem("accountsUser", JSON.stringify({ 
-        username, 
-        role: "accounts",
-        loginTime: new Date().toISOString()
-      }));
-      
+    if (result.success) {
       toast({
         title: "Login Successful",
         description: "Welcome to Accounts Dashboard",
       });
-      
       navigate("/accounts/dashboard");
-    } else {
-      toast({
-        title: "Login Failed",
-        description: "Invalid username or password",
-        variant: "destructive",
-      });
     }
-
-    setIsLoading(false);
   };
 
   return (
