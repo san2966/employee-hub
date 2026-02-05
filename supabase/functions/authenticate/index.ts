@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,17 +12,58 @@ interface AuthRequest {
   expectedRole?: string;
 }
 
-// Simple password comparison - in production, use proper bcrypt
-async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  // For bcrypt hashes, we need to use the Web Crypto API approach
-  // This is a simplified check - passwords should be properly hashed
-  if (hash.startsWith("$2")) {
-    // This is a bcrypt hash - for now, do direct comparison with stored password
-    // In production, the portal_users.password_hash should contain bcrypt hashes
-    // and we'd use a proper bcrypt library
-    return password === hash;
+// Rate limiting - in-memory store (resets on function cold start)
+const rateLimiter = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT = 5; // 5 attempts per window
+const RATE_WINDOW = 15 * 60 * 1000; // 15 minutes
+
+function checkRateLimit(key: string): boolean {
+  const now = Date.now();
+  const record = rateLimiter.get(key);
+  
+  if (!record || now > record.resetTime) {
+    rateLimiter.set(key, { count: 1, resetTime: now + RATE_WINDOW });
+    return true;
   }
-  return password === hash;
+  
+  if (record.count >= RATE_LIMIT) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
+function resetRateLimit(key: string): void {
+  rateLimiter.delete(key);
+}
+
+// Secure password verification using bcrypt
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  try {
+    // Check if it's a bcrypt hash (starts with $2a$, $2b$, or $2y$)
+    if (hash.startsWith("$2")) {
+      return await bcrypt.compare(password, hash);
+    }
+    // For legacy plaintext passwords, do constant-time comparison
+    // Note: This is a migration path - all passwords should be hashed
+    if (password.length !== hash.length) {
+      return false;
+    }
+    let result = 0;
+    for (let i = 0; i < password.length; i++) {
+      result |= password.charCodeAt(i) ^ hash.charCodeAt(i);
+    }
+    return result === 0;
+  } catch (error) {
+    console.error("Password verification error:", error);
+    return false;
+  }
+}
+
+// Hash a password for storage (exported for user creation/password change)
+async function hashPassword(password: string): Promise<string> {
+  return await bcrypt.hash(password);
 }
 
 Deno.serve(async (req) => {
@@ -69,6 +111,16 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Rate limiting check - use username as key to prevent brute force per user
+    const rateLimitKey = `auth:${username.toLowerCase()}`;
+    if (!checkRateLimit(rateLimitKey)) {
+      console.log("Rate limit exceeded for user:", username);
+      return new Response(
+        JSON.stringify({ error: "Too many login attempts. Please try again later." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Fetch user from portal_users
     const { data: portalUser, error: fetchError } = await supabase
       .from("portal_users")
@@ -86,7 +138,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify password
+    // Verify password using bcrypt
     const passwordValid = await verifyPassword(password, portalUser.password_hash);
     
     if (!passwordValid) {
@@ -96,6 +148,9 @@ Deno.serve(async (req) => {
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Successful login - reset rate limit
+    resetRateLimit(rateLimitKey);
 
     // Optionally verify expected role matches
     if (expectedRole && portalUser.role !== expectedRole) {

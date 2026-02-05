@@ -35,17 +35,17 @@ export const useSupabaseITHead = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchPasswords = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("it_passwords")
-      .select("*")
-      .order("created_at", { ascending: false });
+    // Use the encrypt-password edge function to get decrypted passwords
+    const { data, error } = await supabase.functions.invoke('encrypt-password', {
+      body: { action: 'get' }
+    });
 
     if (error) {
       console.error("Error fetching passwords:", error);
       return;
     }
 
-    setPasswords(data || []);
+    setPasswords(data?.passwords || []);
   }, []);
 
   const fetchNetworkImages = useCallback(async () => {
@@ -95,21 +95,19 @@ export const useSupabaseITHead = () => {
     loadData();
   }, [fetchPasswords, fetchNetworkImages, fetchTelephoneEntries]);
 
-  // Password operations
+  // Password operations - use edge function for secure encryption
   const addPassword = async (portal: string, username: string, password: string) => {
-    const { data, error } = await supabase
-      .from("it_passwords")
-      .insert({
-        portal,
-        username,
-        encrypted_password: password, // In production, encrypt this
-      })
-      .select()
-      .single();
+    const { data, error } = await supabase.functions.invoke('encrypt-password', {
+      body: { action: 'save', portal, username, password }
+    });
 
     if (error) {
       console.error("Error adding password:", error);
       throw error;
+    }
+
+    if (data?.error) {
+      throw new Error(data.error);
     }
 
     await fetchPasswords();
@@ -117,6 +115,21 @@ export const useSupabaseITHead = () => {
   };
 
   const updatePassword = async (id: string, updates: { portal?: string; username?: string; encrypted_password?: string }) => {
+    // For password updates, we need to re-encrypt if password changed
+    if (updates.encrypted_password) {
+      // Use edge function to encrypt the new password
+      const { data: encryptData, error: encryptError } = await supabase.functions.invoke('encrypt-password', {
+        body: { action: 'encrypt', password: updates.encrypted_password }
+      });
+
+      if (encryptError || encryptData?.error) {
+        console.error("Error encrypting password:", encryptError || encryptData?.error);
+        throw new Error(encryptError?.message || encryptData?.error);
+      }
+
+      updates.encrypted_password = encryptData.encrypted;
+    }
+
     const { error } = await supabase
       .from("it_passwords")
       .update(updates)
@@ -131,14 +144,17 @@ export const useSupabaseITHead = () => {
   };
 
   const deletePassword = async (id: string) => {
-    const { error } = await supabase
-      .from("it_passwords")
-      .delete()
-      .eq("id", id);
+    const { data, error } = await supabase.functions.invoke('encrypt-password', {
+      body: { action: 'delete', id }
+    });
 
     if (error) {
       console.error("Error deleting password:", error);
       throw error;
+    }
+
+    if (data?.error) {
+      throw new Error(data.error);
     }
 
     await fetchPasswords();
