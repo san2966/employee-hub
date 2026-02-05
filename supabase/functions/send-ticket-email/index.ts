@@ -124,6 +124,27 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // HTML escape function to prevent XSS in emails
+    const escapeHtml = (text: string): string => {
+      const htmlEntities: Record<string, string> = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      };
+      return text.replace(/[&<>"']/g, (char) => htmlEntities[char] || char);
+    };
+
+    // Sanitize all user inputs
+    const safeTicketNumber = escapeHtml(ticketNumber || '');
+    const safeName = escapeHtml(name || '');
+    const safeEmail = escapeHtml(email || '');
+    const safeSubject = escapeHtml(subject || '');
+    const safeDescription = escapeHtml(description || '');
+    const safeProblemCause = escapeHtml(problemCause || 'Not specified');
+    const safeSolutionProvided = escapeHtml(solutionProvided || 'Not specified');
+
     const sendEmail = async (to: string[], emailSubject: string, html: string) => {
       const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -145,14 +166,14 @@ const handler = async (req: Request): Promise<Response> => {
       // Send to IT Head
       const itHeadResponse = await sendEmail(
         [itHeadEmail],
-        `New Support Ticket: ${ticketNumber} - ${subject}`,
+        `New Support Ticket: ${safeTicketNumber} - ${safeSubject}`,
         `
           <h1>New Support Ticket Received</h1>
-          <p><strong>Ticket Number:</strong> ${ticketNumber}</p>
-          <p><strong>From:</strong> ${name} (${email})</p>
-          <p><strong>Subject:</strong> ${subject}</p>
+          <p><strong>Ticket Number:</strong> ${safeTicketNumber}</p>
+          <p><strong>From:</strong> ${safeName} (${safeEmail})</p>
+          <p><strong>Subject:</strong> ${safeSubject}</p>
           <p><strong>Description:</strong></p>
-          <p>${description}</p>
+          <p>${safeDescription}</p>
           <hr>
           <p>Please login to the IT Head portal to manage this ticket.</p>
         `
@@ -162,13 +183,13 @@ const handler = async (req: Request): Promise<Response> => {
       // Send confirmation to user
       const userResponse = await sendEmail(
         [email],
-        `Ticket Received: ${ticketNumber}`,
+        `Ticket Received: ${safeTicketNumber}`,
         `
           <h1>Your Support Request Has Been Received</h1>
-          <p>Dear ${name},</p>
+          <p>Dear ${safeName},</p>
           <p>Thank you for contacting us. Your support ticket has been created.</p>
-          <p><strong>Ticket Number:</strong> ${ticketNumber}</p>
-          <p><strong>Subject:</strong> ${subject}</p>
+          <p><strong>Ticket Number:</strong> ${safeTicketNumber}</p>
+          <p><strong>Subject:</strong> ${safeSubject}</p>
           <p>Our IT team will review your request and get back to you soon.</p>
           <hr>
           <p>Best regards,<br>IT Support Team</p>
@@ -180,17 +201,17 @@ const handler = async (req: Request): Promise<Response> => {
       // Send resolution notification to user
       const userResponse = await sendEmail(
         [email],
-        `Ticket Resolved: ${ticketNumber}`,
+        `Ticket Resolved: ${safeTicketNumber}`,
         `
           <h1>Your Support Ticket Has Been Resolved</h1>
-          <p>Dear ${name},</p>
+          <p>Dear ${safeName},</p>
           <p>Your support ticket has been resolved.</p>
-          <p><strong>Ticket Number:</strong> ${ticketNumber}</p>
-          <p><strong>Subject:</strong> ${subject}</p>
+          <p><strong>Ticket Number:</strong> ${safeTicketNumber}</p>
+          <p><strong>Subject:</strong> ${safeSubject}</p>
           <h3>Problem Cause:</h3>
-          <p>${problemCause || "Not specified"}</p>
+          <p>${safeProblemCause}</p>
           <h3>Solution Provided:</h3>
-          <p>${solutionProvided || "Not specified"}</p>
+          <p>${safeSolutionProvided}</p>
           <hr>
           <p>If you have any further questions, please submit a new ticket.</p>
           <p>Best regards,<br>IT Support Team</p>
