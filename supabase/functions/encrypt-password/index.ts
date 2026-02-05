@@ -127,6 +127,23 @@ Deno.serve(async (req) => {
     const body: PasswordRequest = await req.json();
     const { action, password, portal, username, id } = body;
 
+    // Input validation helper
+    const sanitizeText = (text: string | undefined, maxLen: number): string | undefined => {
+      if (!text) return undefined;
+      // Remove HTML tags and limit length
+      return text.replace(/<[^>]*>/g, '').trim().substring(0, maxLen);
+    };
+
+    const isValidText = (text: string | undefined): boolean => {
+      if (!text) return false;
+      // Allow alphanumeric, spaces, and common punctuation only
+      return /^[a-zA-Z0-9\s._@#$%&*()-]+$/.test(text);
+    };
+
+    // Sanitize inputs
+    const sanitizedPortal = sanitizeText(portal, 100);
+    const sanitizedUsername = sanitizeText(username, 100);
+
     switch (action) {
       case "encrypt": {
         if (!password) {
@@ -164,19 +181,27 @@ Deno.serve(async (req) => {
       }
 
       case "save": {
-        if (!portal || !username || !password) {
+        if (!sanitizedPortal || !sanitizedUsername || !password) {
           return new Response(
             JSON.stringify({ error: "Portal, username, and password are required" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
+
+        if (!isValidText(sanitizedPortal) || !isValidText(sanitizedUsername)) {
+          return new Response(
+            JSON.stringify({ error: "Invalid input format" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
         const encrypted = await encryptPassword(password);
         
         const { data, error } = await supabase
           .from("it_passwords")
           .insert({
-            portal,
-            username,
+            portal: sanitizedPortal,
+            username: sanitizedUsername,
             encrypted_password: encrypted,
           })
           .select()
@@ -251,10 +276,9 @@ Deno.serve(async (req) => {
         );
     }
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("Error in encrypt-password function:", error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "An error occurred. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

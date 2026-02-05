@@ -48,14 +48,23 @@ Deno.serve(async (req) => {
 
     if (username.length < 3 || username.length > 100) {
       return new Response(
-        JSON.stringify({ error: "Invalid username format" }),
+        JSON.stringify({ error: "Invalid credentials" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate username format: alphanumeric, underscore, hyphen, dot only
+    const usernameRegex = /^[a-zA-Z0-9._-]+$/;
+    if (!usernameRegex.test(username)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid credentials" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     if (password.length < 6 || password.length > 100) {
       return new Response(
-        JSON.stringify({ error: "Invalid password format" }),
+        JSON.stringify({ error: "Invalid credentials" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -212,10 +221,9 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("Error in authenticate function:", error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "An error occurred. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
