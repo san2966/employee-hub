@@ -1,1 +1,13 @@
 project_id = "pkpqkclxphkmftmysmmx"
+
+[functions.authenticate]
+verify_jwt = false
+
+[functions.encrypt-password]
+verify_jwt = false
+
+[functions.reset-yearly-leaves]
+verify_jwt = false
+
+[functions.send-ticket-email]
+verify_jwt = false

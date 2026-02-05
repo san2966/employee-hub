@@ -5,49 +5,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-
-const HR_CREDENTIALS = {
-  email: "hr@vmcc-india.com",
-  password: "Hr@12345",
-};
+import { useAuth } from "@/hooks/useAuth";
 
 const HRLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login, isLoading } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
+    const result = await login(email, password, "hr");
 
-    if (email === HR_CREDENTIALS.email && password === HR_CREDENTIALS.password) {
-      const session = {
-        email,
-        loginTime: new Date().toISOString(),
-      };
-      sessionStorage.setItem("hrSession", JSON.stringify(session));
-      
+    if (result.success) {
       toast({
         title: "Login Successful",
         description: "Welcome to HR Dashboard",
       });
-      
       navigate("/hr/dashboard");
-    } else {
-      toast({
-        title: "Login Failed",
-        description: "Invalid credentials. Please try again.",
-        variant: "destructive",
-      });
     }
-
-    setIsLoading(false);
   };
 
   return (

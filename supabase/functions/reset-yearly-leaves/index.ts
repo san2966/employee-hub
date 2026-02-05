@@ -2,7 +2,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
 interface Employee {
@@ -13,6 +14,28 @@ interface Employee {
   exchange_leave_balance: number;
 }
 
+async function verifyAdminOrHRRole(supabase: ReturnType<typeof createClient>, authHeader: string): Promise<boolean> {
+  if (!authHeader?.startsWith("Bearer ")) {
+    return false;
+  }
+
+  const token = authHeader.replace("Bearer ", "");
+  const { data, error } = await supabase.auth.getUser(token);
+  
+  if (error || !data.user) {
+    return false;
+  }
+
+  // Check user_roles table
+  const { data: roleData } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", data.user.id)
+    .single();
+
+  return roleData?.role === "admin" || roleData?.role === "hr" || roleData?.role === "director";
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -21,7 +44,28 @@ Deno.serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    
+    const authHeader = req.headers.get("Authorization") || "";
+    const cronSecret = req.headers.get("X-Cron-Secret");
+    
+    // Allow cron jobs with secret or authenticated admin/HR users
+    const isCronJob = cronSecret === Deno.env.get("CRON_SECRET");
+    
+    if (!isCronJob) {
+      const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } }
+      });
+      
+      const hasAccess = await verifyAdminOrHRRole(supabaseAuth, authHeader);
+      if (!hasAccess) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized - Admin, HR, or Director access required" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
