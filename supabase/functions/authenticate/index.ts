@@ -38,23 +38,29 @@ function resetRateLimit(key: string): void {
   rateLimiter.delete(key);
 }
 
-// Secure password verification using bcrypt
-async function verifyPassword(password: string, hash: string): Promise<boolean> {
+// Verify password using database crypt() function for pgcrypto compatibility
+async function verifyPasswordWithDb(
+  supabase: ReturnType<typeof createClient>,
+  password: string, 
+  hash: string
+): Promise<boolean> {
   try {
-    // Check if it's a bcrypt hash (starts with $2a$, $2b$, or $2y$)
-    if (hash.startsWith("$2")) {
-      return await bcrypt.compare(password, hash);
-    }
-    // For legacy plaintext passwords, do constant-time comparison
-    // Note: This is a migration path - all passwords should be hashed
-    if (password.length !== hash.length) {
+    // Use database crypt function to verify password
+    const { data, error } = await supabase.rpc('verify_password', {
+      input_password: password,
+      stored_hash: hash
+    });
+    
+    if (error) {
+      console.error("Password verification error:", error);
+      // Fallback to Deno bcrypt for legacy hashes
+      if (hash.startsWith("$2")) {
+        return await bcrypt.compare(password, hash);
+      }
       return false;
     }
-    let result = 0;
-    for (let i = 0; i < password.length; i++) {
-      result |= password.charCodeAt(i) ^ hash.charCodeAt(i);
-    }
-    return result === 0;
+    
+    return data === true;
   } catch (error) {
     console.error("Password verification error:", error);
     return false;
