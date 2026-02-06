@@ -5,57 +5,41 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { User, Lock, ArrowLeft, Briefcase } from "lucide-react";
 
 const EmployeeLogin = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login, isLoading } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    // Get employees from HR data
-    const hrEmployees = JSON.parse(localStorage.getItem("hr_employees") || "[]");
-    
-    // Find matching employee
-    const employee = hrEmployees.find(
-      (emp: { username: string; password: string }) => 
-        emp.username === username && emp.password === password
-    );
+    const result = await login(username, password, "employee");
 
-    setTimeout(() => {
-      setIsLoading(false);
+    if (result.success) {
+      // Store employee session for compatibility
+      const session = {
+        employeeId: result.user?.employee_id,
+        employeeName: result.user?.username,
+        username: result.user?.username,
+        firstName: "",
+        lastName: "",
+        photo: "",
+        designation: "",
+      };
+      sessionStorage.setItem("employee_session", JSON.stringify(session));
+      sessionStorage.setItem("employeeSession", JSON.stringify(session));
       
-      if (employee) {
-        // Create session
-        const session = {
-          employeeId: employee.id,
-          employeeName: employee.name,
-          username: employee.username,
-          firstName: employee.name?.split(" ")[0] || "",
-          lastName: employee.name?.split(" ").slice(1).join(" ") || "",
-          photo: employee.photo,
-          designation: employee.designation,
-        };
-        sessionStorage.setItem("employee_session", JSON.stringify(session));
-        
-        toast({
-          title: "Login Successful",
-          description: `Welcome back, ${employee.name}!`,
-        });
-        navigate("/employee/dashboard");
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Login Failed",
-          description: "Invalid username or password. Please contact HR if you need access.",
-        });
-      }
-    }, 1000);
+      toast({
+        title: "Login Successful",
+        description: `Welcome back!`,
+      });
+      navigate("/employee/dashboard");
+    }
   };
 
   return (
@@ -97,8 +81,8 @@ const EmployeeLogin = () => {
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="username"
-                  type="email"
-                  placeholder="your.email@vmcc-india.com"
+                  type="text"
+                  placeholder="Enter your username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="pl-10"

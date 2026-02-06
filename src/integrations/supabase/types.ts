@@ -1053,6 +1053,10 @@ export type Database = {
         Args: { check_role: string; user_uuid: string }
         Returns: boolean
       }
+      verify_password: {
+        Args: { input_password: string; stored_hash: string }
+        Returns: boolean
+      }
     }
     Enums: {
       leave_status: "pending" | "approved" | "rejected"

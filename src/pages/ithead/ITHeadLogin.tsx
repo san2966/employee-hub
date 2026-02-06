@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 
@@ -12,9 +13,9 @@ const ITHeadLogin = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login, isLoading } = useAuth();
 
   const validateInput = (value: string, fieldName: string): boolean => {
     if (!value.trim()) {
@@ -43,15 +44,16 @@ const ITHeadLogin = () => {
       return;
     }
 
-    setIsLoading(true);
+    const result = await login(username, password, "ithead");
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Validate credentials
-    if (username === "it-head@vmcc-india.com" && password === "IT-Head@100") {
+    if (result.success) {
       sessionStorage.setItem("userRole", "ithead");
-      sessionStorage.setItem("userName", username);
+      sessionStorage.setItem("userName", result.user?.username || username);
+      sessionStorage.setItem("itHeadSession", JSON.stringify({
+        role: "ithead",
+        username: result.user?.username || username,
+        loginTime: new Date().toISOString(),
+      }));
       
       toast({
         title: "Login Successful",
@@ -59,15 +61,7 @@ const ITHeadLogin = () => {
       });
       
       navigate("/ithead/dashboard");
-    } else {
-      toast({
-        title: "Login Failed",
-        description: "Invalid username or password",
-        variant: "destructive",
-      });
     }
-
-    setIsLoading(false);
   };
 
   return (
@@ -92,8 +86,8 @@ const ITHeadLogin = () => {
                 <Label htmlFor="username">Username</Label>
                 <Input
                   id="username"
-                  type="email"
-                  placeholder="Enter your email"
+                  type="text"
+                  placeholder="Enter your username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   disabled={isLoading}

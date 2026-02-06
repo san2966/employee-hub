@@ -144,8 +144,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify password using bcrypt
-    const passwordValid = await verifyPassword(password, portalUser.password_hash);
+    // Verify password using database function
+    const passwordValid = await verifyPasswordWithDb(supabase, password, portalUser.password_hash);
     
     if (!passwordValid) {
       console.log("Invalid password for user:", username);
