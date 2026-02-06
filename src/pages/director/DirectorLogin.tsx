@@ -5,44 +5,62 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-
-const DIRECTOR_CREDENTIALS = {
-  username: "director@vmcc-india.com",
-  password: "Director@100",
-};
+import { useAuth } from "@/hooks/useAuth";
 
 const DirectorLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login, isLoading } = useAuth();
   
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+
+  const validateInput = (value: string, fieldName: string): boolean => {
+    if (!value.trim()) {
+      toast({
+        title: "Validation Error",
+        description: `${fieldName} is required`,
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (value.length < 3) {
+      toast({
+        title: "Validation Error",
+        description: `${fieldName} must be at least 3 characters`,
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (value.length > 50) {
+      toast({
+        title: "Validation Error",
+        description: `${fieldName} must be less than 50 characters`,
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!username.trim() || !password.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Please enter both username and password",
-        variant: "destructive",
-      });
+    if (!validateInput(username, "Username") || !validateInput(password, "Password")) {
       return;
     }
 
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
+    const result = await login(username, password, "director");
 
-    if (username === DIRECTOR_CREDENTIALS.username && password === DIRECTOR_CREDENTIALS.password) {
-      // Store director session
+    if (result.success) {
+      // Store director session for layout component compatibility
       const directorData = {
         role: "director",
-        email: username,
+        email: result.user?.username || username,
         firstName: "",
         lastName: "",
-        displayName: "User",
+        displayName: "Director",
         mobile: "",
         designation: "Director",
         profileImage: "",
@@ -55,14 +73,7 @@ const DirectorLogin = () => {
         description: "Welcome, Director!",
       });
       navigate("/director/dashboard");
-    } else {
-      toast({
-        title: "Login Failed",
-        description: "Invalid credentials. Please try again.",
-        variant: "destructive",
-      });
     }
-    setIsLoading(false);
   };
 
   return (
@@ -89,14 +100,15 @@ const DirectorLogin = () => {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="username">Email / Username</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
                 id="username"
-                type="email"
-                placeholder="Enter your email"
+                type="text"
+                placeholder="Enter your username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="h-11"
+                maxLength={50}
                 autoComplete="username"
               />
             </div>
@@ -111,6 +123,7 @@ const DirectorLogin = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-11 pr-10"
+                  maxLength={50}
                   autoComplete="current-password"
                 />
                 <button
