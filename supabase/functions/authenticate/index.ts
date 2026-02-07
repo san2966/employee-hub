@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (username.length < 3 || username.length > 100) {
+    if (username.length < 2 || username.length > 100) {
       return new Response(
         JSON.stringify({ error: "Invalid credentials" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
