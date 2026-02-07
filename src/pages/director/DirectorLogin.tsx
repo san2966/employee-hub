@@ -25,10 +25,10 @@ const DirectorLogin = () => {
       });
       return false;
     }
-    if (value.length < 3) {
+    if (value.length < 2) {
       toast({
         title: "Validation Error",
-        description: `${fieldName} must be at least 3 characters`,
+        description: `${fieldName} must be at least 2 characters`,
         variant: "destructive",
       });
       return false;
