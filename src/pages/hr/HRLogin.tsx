@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
 const HRLogin = () => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ const HRLogin = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const result = await login(email, password, "hr");
+    const result = await login(username, password, "hr");
 
     if (result.success) {
       toast({
@@ -47,13 +47,13 @@ const HRLogin = () => {
           {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="username">Email Address</Label>
               <Input
-                id="email"
+                id="username"
                 type="email"
                 placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
                 className="h-12"
               />

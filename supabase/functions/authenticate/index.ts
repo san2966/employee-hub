@@ -101,8 +101,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate username format: alphanumeric, underscore, hyphen, dot only
-    const usernameRegex = /^[a-zA-Z0-9._-]+$/;
+    // Validate username format: alphanumeric, underscore, hyphen, dot, @ (for emails)
+    const usernameRegex = /^[a-zA-Z0-9._@-]+$/;
     if (!usernameRegex.test(username)) {
       return new Response(
         JSON.stringify({ error: "Invalid credentials" }),
