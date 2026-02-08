@@ -45,7 +45,7 @@ const AccountsLogin = () => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">Email Address</Label>
               <Input
                 id="username"
                 type="email"

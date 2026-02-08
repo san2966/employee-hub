@@ -83,11 +83,11 @@ const ITHeadLogin = () => {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">Email Address</Label>
                 <Input
                   id="username"
-                  type="text"
-                  placeholder="Enter your username"
+                  type="email"
+                  placeholder="Enter your email"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   disabled={isLoading}

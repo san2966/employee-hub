@@ -33,10 +33,10 @@ const DirectorLogin = () => {
       });
       return false;
     }
-    if (value.length > 50) {
+    if (value.length > 100) {
       toast({
         title: "Validation Error",
-        description: `${fieldName} must be less than 50 characters`,
+        description: `${fieldName} must be less than 100 characters`,
         variant: "destructive",
       });
       return false;
@@ -100,15 +100,15 @@ const DirectorLogin = () => {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">Email Address</Label>
               <Input
                 id="username"
-                type="text"
-                placeholder="Enter your username"
+                type="email"
+                placeholder="Enter your email"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="h-11"
-                maxLength={50}
+                maxLength={100}
                 autoComplete="username"
               />
             </div>
