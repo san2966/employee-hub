@@ -1503,6 +1503,8 @@ export type Database = {
         | "admin"
         | "ithead"
         | "employee"
+        | "tender_head"
+        | "tender_executive"
       task_priority: "low" | "medium" | "high"
       task_status: "pending" | "in_progress" | "completed"
     }
@@ -1642,6 +1644,8 @@ export const Constants = {
         "admin",
         "ithead",
         "employee",
+        "tender_head",
+        "tender_executive",
       ],
       task_priority: ["low", "medium", "high"],
       task_status: ["pending", "in_progress", "completed"],
