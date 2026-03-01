@@ -852,6 +852,440 @@ export type Database = {
         }
         Relationships: []
       }
+      tender_companies: {
+        Row: {
+          address: string
+          created_at: string
+          created_by: string | null
+          director_name: string
+          gst_number: string
+          id: string
+          logo_url: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          created_by?: string | null
+          director_name: string
+          gst_number: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          created_by?: string | null
+          director_name?: string
+          gst_number?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tender_company_links: {
+        Row: {
+          company_id: string
+          created_at: string
+          financial_status: string | null
+          id: string
+          technical_status: string | null
+          tender_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          financial_status?: string | null
+          id?: string
+          technical_status?: string | null
+          tender_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          financial_status?: string | null
+          id?: string
+          technical_status?: string | null
+          tender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tender_company_links_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "tender_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tender_company_links_tender_id_fkey"
+            columns: ["tender_id"]
+            isOneToOne: false
+            referencedRelation: "tenders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tender_contacts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          department: string | null
+          designation: string | null
+          email: string | null
+          id: string
+          name: string
+          organization: string | null
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          designation?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          organization?: string | null
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          designation?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          organization?: string | null
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tender_documents: {
+        Row: {
+          bid_date: string
+          bid_number: string
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          organization: string
+          pdf_url: string | null
+          product: string
+          updated_at: string
+        }
+        Insert: {
+          bid_date: string
+          bid_number: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          organization: string
+          pdf_url?: string | null
+          product: string
+          updated_at?: string
+        }
+        Update: {
+          bid_date?: string
+          bid_number?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          organization?: string
+          pdf_url?: string | null
+          product?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tender_notes: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tender_products: {
+        Row: {
+          atc_url: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          image_url: string | null
+          manufacturer: string
+          model: string
+          name: string
+          specification: string | null
+          updated_at: string
+        }
+        Insert: {
+          atc_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          manufacturer: string
+          model: string
+          name: string
+          specification?: string | null
+          updated_at?: string
+        }
+        Update: {
+          atc_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          manufacturer?: string
+          model?: string
+          name?: string
+          specification?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tender_reminders: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          reminder_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          reminder_date: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          reminder_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tender_research: {
+        Row: {
+          amount: number | null
+          close_date: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          open_date: string | null
+          organization: string
+          subject: string
+          tender_id_ref: string
+          tender_number: string
+          user_name: string
+        }
+        Insert: {
+          amount?: number | null
+          close_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          open_date?: string | null
+          organization: string
+          subject: string
+          tender_id_ref: string
+          tender_number: string
+          user_name: string
+        }
+        Update: {
+          amount?: number | null
+          close_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          open_date?: string | null
+          organization?: string
+          subject?: string
+          tender_id_ref?: string
+          tender_number?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
+      tender_settings: {
+        Row: {
+          created_at: string
+          designation: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          mobile: string | null
+          profile_photo_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          designation?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          mobile?: string | null
+          profile_photo_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          designation?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          mobile?: string | null
+          profile_photo_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tender_tasks: {
+        Row: {
+          assigned_by: string
+          assigned_to: string
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          report: string | null
+          status: string
+          task_title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_by: string
+          assigned_to: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          report?: string | null
+          status?: string
+          task_title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_by?: string
+          assigned_to?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          report?: string | null
+          status?: string
+          task_title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tenders: {
+        Row: {
+          bg: boolean | null
+          bg_doc_url: string | null
+          created_at: string
+          created_by: string | null
+          dd: boolean | null
+          dd_doc_url: string | null
+          document_id: string | null
+          emd: boolean | null
+          emd_doc_url: string | null
+          epbg: boolean | null
+          epbg_doc_url: string | null
+          financial_opening_date: string | null
+          gras: boolean | null
+          gras_doc_url: string | null
+          id: string
+          status: string
+          technical_opening_date: string | null
+          updated_at: string
+          work_order_url: string | null
+        }
+        Insert: {
+          bg?: boolean | null
+          bg_doc_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          dd?: boolean | null
+          dd_doc_url?: string | null
+          document_id?: string | null
+          emd?: boolean | null
+          emd_doc_url?: string | null
+          epbg?: boolean | null
+          epbg_doc_url?: string | null
+          financial_opening_date?: string | null
+          gras?: boolean | null
+          gras_doc_url?: string | null
+          id?: string
+          status?: string
+          technical_opening_date?: string | null
+          updated_at?: string
+          work_order_url?: string | null
+        }
+        Update: {
+          bg?: boolean | null
+          bg_doc_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          dd?: boolean | null
+          dd_doc_url?: string | null
+          document_id?: string | null
+          emd?: boolean | null
+          emd_doc_url?: string | null
+          epbg?: boolean | null
+          epbg_doc_url?: string | null
+          financial_opening_date?: string | null
+          gras?: boolean | null
+          gras_doc_url?: string | null
+          id?: string
+          status?: string
+          technical_opening_date?: string | null
+          updated_at?: string
+          work_order_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenders_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "tender_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tickets: {
         Row: {
           created_at: string
