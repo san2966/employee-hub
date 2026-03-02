@@ -5,7 +5,8 @@ import {
   Calculator, 
   User, 
   Shield, 
-  Server 
+  Server,
+  FileText,
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -52,6 +53,13 @@ const loginOptions = [
     icon: Server,
     role: "ithead",
     customPath: "/login/ithead",
+  },
+  {
+    title: "Tender Login",
+    description: "Manage tenders, bids and procurement",
+    icon: FileText,
+    role: "tender",
+    customPath: "/login/tender",
   },
 ];
 

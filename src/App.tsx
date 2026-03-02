@@ -66,6 +66,11 @@ import EmployeeDashboard from "./pages/dashboards/EmployeeDashboard";
 import AdminDashboard from "./pages/dashboards/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
+// Tender Module
+import TenderLogin from "./pages/tender/TenderLogin";
+import TenderDashboard from "./pages/tender/TenderDashboard";
+import TenderSettings from "./pages/tender/TenderSettings";
+
 // IT Head Module
 import ITHeadLogin from "./pages/ithead/ITHeadLogin";
 import ITHeadDashboard from "./pages/ithead/ITHeadDashboard";
@@ -150,6 +155,11 @@ const App = () => (
           <Route path="/ithead/network" element={<ITHeadNetwork />} />
           <Route path="/ithead/telephone" element={<ITHeadTelephone />} />
           <Route path="/ithead/settings" element={<ITHeadSettings />} />
+          
+          {/* Tender Routes */}
+          <Route path="/login/tender" element={<TenderLogin />} />
+          <Route path="/tender/dashboard" element={<TenderDashboard />} />
+          <Route path="/tender/settings" element={<TenderSettings />} />
           
           {/* Other Dashboards */}
           <Route path="/dashboard/hr" element={<HRDashboard />} />

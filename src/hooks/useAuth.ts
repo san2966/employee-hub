@@ -111,6 +111,7 @@ export const useAuth = () => {
     sessionStorage.removeItem("directorSession");
     sessionStorage.removeItem("employeeSession");
     sessionStorage.removeItem("itHeadSession");
+    sessionStorage.removeItem("tenderSession");
   }, []);
 
   const checkAuth = useCallback(async () => {
