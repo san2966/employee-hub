@@ -69,7 +69,17 @@ import NotFound from "./pages/NotFound";
 // Tender Module
 import TenderLogin from "./pages/tender/TenderLogin";
 import TenderDashboard from "./pages/tender/TenderDashboard";
+import TenderTaskManager from "./pages/tender/TenderTaskManager";
+import TenderCompanyManager from "./pages/tender/TenderCompanyManager";
+import TenderDocuments from "./pages/tender/TenderDocuments";
+import TenderManager from "./pages/tender/TenderManager";
+import TenderProductManager from "./pages/tender/TenderProductManager";
+import TenderResearch from "./pages/tender/TenderResearch";
+import TenderContacts from "./pages/tender/TenderContacts";
 import TenderSettings from "./pages/tender/TenderSettings";
+
+// Director Tender Monitor
+import TenderMonitor from "./pages/director/TenderMonitor";
 
 // IT Head Module
 import ITHeadLogin from "./pages/ithead/ITHeadLogin";
@@ -106,6 +116,7 @@ const App = () => (
           <Route path="/director/requirements" element={<Requirements />} />
           <Route path="/director/products" element={<ProductManager />} />
           <Route path="/director/contacts" element={<Contacts />} />
+          <Route path="/director/tender-monitor" element={<TenderMonitor />} />
           <Route path="/director/settings" element={<Settings />} />
           
           {/* HR Routes */}
@@ -159,6 +170,13 @@ const App = () => (
           {/* Tender Routes */}
           <Route path="/login/tender" element={<TenderLogin />} />
           <Route path="/tender/dashboard" element={<TenderDashboard />} />
+          <Route path="/tender/tasks" element={<TenderTaskManager />} />
+          <Route path="/tender/companies" element={<TenderCompanyManager />} />
+          <Route path="/tender/documents" element={<TenderDocuments />} />
+          <Route path="/tender/tenders" element={<TenderManager />} />
+          <Route path="/tender/products" element={<TenderProductManager />} />
+          <Route path="/tender/research" element={<TenderResearch />} />
+          <Route path="/tender/contacts" element={<TenderContacts />} />
           <Route path="/tender/settings" element={<TenderSettings />} />
           
           {/* Other Dashboards */}

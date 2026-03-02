@@ -32,6 +32,7 @@ const menuItems = [
   { icon: Package, label: "Requirements", path: "/director/requirements" },
   { icon: Package, label: "Product Manager", path: "/director/products" },
   { icon: Users, label: "Contacts", path: "/director/contacts" },
+  { icon: FileText, label: "Tender Monitor", path: "/director/tender-monitor" },
   { icon: Settings, label: "Settings", path: "/director/settings" },
 ];
 
