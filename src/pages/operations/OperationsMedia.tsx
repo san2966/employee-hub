@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Download, Image } from "lucide-react";
+import { Plus, Search, Download, Image, Eye } from "lucide-react";
 
 const mediaTypes = ["Video", "Images", "Newspaper Article", "Other"];
 
@@ -45,9 +45,21 @@ const OperationsMedia = () => {
     setUploading(false);
   };
 
-  const handleDownload = async (item: any) => {
+  const handlePreview = async (item: any) => {
     const url = await getSignedUrl(item.file_url);
     if (url) window.open(url, "_blank");
+  };
+
+  const handleDownload = async (item: any) => {
+    const url = await getSignedUrl(item.file_url);
+    if (url) {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = item.product_name || item.media_type || "media";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   const products = [...new Set(media.data.filter((m: any) => m.product_name).map((m: any) => m.product_name))];
@@ -102,9 +114,14 @@ const OperationsMedia = () => {
               <p className="text-xs text-muted-foreground">{m.media_type}</p>
               {m.product_name && <p className="font-medium text-foreground">{m.product_name}</p>}
               {m.description && <p className="text-sm text-muted-foreground">{m.description}</p>}
-              <Button size="sm" variant="outline" className="w-full" onClick={() => handleDownload(m)}>
-                <Download className="h-3 w-3 mr-1" />Download
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => handlePreview(m)}>
+                  <Eye className="h-3 w-3 mr-1" />Preview
+                </Button>
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => handleDownload(m)}>
+                  <Download className="h-3 w-3 mr-1" />Download
+                </Button>
+              </div>
             </div>
           ))}
         </div>
