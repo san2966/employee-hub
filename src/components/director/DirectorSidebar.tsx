@@ -44,6 +44,7 @@ const DirectorSidebar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { hasNew, markViewed } = useDirectorNotifications();
 
   const sessionData = sessionStorage.getItem("directorSession");
   const session: DirectorSession = sessionData 
@@ -54,6 +55,11 @@ const DirectorSidebar = () => {
     sessionStorage.removeItem("directorSession");
     navigate("/");
   };
+
+  // Mark current page as viewed whenever route changes
+  useEffect(() => {
+    markViewed(location.pathname);
+  }, [location.pathname, markViewed]);
 
   const isActive = (path: string) => location.pathname === path;
 
