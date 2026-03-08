@@ -54,11 +54,23 @@ const AdminVehicles = () => {
     amount: "",
   });
 
-  const hrEmployees = JSON.parse(localStorage.getItem("hr_employees") || "[]");
-  const allEmployees = [
-    ...employees.map(e => ({ id: e.id, name: e.name })),
-    ...hrEmployees.map((e: any) => ({ id: e.id, name: `${e.firstName} ${e.lastName}` })),
-  ];
+  const [dbEmployees, setDbEmployees] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      const { data, error } = await supabase
+        .from("employees")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("name");
+      if (!error && data) {
+        setDbEmployees(data);
+      }
+    };
+    fetchEmployees();
+  }, []);
+
+  const allEmployees = dbEmployees;
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
