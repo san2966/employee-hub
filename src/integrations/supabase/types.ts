@@ -659,6 +659,321 @@ export type Database = {
         }
         Relationships: []
       }
+      operations_brochures: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          file_url: string | null
+          id: string
+          product_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          product_name: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          product_name?: string
+        }
+        Relationships: []
+      }
+      operations_events: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          event_date: string | null
+          event_time: string | null
+          id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          event_date?: string | null
+          event_time?: string | null
+          id?: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          event_date?: string | null
+          event_time?: string | null
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      operations_gr: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          department_name: string
+          file_url: string | null
+          gr_date: string
+          id: string
+          title: string
+          unique_code: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          department_name: string
+          file_url?: string | null
+          gr_date: string
+          id?: string
+          title: string
+          unique_code: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          department_name?: string
+          file_url?: string | null
+          gr_date?: string
+          id?: string
+          title?: string
+          unique_code?: string
+        }
+        Relationships: []
+      }
+      operations_inwards: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          date: string | null
+          document_type: string
+          e_office_number: string | null
+          file_url: string | null
+          id: string
+          organization_name: string
+          product_name: string
+          subject: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          date?: string | null
+          document_type: string
+          e_office_number?: string | null
+          file_url?: string | null
+          id?: string
+          organization_name: string
+          product_name: string
+          subject: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          date?: string | null
+          document_type?: string
+          e_office_number?: string | null
+          file_url?: string | null
+          id?: string
+          organization_name?: string
+          product_name?: string
+          subject?: string
+        }
+        Relationships: []
+      }
+      operations_media: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          file_url: string | null
+          id: string
+          media_type: string
+          product_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          media_type: string
+          product_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          media_type?: string
+          product_name?: string | null
+        }
+        Relationships: []
+      }
+      operations_notes: {
+        Row: {
+          content: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      operations_presentations: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          file_url: string | null
+          id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      operations_proposals: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          file_url: string | null
+          id: string
+          organization_name: string
+          product_name: string
+          reason: string | null
+          status: string
+          subject: string
+          to_sender: string
+          unique_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          file_url?: string | null
+          id?: string
+          organization_name: string
+          product_name: string
+          reason?: string | null
+          status?: string
+          subject: string
+          to_sender: string
+          unique_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          file_url?: string | null
+          id?: string
+          organization_name?: string
+          product_name?: string
+          reason?: string | null
+          status?: string
+          subject?: string
+          to_sender?: string
+          unique_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      operations_reminders: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          date_time: string
+          id: string
+          notified: boolean | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          date_time: string
+          id?: string
+          notified?: boolean | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          date_time?: string
+          id?: string
+          notified?: boolean | null
+          title?: string
+        }
+        Relationships: []
+      }
+      operations_settings: {
+        Row: {
+          created_at: string | null
+          designation: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          mobile: string | null
+          profile_photo_url: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          designation?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          mobile?: string | null
+          profile_photo_url?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          designation?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          mobile?: string | null
+          profile_photo_url?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       portal_users: {
         Row: {
           created_at: string | null
@@ -2037,6 +2352,7 @@ export type Database = {
         | "tender_head"
         | "tender_executive"
         | "purchase"
+        | "operations"
       task_priority: "low" | "medium" | "high"
       task_status: "pending" | "in_progress" | "completed"
     }
@@ -2179,6 +2495,7 @@ export const Constants = {
         "tender_head",
         "tender_executive",
         "purchase",
+        "operations",
       ],
       task_priority: ["low", "medium", "high"],
       task_status: ["pending", "in_progress", "completed"],
