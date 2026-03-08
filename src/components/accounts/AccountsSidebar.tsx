@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { usePortalNotifications } from "@/hooks/usePortalNotifications";
 import { 
   LayoutDashboard, 
   Receipt, 
@@ -14,6 +15,11 @@ const AccountsSidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasNew, markViewed } = usePortalNotifications("accounts");
+
+  useEffect(() => {
+    markViewed(location.pathname);
+  }, [location.pathname, markViewed]);
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/accounts/dashboard" },
@@ -30,11 +36,11 @@ const AccountsSidebar = () => {
   const handleNavigation = (path: string) => {
     navigate(path);
     setIsOpen(false);
+    markViewed(path);
   };
 
   return (
     <>
-      {/* Mobile Menu Button */}
       <Button
         variant="ghost"
         size="icon"
@@ -44,7 +50,6 @@ const AccountsSidebar = () => {
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </Button>
 
-      {/* Overlay */}
       {isOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -52,7 +57,6 @@ const AccountsSidebar = () => {
         />
       )}
 
-      {/* Sidebar */}
       <aside className={`
         fixed top-0 left-0 h-full w-64 bg-card border-r border-border z-40
         transform transition-transform duration-300 ease-in-out
@@ -60,13 +64,11 @@ const AccountsSidebar = () => {
         lg:translate-x-0 lg:static
       `}>
         <div className="flex flex-col h-full">
-          {/* Logo Area */}
           <div className="p-6 border-b border-border">
             <h1 className="text-xl font-bold text-primary">Employee Portal</h1>
             <p className="text-sm text-muted-foreground mt-1">Accounts Module</p>
           </div>
 
-          {/* Navigation */}
           <nav className="flex-1 p-4 space-y-2">
             {menuItems.map((item) => {
               const isActive = location.pathname === item.path;
@@ -76,7 +78,7 @@ const AccountsSidebar = () => {
                   onClick={() => handleNavigation(item.path)}
                   className={`
                     w-full flex items-center gap-3 px-4 py-3 rounded-lg
-                    transition-all duration-200 text-left
+                    transition-all duration-200 text-left relative
                     ${isActive 
                       ? "bg-primary text-primary-foreground shadow-md" 
                       : "hover:bg-muted text-foreground"
@@ -85,12 +87,14 @@ const AccountsSidebar = () => {
                 >
                   <item.icon className="h-5 w-5" />
                   <span className="font-medium">{item.label}</span>
+                  {hasNew[item.path] && !isActive && (
+                    <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-destructive animate-pulse" />
+                  )}
                 </button>
               );
             })}
           </nav>
 
-          {/* Logout Button */}
           <div className="p-4 border-t border-border">
             <button
               onClick={handleLogout}

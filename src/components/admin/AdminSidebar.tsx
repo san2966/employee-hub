@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { usePortalNotifications } from "@/hooks/usePortalNotifications";
 import {
   LayoutDashboard,
   CreditCard,
@@ -33,6 +34,11 @@ const AdminSidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasNew, markViewed } = usePortalNotifications("admin");
+
+  useEffect(() => {
+    markViewed(location.pathname);
+  }, [location.pathname, markViewed]);
 
   const handleLogout = () => {
     sessionStorage.removeItem("adminSession");
@@ -43,7 +49,6 @@ const AdminSidebar = () => {
 
   return (
     <>
-      {/* Mobile Menu Button */}
       <Button
         variant="ghost"
         size="icon"
@@ -53,7 +58,6 @@ const AdminSidebar = () => {
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </Button>
 
-      {/* Overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
@@ -61,7 +65,6 @@ const AdminSidebar = () => {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={cn(
           "fixed left-0 top-0 h-full w-64 bg-card border-r shadow-lg z-40 transform transition-transform duration-300 ease-in-out",
@@ -70,13 +73,11 @@ const AdminSidebar = () => {
         )}
       >
         <div className="flex flex-col h-full">
-          {/* Logo/Header */}
           <div className="p-6 border-b">
             <h2 className="text-xl font-bold text-primary">Admin Portal</h2>
             <p className="text-sm text-muted-foreground">Administration Panel</p>
           </div>
 
-          {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {menuItems.map((item) => (
               <button
@@ -84,9 +85,10 @@ const AdminSidebar = () => {
                 onClick={() => {
                   navigate(item.path);
                   setIsOpen(false);
+                  markViewed(item.path);
                 }}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors relative",
                   isActive(item.path)
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -94,11 +96,13 @@ const AdminSidebar = () => {
               >
                 <item.icon className="h-5 w-5" />
                 {item.label}
+                {hasNew[item.path] && !isActive(item.path) && (
+                  <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-destructive animate-pulse" />
+                )}
               </button>
             ))}
           </nav>
 
-          {/* Logout */}
           <div className="p-4 border-t">
             <button
               onClick={handleLogout}

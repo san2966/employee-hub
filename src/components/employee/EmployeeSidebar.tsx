@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { usePortalNotifications } from "@/hooks/usePortalNotifications";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { 
@@ -33,6 +34,11 @@ const EmployeeSidebar = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasNew, markViewed } = usePortalNotifications("employee");
+
+  useEffect(() => {
+    markViewed(location.pathname);
+  }, [location.pathname, markViewed]);
 
   const handleLogout = () => {
     sessionStorage.removeItem("employee_session");
@@ -42,6 +48,7 @@ const EmployeeSidebar = () => {
   const handleNavigation = (path: string) => {
     navigate(path);
     setOpen(false);
+    markViewed(path);
   };
 
   const SidebarContent = () => (
@@ -70,7 +77,7 @@ const EmployeeSidebar = () => {
               <li key={item.path}>
                 <button
                   onClick={() => handleNavigation(item.path)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 relative ${
                     isActive
                       ? "bg-primary text-primary-foreground shadow-md"
                       : "text-foreground/70 hover:bg-muted hover:text-foreground"
@@ -78,6 +85,9 @@ const EmployeeSidebar = () => {
                 >
                   <item.icon className="h-5 w-5" />
                   <span className="font-medium">{item.label}</span>
+                  {hasNew[item.path] && !isActive && (
+                    <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-destructive animate-pulse" />
+                  )}
                 </button>
               </li>
             );
@@ -100,7 +110,6 @@ const EmployeeSidebar = () => {
 
   return (
     <>
-      {/* Mobile trigger */}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="md:hidden fixed top-4 left-4 z-50">
@@ -112,7 +121,6 @@ const EmployeeSidebar = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Desktop sidebar */}
       <aside className="hidden md:flex w-72 h-screen bg-card border-r border-border flex-col fixed left-0 top-0">
         <SidebarContent />
       </aside>

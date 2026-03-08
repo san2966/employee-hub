@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { usePortalNotifications } from "@/hooks/usePortalNotifications";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -28,6 +29,11 @@ const PurchaseSidebar = ({ displayName, photoUrl }: PurchaseSidebarProps) => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasNew, markViewed } = usePortalNotifications("purchase");
+
+  useEffect(() => {
+    markViewed(location.pathname);
+  }, [location.pathname, markViewed]);
 
   const handleLogout = () => {
     sessionStorage.removeItem("purchaseSession");
@@ -38,6 +44,7 @@ const PurchaseSidebar = ({ displayName, photoUrl }: PurchaseSidebarProps) => {
   const handleNavigation = (path: string) => {
     navigate(path);
     setOpen(false);
+    markViewed(path);
   };
 
   const SidebarContent = () => (
@@ -58,7 +65,6 @@ const PurchaseSidebar = ({ displayName, photoUrl }: PurchaseSidebarProps) => {
         </div>
       </div>
 
-      {/* User Info */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
@@ -85,7 +91,7 @@ const PurchaseSidebar = ({ displayName, photoUrl }: PurchaseSidebarProps) => {
               <li key={item.path}>
                 <button
                   onClick={() => handleNavigation(item.path)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 relative ${
                     isActive
                       ? "bg-primary text-primary-foreground shadow-md"
                       : "text-foreground/70 hover:bg-muted hover:text-foreground"
@@ -93,6 +99,9 @@ const PurchaseSidebar = ({ displayName, photoUrl }: PurchaseSidebarProps) => {
                 >
                   <item.icon className="h-5 w-5" />
                   <span className="font-medium">{item.label}</span>
+                  {hasNew[item.path] && !isActive && (
+                    <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-destructive animate-pulse" />
+                  )}
                 </button>
               </li>
             );
