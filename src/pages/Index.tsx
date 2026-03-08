@@ -8,6 +8,7 @@ import {
   Server,
   FileText,
   ShoppingCart,
+  Briefcase,
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -68,6 +69,13 @@ const loginOptions = [
     icon: ShoppingCart,
     role: "purchase",
     customPath: "/login/purchase",
+  },
+  {
+    title: "Operations Login",
+    description: "Proposals, brochures, inwards and media",
+    icon: Briefcase,
+    role: "operations",
+    customPath: "/login/operations",
   },
 ];
 

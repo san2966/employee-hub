@@ -78,8 +78,9 @@ import TenderResearch from "./pages/tender/TenderResearch";
 import TenderContacts from "./pages/tender/TenderContacts";
 import TenderSettings from "./pages/tender/TenderSettings";
 
-// Director Tender Monitor
+// Director Tender Monitor & Record Management
 import TenderMonitor from "./pages/director/TenderMonitor";
+import DirectorRecordManagement from "./pages/director/RecordManagement";
 
 // IT Head Module
 import ITHeadLogin from "./pages/ithead/ITHeadLogin";
@@ -103,6 +104,16 @@ import PurchaseDocuments from "./pages/purchase/PurchaseDocuments";
 import PurchaseTechnicalSupport from "./pages/purchase/PurchaseTechnicalSupport";
 import PurchaseSettings from "./pages/purchase/PurchaseSettings";
 
+// Operations Module
+import OperationsLogin from "./pages/operations/OperationsLogin";
+import OperationsDashboard from "./pages/operations/OperationsDashboard";
+import OperationsProposals from "./pages/operations/OperationsProposals";
+import OperationsBrochures from "./pages/operations/OperationsBrochures";
+import OperationsInwards from "./pages/operations/OperationsInwards";
+import OperationsPresentations from "./pages/operations/OperationsPresentations";
+import OperationsMedia from "./pages/operations/OperationsMedia";
+import OperationsGR from "./pages/operations/OperationsGR";
+import OperationsSettings from "./pages/operations/OperationsSettings";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -129,6 +140,7 @@ const App = () => (
           <Route path="/director/products" element={<ProductManager />} />
           <Route path="/director/contacts" element={<Contacts />} />
           <Route path="/director/tender-monitor" element={<TenderMonitor />} />
+          <Route path="/director/records" element={<DirectorRecordManagement />} />
           <Route path="/director/settings" element={<Settings />} />
           
           {/* HR Routes */}
@@ -202,6 +214,17 @@ const App = () => (
           <Route path="/purchase/documents" element={<PurchaseDocuments />} />
           <Route path="/purchase/technical-support" element={<PurchaseTechnicalSupport />} />
           <Route path="/purchase/settings" element={<PurchaseSettings />} />
+          
+          {/* Operations Routes */}
+          <Route path="/login/operations" element={<OperationsLogin />} />
+          <Route path="/operations/dashboard" element={<OperationsDashboard />} />
+          <Route path="/operations/proposals" element={<OperationsProposals />} />
+          <Route path="/operations/brochures" element={<OperationsBrochures />} />
+          <Route path="/operations/inwards" element={<OperationsInwards />} />
+          <Route path="/operations/presentations" element={<OperationsPresentations />} />
+          <Route path="/operations/media" element={<OperationsMedia />} />
+          <Route path="/operations/gr" element={<OperationsGR />} />
+          <Route path="/operations/settings" element={<OperationsSettings />} />
           
           {/* Other Dashboards */}
           <Route path="/dashboard/hr" element={<HRDashboard />} />
