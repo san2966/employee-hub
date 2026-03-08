@@ -16,42 +16,16 @@ const TenderMonitor = () => {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const [docsRes, tendersRes, quotesRes] = await Promise.all([
+    const [docsRes, tendersRes] = await Promise.all([
       (supabase as any).from("tender_documents").select("*").order("created_at", { ascending: false }),
       (supabase as any).from("tenders").select("*").order("created_at", { ascending: false }),
-      (supabase as any).from("purchase_quotes").select("*").order("created_at", { ascending: false }),
     ]);
     setDocuments(docsRes.data || []);
     setTenders(tendersRes.data || []);
-    setQuotes(quotesRes.data || []);
     setLoading(false);
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
-
-  // Realtime for quotes
-  useEffect(() => {
-    const channel = supabase.channel("director_quotes_realtime").on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "purchase_quotes" },
-      () => { fetchAll(); }
-    ).subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [fetchAll]);
-
-  const handleApprove = async (quoteId: string) => {
-    await (supabase as any).from("purchase_quotes").update({ status: "Approved" }).eq("id", quoteId);
-    fetchAll();
-  };
-
-  const handleReject = async () => {
-    if (!rejectQuote) return;
-    await (supabase as any).from("purchase_quotes").update({ status: "Rejected", description: rejectDesc }).eq("id", rejectQuote.id);
-    setRejectOpen(false);
-    setRejectQuote(null);
-    setRejectDesc("");
-    fetchAll();
-  };
 
   const getTenderForDoc = (docId: string) => tenders.find((t: any) => t.document_id === docId);
 
