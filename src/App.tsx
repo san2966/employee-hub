@@ -91,7 +91,18 @@ import ITHeadNetwork from "./pages/ithead/ITHeadNetwork";
 import ITHeadTelephone from "./pages/ithead/ITHeadTelephone";
 import ITHeadSettings from "./pages/ithead/ITHeadSettings";
 
-const queryClient = new QueryClient();
+// Purchase Module
+import PurchaseLogin from "./pages/purchase/PurchaseLogin";
+import PurchaseDashboard from "./pages/purchase/PurchaseDashboard";
+import PurchaseTaskManager from "./pages/purchase/PurchaseTaskManager";
+import PurchaseQuotationManager from "./pages/purchase/PurchaseQuotationManager";
+import PurchaseProductManager from "./pages/purchase/PurchaseProductManager";
+import PurchaseContacts from "./pages/purchase/PurchaseContacts";
+import PurchaseDispatch from "./pages/purchase/PurchaseDispatch";
+import PurchaseDocuments from "./pages/purchase/PurchaseDocuments";
+import PurchaseTechnicalSupport from "./pages/purchase/PurchaseTechnicalSupport";
+import PurchaseSettings from "./pages/purchase/PurchaseSettings";
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
