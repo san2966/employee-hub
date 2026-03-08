@@ -98,6 +98,10 @@ const Login = () => {
           sessionStorage.setItem("purchaseSession", JSON.stringify({ role: "purchase", username }));
           navigate("/purchase/dashboard");
           break;
+        case "operations":
+          sessionStorage.setItem("operationsSession", JSON.stringify({ role: "operations", username }));
+          navigate("/operations/dashboard");
+          break;
         default:
           navigate(`/dashboard/${userRole}`);
       }
