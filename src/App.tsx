@@ -80,6 +80,7 @@ import TenderSettings from "./pages/tender/TenderSettings";
 
 // Director Tender Monitor & Record Management
 import TenderMonitor from "./pages/director/TenderMonitor";
+import DirectorQuotationManager from "./pages/director/QuotationManager";
 import DirectorRecordManagement from "./pages/director/RecordManagement";
 
 // IT Head Module
