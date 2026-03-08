@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminData } from "@/hooks/useAdminData";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,23 +53,11 @@ const AdminVehicles = () => {
     amount: "",
   });
 
-  const [dbEmployees, setDbEmployees] = useState<{ id: string; name: string }[]>([]);
-
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      const { data, error } = await supabase
-        .from("employees")
-        .select("id, name")
-        .eq("is_active", true)
-        .order("name");
-      if (!error && data) {
-        setDbEmployees(data);
-      }
-    };
-    fetchEmployees();
-  }, []);
-
-  const allEmployees = dbEmployees;
+  const hrEmployees = JSON.parse(localStorage.getItem("hr_employees") || "[]");
+  const allEmployees = [
+    ...employees.map(e => ({ id: e.id, name: e.name })),
+    ...hrEmployees.map((e: any) => ({ id: e.id, name: `${e.firstName} ${e.lastName}` })),
+  ];
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
