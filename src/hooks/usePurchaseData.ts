@@ -88,8 +88,8 @@ export const useUploadFile = () => {
       toast({ title: "Upload Error", description: error.message, variant: "destructive" });
       return null;
     }
-    const { data } = supabase.storage.from("purchase-files").getPublicUrl(path);
-    return data.publicUrl;
+    const { data } = await supabase.storage.from("purchase-files").createSignedUrl(path, 3600);
+    return data?.signedUrl || null;
   }, [toast]);
 
   return { upload };
