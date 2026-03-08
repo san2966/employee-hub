@@ -114,9 +114,14 @@ const OperationsMedia = () => {
               <p className="text-xs text-muted-foreground">{m.media_type}</p>
               {m.product_name && <p className="font-medium text-foreground">{m.product_name}</p>}
               {m.description && <p className="text-sm text-muted-foreground">{m.description}</p>}
-              <Button size="sm" variant="outline" className="w-full" onClick={() => handleDownload(m)}>
-                <Download className="h-3 w-3 mr-1" />Download
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => handlePreview(m)}>
+                  <Eye className="h-3 w-3 mr-1" />Preview
+                </Button>
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => handleDownload(m)}>
+                  <Download className="h-3 w-3 mr-1" />Download
+                </Button>
+              </div>
             </div>
           ))}
         </div>
