@@ -104,6 +104,16 @@ import PurchaseDocuments from "./pages/purchase/PurchaseDocuments";
 import PurchaseTechnicalSupport from "./pages/purchase/PurchaseTechnicalSupport";
 import PurchaseSettings from "./pages/purchase/PurchaseSettings";
 
+// Operations Module
+import OperationsLogin from "./pages/operations/OperationsLogin";
+import OperationsDashboard from "./pages/operations/OperationsDashboard";
+import OperationsProposals from "./pages/operations/OperationsProposals";
+import OperationsBrochures from "./pages/operations/OperationsBrochures";
+import OperationsInwards from "./pages/operations/OperationsInwards";
+import OperationsPresentations from "./pages/operations/OperationsPresentations";
+import OperationsMedia from "./pages/operations/OperationsMedia";
+import OperationsGR from "./pages/operations/OperationsGR";
+import OperationsSettings from "./pages/operations/OperationsSettings";
 const queryClient = new QueryClient();
 
 const App = () => (
