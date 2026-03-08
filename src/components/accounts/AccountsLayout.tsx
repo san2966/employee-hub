@@ -22,14 +22,22 @@ const AccountsLayout = ({ children, title }: AccountsLayoutProps) => {
 
   useEffect(() => {
     const accountsUser = sessionStorage.getItem("accountsUser");
-    if (!accountsUser) {
+    const authData = sessionStorage.getItem("authUser");
+    
+    if (accountsUser) {
+      const savedProfile = sessionStorage.getItem("accountsProfile");
+      if (savedProfile) {
+        setProfile(JSON.parse(savedProfile));
+      }
+    } else if (authData) {
+      const user = JSON.parse(authData);
+      if (user.role === "accounts") {
+        // Valid accounts session via unified login
+      } else {
+        navigate("/login/accounts");
+      }
+    } else {
       navigate("/login/accounts");
-      return;
-    }
-
-    const savedProfile = sessionStorage.getItem("accountsProfile");
-    if (savedProfile) {
-      setProfile(JSON.parse(savedProfile));
     }
   }, [navigate]);
 
