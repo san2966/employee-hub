@@ -185,7 +185,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    const passwordHash = await bcrypt.hash(password);
+    // Use pgcrypto via SQL to hash the password (bcrypt Worker not available in edge runtime)
+    const { data: hashResult, error: hashError } = await adminClient.rpc("hash_password", { raw_password: password });
+
+    if (hashError || !hashResult) {
+      console.error("Error hashing password:", hashError);
+      return new Response(JSON.stringify({ error: "Failed to process credentials" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const passwordHash = hashResult;
 
     const { data: employeeRow, error: employeeError } = await adminClient
       .from("employees")
