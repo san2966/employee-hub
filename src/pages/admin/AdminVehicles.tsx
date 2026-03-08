@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminData } from "@/hooks/useAdminData";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,10 +54,25 @@ const AdminVehicles = () => {
     amount: "",
   });
 
-  const hrEmployees = JSON.parse(localStorage.getItem("hr_employees") || "[]");
+  const [supabaseEmployees, setSupabaseEmployees] = useState<{id: string; name: string}[]>([]);
+
+  useEffect(() => {
+    const fetchHREmployees = async () => {
+      const { data } = await supabase
+        .from("employees")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("name");
+      if (data) {
+        setSupabaseEmployees(data.map(e => ({ id: e.id, name: e.name })));
+      }
+    };
+    fetchHREmployees();
+  }, []);
+
   const allEmployees = [
     ...employees.map(e => ({ id: e.id, name: e.name })),
-    ...hrEmployees.map((e: any) => ({ id: e.id, name: `${e.firstName} ${e.lastName}` })),
+    ...supabaseEmployees.filter(se => !employees.some(e => e.name === se.name)),
   ];
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
