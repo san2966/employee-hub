@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface Employee {
   id: string;
@@ -96,17 +97,31 @@ export const useHRData = () => {
     localStorage.setItem("director_employees", JSON.stringify(newEmployees));
   };
 
-  const addEmployee = (employee: Omit<Employee, "id" | "createdAt" | "leaveBalance">) => {
+  const addEmployee = async (employee: Omit<Employee, "id" | "createdAt" | "leaveBalance">) => {
+    const { data, error } = await supabase.functions.invoke("create-employee", {
+      body: employee,
+    });
+
+    if (error) {
+      console.error("Error creating employee account:", error);
+      throw new Error(error.message || "Failed to create employee account");
+    }
+
+    if (data?.error) {
+      throw new Error(data.error);
+    }
+
     const newEmployee: Employee = {
       ...employee,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
+      id: data?.employee?.id || crypto.randomUUID(),
+      createdAt: data?.employee?.created_at || new Date().toISOString(),
       leaveBalance: {
-        paid: 12,
-        medical: 6,
-        exchange: 0, // Exchange leaves start at 0
+        paid: data?.employee?.paid_leave_balance ?? 12,
+        medical: data?.employee?.medical_leave_balance ?? 6,
+        exchange: data?.employee?.exchange_leave_balance ?? 0,
       },
     };
+
     const updated = [...employees, newEmployee];
     saveEmployees(updated);
     return newEmployee;
