@@ -122,7 +122,7 @@ const EmployeeAdd = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateStep(4)) {
       toast({
         title: "Missing Information",
@@ -132,12 +132,21 @@ const EmployeeAdd = () => {
       return;
     }
 
-    addEmployee(formData);
-    toast({
-      title: "Employee Added",
-      description: `${formData.name} has been successfully added to the system.`,
-    });
-    navigate("/hr/dashboard");
+    try {
+      await addEmployee(formData);
+      toast({
+        title: "Employee Added",
+        description: `${formData.name} has been successfully added to the system.`,
+      });
+      navigate("/hr/dashboard");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to register employee account";
+      toast({
+        title: "Employee Registration Failed",
+        description: message,
+        variant: "destructive",
+      });
+    }
   };
 
   const renderStepContent = () => {
