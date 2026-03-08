@@ -164,22 +164,63 @@ const TenderManager = () => {
     const finApproved = links.filter((l: any) => l.financial_status === "accepted").map((l: any) => l.company?.name || "Unknown").join(", ");
 
     const pdf = new jsPDF();
-    pdf.setFontSize(16); pdf.text("Tender Report", 14, 20);
+    const pageWidth = pdf.internal.pageSize.getWidth();
+
+    // Header branding
+    pdf.setFillColor(30, 58, 138);
+    pdf.rect(0, 0, pageWidth, 28, "F");
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(18);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("VMCC", 14, 14);
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    pdf.text("Tender Report", 14, 22);
+    pdf.setFontSize(8);
+    pdf.text(`Generated: ${format(new Date(), "PPpp")}`, pageWidth - 14, 22, { align: "right" });
+
+    // Title
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(14);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(`Bid #${doc.bid_number}`, 14, 40);
+    pdf.setFontSize(9);
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(100, 100, 100);
+    pdf.text(`${doc.organization} • ${doc.product}`, 14, 47);
+
+    // Details table
     autoTable(pdf, {
-      startY: 30,
-      head: [["Subject", "Description"]],
+      startY: 54,
+      head: [["Field", "Details"]],
       body: [
-        ["Tender", doc.bid_number],
-        ["Organization Name", doc.organization],
-        ["Product", doc.product],
-        ["Bid Published", doc.bid_date],
-        ["Company Applied", allCompanies || "None"],
-        ["Technical Open", tender.technical_opening_date || "N/A"],
+        ["Bid Number", doc.bid_number || "-"],
+        ["Organization", doc.organization || "-"],
+        ["Product", doc.product || "-"],
+        ["Bid Published Date", doc.bid_date || "-"],
+        ["Companies Applied", allCompanies || "None"],
+        ["Technical Opening Date", tender.technical_opening_date || "N/A"],
         ["Technically Approved", techApproved || "None"],
+        ["Financial Opening Date", tender.financial_opening_date || "N/A"],
         ["Financially Approved", finApproved || "None"],
-        ["Work Order", tender.work_order_url || "N/A"],
+        ["Work Order", tender.work_order_url ? "Available" : "N/A"],
       ],
+      styles: { fontSize: 9, cellPadding: 4 },
+      headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [245, 247, 250] },
+      columnStyles: { 0: { fontStyle: "bold", cellWidth: 55 } },
+      margin: { left: 14, right: 14 },
     });
+
+    // Footer
+    const pageCount = pdf.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(8);
+      pdf.setTextColor(150, 150, 150);
+      pdf.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pdf.internal.pageSize.getHeight() - 10, { align: "center" });
+    }
+
     pdf.save(`Tender_${doc.bid_number}_${format(new Date(), "yyyyMMdd")}.pdf`);
   };
 
