@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useDirectorNotifications } from "@/hooks/useDirectorNotifications";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -43,6 +44,7 @@ const DirectorSidebar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { hasNew, markViewed } = useDirectorNotifications();
 
   const sessionData = sessionStorage.getItem("directorSession");
   const session: DirectorSession = sessionData 
@@ -53,6 +55,11 @@ const DirectorSidebar = () => {
     sessionStorage.removeItem("directorSession");
     navigate("/");
   };
+
+  // Mark current page as viewed whenever route changes
+  useEffect(() => {
+    markViewed(location.pathname);
+  }, [location.pathname, markViewed]);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -106,8 +113,11 @@ const DirectorSidebar = () => {
             <li key={item.path}>
               <Link
                 to={item.path}
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                onClick={() => {
+                  setMobileOpen(false);
+                  markViewed(item.path);
+                }}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative ${
                   isActive(item.path)
                     ? "bg-sidebar-primary text-sidebar-primary-foreground"
                     : "text-sidebar-foreground hover:bg-sidebar-accent"
@@ -115,6 +125,9 @@ const DirectorSidebar = () => {
               >
                 <item.icon className="h-5 w-5 shrink-0" />
                 {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+                {hasNew[item.path] && !isActive(item.path) && (
+                  <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-destructive animate-pulse" />
+                )}
               </Link>
             </li>
           ))}
