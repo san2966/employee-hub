@@ -25,11 +25,29 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
 
   useEffect(() => {
     const storedSession = sessionStorage.getItem("adminSession");
-    if (!storedSession) {
+    const authData = sessionStorage.getItem("authUser");
+    
+    if (storedSession) {
+      setSession(JSON.parse(storedSession));
+    } else if (authData) {
+      const user = JSON.parse(authData);
+      if (user.role === "admin") {
+        setSession({
+          email: user.username,
+          firstName: "Admin",
+          lastName: "",
+          displayName: "Admin",
+          mobile: "",
+          designation: "Administrator",
+          profileImage: "",
+          loginTime: new Date().toISOString(),
+        });
+      } else {
+        navigate("/login/admin");
+      }
+    } else {
       navigate("/login/admin");
-      return;
     }
-    setSession(JSON.parse(storedSession));
   }, [navigate]);
 
   if (!session) return null;
