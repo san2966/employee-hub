@@ -78,8 +78,9 @@ import TenderResearch from "./pages/tender/TenderResearch";
 import TenderContacts from "./pages/tender/TenderContacts";
 import TenderSettings from "./pages/tender/TenderSettings";
 
-// Director Tender Monitor
+// Director Tender Monitor & Record Management
 import TenderMonitor from "./pages/director/TenderMonitor";
+import DirectorRecordManagement from "./pages/director/RecordManagement";
 
 // IT Head Module
 import ITHeadLogin from "./pages/ithead/ITHeadLogin";
