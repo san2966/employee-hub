@@ -103,6 +103,7 @@ import PurchaseDocuments from "./pages/purchase/PurchaseDocuments";
 import PurchaseTechnicalSupport from "./pages/purchase/PurchaseTechnicalSupport";
 import PurchaseSettings from "./pages/purchase/PurchaseSettings";
 
+const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
