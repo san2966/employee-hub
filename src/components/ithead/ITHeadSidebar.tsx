@@ -1,4 +1,6 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { usePortalNotifications } from "@/hooks/usePortalNotifications";
 import { 
   LayoutDashboard, 
   HardDrive, 
@@ -28,6 +30,12 @@ const menuItems = [
 const ITHeadSidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { hasNew, markViewed } = usePortalNotifications("ithead");
+
+  useEffect(() => {
+    markViewed(location.pathname);
+  }, [location.pathname, markViewed]);
 
   const handleLogout = () => {
     sessionStorage.removeItem("userRole");
@@ -47,18 +55,28 @@ const ITHeadSidebar = () => {
           <NavLink
             key={item.path}
             to={item.path}
-            onClick={() => setIsOpen(false)}
+            onClick={() => {
+              setIsOpen(false);
+              markViewed(item.path);
+            }}
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors relative",
                 isActive
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )
             }
           >
-            <item.icon className="h-4 w-4" />
-            {item.label}
+            {({ isActive }) => (
+              <>
+                <item.icon className="h-4 w-4" />
+                {item.label}
+                {hasNew[item.path] && !isActive && (
+                  <span className="absolute top-1.5 right-2 h-2.5 w-2.5 rounded-full bg-destructive animate-pulse" />
+                )}
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
@@ -78,7 +96,6 @@ const ITHeadSidebar = () => {
 
   return (
     <>
-      {/* Mobile menu button */}
       <Button
         variant="ghost"
         size="icon"
@@ -88,7 +105,6 @@ const ITHeadSidebar = () => {
         {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </Button>
 
-      {/* Mobile overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
@@ -96,7 +112,6 @@ const ITHeadSidebar = () => {
         />
       )}
 
-      {/* Mobile sidebar */}
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-40 w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out lg:hidden",
@@ -106,7 +121,6 @@ const ITHeadSidebar = () => {
         {sidebarContent}
       </aside>
 
-      {/* Desktop sidebar */}
       <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-card border-r border-border">
         {sidebarContent}
       </aside>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { usePortalNotifications } from "@/hooks/usePortalNotifications";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -22,6 +23,7 @@ const TenderSidebar = () => {
   const [role, setRole] = useState<string>("");
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasNew, markViewed } = usePortalNotifications("tender");
 
   useEffect(() => {
     const session = sessionStorage.getItem("tenderSession");
@@ -30,6 +32,10 @@ const TenderSidebar = () => {
       setRole(parsed.role);
     }
   }, []);
+
+  useEffect(() => {
+    markViewed(location.pathname);
+  }, [location.pathname, markViewed]);
 
   const isHead = role === "tender_head";
 
@@ -58,6 +64,7 @@ const TenderSidebar = () => {
   const handleNavigation = (path: string) => {
     navigate(path);
     setOpen(false);
+    markViewed(path);
   };
 
   const SidebarContent = () => (
@@ -86,7 +93,7 @@ const TenderSidebar = () => {
               <li key={item.path}>
                 <button
                   onClick={() => handleNavigation(item.path)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 relative ${
                     isActive
                       ? "bg-primary text-primary-foreground shadow-md"
                       : "text-foreground/70 hover:bg-muted hover:text-foreground"
@@ -94,6 +101,9 @@ const TenderSidebar = () => {
                 >
                   <item.icon className="h-5 w-5" />
                   <span className="font-medium">{item.label}</span>
+                  {hasNew[item.path] && !isActive && (
+                    <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-destructive animate-pulse" />
+                  )}
                 </button>
               </li>
             );
