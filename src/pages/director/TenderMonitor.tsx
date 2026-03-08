@@ -111,107 +111,41 @@ const TenderMonitor = () => {
 
   return (
     <DirectorLayout title="Tender Monitor">
-      <Tabs defaultValue="tenders">
-        <TabsList>
-          <TabsTrigger value="tenders">Tenders</TabsTrigger>
-          <TabsTrigger value="quotations">Quotation Manager</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="tenders">
-          {documents.length === 0 ? (
-            <div className="text-center py-16 text-muted-foreground">
-              <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No tenders to monitor</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {documents.map((doc: any) => {
-                const tender = getTenderForDoc(doc.id);
-                return (
-                  <Card key={doc.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-sm">Bid #{doc.bid_number}</h3>
-                        {tender && <Badge variant="secondary">{getStatusLabel(tender.status)}</Badge>}
-                      </div>
-                      <p className="text-xs text-muted-foreground">{doc.organization} • {doc.product}</p>
-                      <p className="text-xs text-muted-foreground">Published: {doc.bid_date}</p>
-                      {tender && (
-                        <div className="text-xs space-y-1">
-                          {tender.technical_opening_date && <p>Tech Open: {tender.technical_opening_date}</p>}
-                          {tender.financial_opening_date && <p>Fin Open: {tender.financial_opening_date}</p>}
-                        </div>
-                      )}
-                      {tender && tender.status === "completed" && (
-                        <Button size="sm" variant="outline" onClick={() => downloadPDF(tender, doc)}>
-                          <Download className="h-3 w-3 mr-1" /> Download Report
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="quotations">
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Quote ID</TableHead>
-                      <TableHead>Subject</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>File</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {quotes.length === 0 ? (
-                      <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No quotations submitted</TableCell></TableRow>
-                    ) : quotes.map((q: any) => (
-                      <TableRow key={q.id}>
-                        <TableCell className="font-medium">{q.quote_id}</TableCell>
-                        <TableCell>{q.subject}</TableCell>
-                        <TableCell>{q.type}</TableCell>
-                        <TableCell>
-                          {q.file_url && (
-                            <div className="flex gap-1">
-                              <Button size="icon" variant="ghost" onClick={() => setPreviewUrl(q.file_url)}><Eye className="h-4 w-4" /></Button>
-                              <Button size="icon" variant="ghost" asChild><a href={q.file_url} download><Download className="h-4 w-4" /></a></Button>
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={q.status === "Approved" ? "default" : q.status === "Rejected" ? "destructive" : "secondary"}>
-                            {q.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {q.status === "Pending" && (
-                            <div className="flex gap-1">
-                              <Button size="sm" variant="outline" className="text-green-600" onClick={() => handleApprove(q.id)}>
-                                <Check className="h-3 w-3 mr-1" /> Approve
-                              </Button>
-                              <Button size="sm" variant="outline" className="text-destructive" onClick={() => { setRejectQuote(q); setRejectDesc(""); setRejectOpen(true); }}>
-                                <X className="h-3 w-3 mr-1" /> Reject
-                              </Button>
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      {documents.length === 0 ? (
+        <div className="text-center py-16 text-muted-foreground">
+          <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>No tenders to monitor</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {documents.map((doc: any) => {
+            const tender = getTenderForDoc(doc.id);
+            return (
+              <Card key={doc.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm">Bid #{doc.bid_number}</h3>
+                    {tender && <Badge variant="secondary">{getStatusLabel(tender.status)}</Badge>}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{doc.organization} • {doc.product}</p>
+                  <p className="text-xs text-muted-foreground">Published: {doc.bid_date}</p>
+                  {tender && (
+                    <div className="text-xs space-y-1">
+                      {tender.technical_opening_date && <p>Tech Open: {tender.technical_opening_date}</p>}
+                      {tender.financial_opening_date && <p>Fin Open: {tender.financial_opening_date}</p>}
+                    </div>
+                  )}
+                  {tender && tender.status === "completed" && (
+                    <Button size="sm" variant="outline" onClick={() => downloadPDF(tender, doc)}>
+                      <Download className="h-3 w-3 mr-1" /> Download Report
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       {/* Reject Dialog */}
       <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
