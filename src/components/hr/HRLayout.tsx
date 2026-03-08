@@ -21,12 +21,21 @@ const HRLayout = ({ children, title }: HRLayoutProps) => {
   const [session, setSession] = useState<HRSession | null>(null);
 
   useEffect(() => {
-    const sessionData = sessionStorage.getItem("hrSession");
-    if (!sessionData) {
+    const hrData = sessionStorage.getItem("hrSession");
+    const authData = sessionStorage.getItem("authUser");
+    
+    if (hrData) {
+      setSession(JSON.parse(hrData));
+    } else if (authData) {
+      const user = JSON.parse(authData);
+      if (user.role === "hr") {
+        setSession({ email: user.username });
+      } else {
+        navigate("/login/hr");
+      }
+    } else {
       navigate("/login/hr");
-      return;
     }
-    setSession(JSON.parse(sessionData));
   }, [navigate]);
 
   if (!session) return null;
