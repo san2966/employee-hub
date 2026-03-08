@@ -89,6 +89,7 @@ const TenderMonitor = () => {
         ["Companies Applied", companyNames.join(", ") || "None"],
         ["Technical Opening Date", tender.technical_opening_date || "N/A"],
         ["Technically Approved", techApproved.join(", ") || "None"],
+        ["Financial Opening Date", tender.financial_opening_date || "N/A"],
         ["Financially Approved", finApproved.join(", ") || "None"],
         ["Work Order", tender.work_order_url ? "Available" : "N/A"],
       ],
