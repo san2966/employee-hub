@@ -6,7 +6,11 @@ const corsHeaders = {
 };
 
 // AES-256-GCM encryption for IT passwords
-const ENCRYPTION_KEY = Deno.env.get("IT_PASSWORD_ENCRYPTION_KEY") || "default-key-change-in-production-32ch";
+const ENCRYPTION_KEY = Deno.env.get("IT_PASSWORD_ENCRYPTION_KEY");
+if (!ENCRYPTION_KEY) {
+  console.error("CRITICAL: IT_PASSWORD_ENCRYPTION_KEY environment variable not configured");
+}
+
 
 async function getEncryptionKey(): Promise<CryptoKey> {
   const encoder = new TextEncoder();
@@ -103,6 +107,13 @@ Deno.serve(async (req) => {
   }
 
   try {
+    if (!ENCRYPTION_KEY) {
+      return new Response(
+        JSON.stringify({ error: "Encryption service is not configured. Contact your administrator." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

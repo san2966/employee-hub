@@ -49,8 +49,8 @@ export const uploadTenderFile = async (file: File, folder: string): Promise<stri
   const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
   const { error } = await supabase.storage.from("tender-files").upload(fileName, file);
   if (error) { console.error("Upload error:", error); return null; }
-  const { data } = supabase.storage.from("tender-files").getPublicUrl(fileName);
-  return data.publicUrl;
+  const { data } = await supabase.storage.from("tender-files").createSignedUrl(fileName, 3600);
+  return data?.signedUrl || null;
 };
 
 // ===== Generic CRUD Hook =====
