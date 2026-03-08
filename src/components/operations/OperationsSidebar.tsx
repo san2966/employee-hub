@@ -17,7 +17,7 @@ const menuItems = [
   { label: "Proposal Management", icon: FileText, path: "/operations/proposals" },
   { label: "Brochure Management", icon: BookOpen, path: "/operations/brochures" },
   { label: "Inward Management", icon: Inbox, path: "/operations/inwards" },
-  { label: "Presentation Management", icon: Presentation, path: "/operations/presentations" },
+  { label: "Presentation Manager", icon: Presentation, path: "/operations/presentations" },
   { label: "Media Manager", icon: Image, path: "/operations/media" },
   { label: "GR Manager", icon: Receipt, path: "/operations/gr" },
   { label: "Settings", icon: Settings, path: "/operations/settings" },
