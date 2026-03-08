@@ -7,6 +7,7 @@ import {
   Shield, 
   Server,
   FileText,
+  ShoppingCart,
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
