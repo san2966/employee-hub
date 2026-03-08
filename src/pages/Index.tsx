@@ -62,6 +62,13 @@ const loginOptions = [
     role: "tender",
     customPath: "/login/tender",
   },
+  {
+    title: "Purchase Login",
+    description: "Manage quotations, dispatch and products",
+    icon: ShoppingCart,
+    role: "purchase",
+    customPath: "/login/purchase",
+  },
 ];
 
 const Index = () => {
