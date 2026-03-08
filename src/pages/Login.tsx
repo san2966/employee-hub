@@ -14,6 +14,7 @@ const roleLabels: Record<string, string> = {
   employee: "Employee",
   admin: "Admin",
   ithead: "IT Head",
+  purchase: "Purchase",
 };
 
 const Login = () => {
