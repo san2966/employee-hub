@@ -110,25 +110,6 @@ const TenderMonitor = () => {
           })}
         </div>
       )}
-
-      {/* Reject Dialog */}
-      <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Reject Quote: {rejectQuote?.quote_id}</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div><Label>Rejection Reason</Label><Textarea value={rejectDesc} onChange={e => setRejectDesc(e.target.value)} placeholder="Enter reason for rejection" /></div>
-            <Button onClick={handleReject} variant="destructive" className="w-full">Submit Rejection</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Preview Dialog */}
-      <Dialog open={!!previewUrl} onOpenChange={() => setPreviewUrl(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader><DialogTitle>Quote Preview</DialogTitle></DialogHeader>
-          {previewUrl && <img src={previewUrl} alt="Quote" className="w-full rounded-lg" />}
-        </DialogContent>
-      </Dialog>
     </DirectorLayout>
   );
 };
