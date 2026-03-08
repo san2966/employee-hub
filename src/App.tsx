@@ -215,6 +215,17 @@ const App = () => (
           <Route path="/purchase/technical-support" element={<PurchaseTechnicalSupport />} />
           <Route path="/purchase/settings" element={<PurchaseSettings />} />
           
+          {/* Operations Routes */}
+          <Route path="/login/operations" element={<OperationsLogin />} />
+          <Route path="/operations/dashboard" element={<OperationsDashboard />} />
+          <Route path="/operations/proposals" element={<OperationsProposals />} />
+          <Route path="/operations/brochures" element={<OperationsBrochures />} />
+          <Route path="/operations/inwards" element={<OperationsInwards />} />
+          <Route path="/operations/presentations" element={<OperationsPresentations />} />
+          <Route path="/operations/media" element={<OperationsMedia />} />
+          <Route path="/operations/gr" element={<OperationsGR />} />
+          <Route path="/operations/settings" element={<OperationsSettings />} />
+          
           {/* Other Dashboards */}
           <Route path="/dashboard/hr" element={<HRDashboard />} />
           <Route path="/dashboard/accounts" element={<AccountsDashboard />} />
