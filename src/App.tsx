@@ -190,6 +190,18 @@ const App = () => (
           <Route path="/tender/contacts" element={<TenderContacts />} />
           <Route path="/tender/settings" element={<TenderSettings />} />
           
+          {/* Purchase Routes */}
+          <Route path="/login/purchase" element={<PurchaseLogin />} />
+          <Route path="/purchase/dashboard" element={<PurchaseDashboard />} />
+          <Route path="/purchase/tasks" element={<PurchaseTaskManager />} />
+          <Route path="/purchase/quotations" element={<PurchaseQuotationManager />} />
+          <Route path="/purchase/products" element={<PurchaseProductManager />} />
+          <Route path="/purchase/contacts" element={<PurchaseContacts />} />
+          <Route path="/purchase/dispatch" element={<PurchaseDispatch />} />
+          <Route path="/purchase/documents" element={<PurchaseDocuments />} />
+          <Route path="/purchase/technical-support" element={<PurchaseTechnicalSupport />} />
+          <Route path="/purchase/settings" element={<PurchaseSettings />} />
+          
           {/* Other Dashboards */}
           <Route path="/dashboard/hr" element={<HRDashboard />} />
           <Route path="/dashboard/accounts" element={<AccountsDashboard />} />
