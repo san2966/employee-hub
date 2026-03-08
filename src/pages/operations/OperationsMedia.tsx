@@ -45,9 +45,21 @@ const OperationsMedia = () => {
     setUploading(false);
   };
 
-  const handleDownload = async (item: any) => {
+  const handlePreview = async (item: any) => {
     const url = await getSignedUrl(item.file_url);
     if (url) window.open(url, "_blank");
+  };
+
+  const handleDownload = async (item: any) => {
+    const url = await getSignedUrl(item.file_url);
+    if (url) {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = item.product_name || item.media_type || "media";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   const products = [...new Set(media.data.filter((m: any) => m.product_name).map((m: any) => m.product_name))];
