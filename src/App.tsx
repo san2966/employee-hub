@@ -91,6 +91,18 @@ import ITHeadNetwork from "./pages/ithead/ITHeadNetwork";
 import ITHeadTelephone from "./pages/ithead/ITHeadTelephone";
 import ITHeadSettings from "./pages/ithead/ITHeadSettings";
 
+// Purchase Module
+import PurchaseLogin from "./pages/purchase/PurchaseLogin";
+import PurchaseDashboard from "./pages/purchase/PurchaseDashboard";
+import PurchaseTaskManager from "./pages/purchase/PurchaseTaskManager";
+import PurchaseQuotationManager from "./pages/purchase/PurchaseQuotationManager";
+import PurchaseProductManager from "./pages/purchase/PurchaseProductManager";
+import PurchaseContacts from "./pages/purchase/PurchaseContacts";
+import PurchaseDispatch from "./pages/purchase/PurchaseDispatch";
+import PurchaseDocuments from "./pages/purchase/PurchaseDocuments";
+import PurchaseTechnicalSupport from "./pages/purchase/PurchaseTechnicalSupport";
+import PurchaseSettings from "./pages/purchase/PurchaseSettings";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -178,6 +190,18 @@ const App = () => (
           <Route path="/tender/research" element={<TenderResearch />} />
           <Route path="/tender/contacts" element={<TenderContacts />} />
           <Route path="/tender/settings" element={<TenderSettings />} />
+          
+          {/* Purchase Routes */}
+          <Route path="/login/purchase" element={<PurchaseLogin />} />
+          <Route path="/purchase/dashboard" element={<PurchaseDashboard />} />
+          <Route path="/purchase/tasks" element={<PurchaseTaskManager />} />
+          <Route path="/purchase/quotations" element={<PurchaseQuotationManager />} />
+          <Route path="/purchase/products" element={<PurchaseProductManager />} />
+          <Route path="/purchase/contacts" element={<PurchaseContacts />} />
+          <Route path="/purchase/dispatch" element={<PurchaseDispatch />} />
+          <Route path="/purchase/documents" element={<PurchaseDocuments />} />
+          <Route path="/purchase/technical-support" element={<PurchaseTechnicalSupport />} />
+          <Route path="/purchase/settings" element={<PurchaseSettings />} />
           
           {/* Other Dashboards */}
           <Route path="/dashboard/hr" element={<HRDashboard />} />

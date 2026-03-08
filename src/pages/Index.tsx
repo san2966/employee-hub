@@ -7,6 +7,7 @@ import {
   Shield, 
   Server,
   FileText,
+  ShoppingCart,
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -60,6 +61,13 @@ const loginOptions = [
     icon: FileText,
     role: "tender",
     customPath: "/login/tender",
+  },
+  {
+    title: "Purchase Login",
+    description: "Manage quotations, dispatch and products",
+    icon: ShoppingCart,
+    role: "purchase",
+    customPath: "/login/purchase",
   },
 ];
 

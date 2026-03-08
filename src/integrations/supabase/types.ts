@@ -731,6 +731,537 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_contacts: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          department: string | null
+          designation: string | null
+          email: string | null
+          id: string
+          name: string
+          organization: string | null
+          phone: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          department?: string | null
+          designation?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          organization?: string | null
+          phone: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          department?: string | null
+          designation?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          organization?: string | null
+          phone?: string
+        }
+        Relationships: []
+      }
+      purchase_dispatches: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          delivered_date: string | null
+          dispatched_date: string
+          eway_bill_no: string | null
+          eway_bill_url: string | null
+          expected_date: string | null
+          id: string
+          organization_name: string
+          status: string | null
+          transporter_name: string
+          updated_at: string | null
+          vehicle_no: string | null
+          work_order_no: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          delivered_date?: string | null
+          dispatched_date: string
+          eway_bill_no?: string | null
+          eway_bill_url?: string | null
+          expected_date?: string | null
+          id?: string
+          organization_name: string
+          status?: string | null
+          transporter_name: string
+          updated_at?: string | null
+          vehicle_no?: string | null
+          work_order_no: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          delivered_date?: string | null
+          dispatched_date?: string
+          eway_bill_no?: string | null
+          eway_bill_url?: string | null
+          expected_date?: string | null
+          id?: string
+          organization_name?: string
+          status?: string | null
+          transporter_name?: string
+          updated_at?: string | null
+          vehicle_no?: string | null
+          work_order_no?: string
+        }
+        Relationships: []
+      }
+      purchase_documents: {
+        Row: {
+          created_by: string | null
+          custom_type: string | null
+          file_url: string | null
+          id: string
+          name: string
+          type: string
+          uploaded_at: string | null
+        }
+        Insert: {
+          created_by?: string | null
+          custom_type?: string | null
+          file_url?: string | null
+          id?: string
+          name: string
+          type: string
+          uploaded_at?: string | null
+        }
+        Update: {
+          created_by?: string | null
+          custom_type?: string | null
+          file_url?: string | null
+          id?: string
+          name?: string
+          type?: string
+          uploaded_at?: string | null
+        }
+        Relationships: []
+      }
+      purchase_events: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          event_date: string | null
+          id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          event_date?: string | null
+          id?: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          event_date?: string | null
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      purchase_installations: {
+        Row: {
+          amc: boolean | null
+          amc_end: string | null
+          amc_start: string | null
+          created_at: string | null
+          created_by: string | null
+          hardware_install: boolean | null
+          id: string
+          organization_name: string
+          product_inspection: boolean | null
+          progress: number | null
+          software_install: boolean | null
+          training_done: boolean | null
+          updated_at: string | null
+          warranty_till: string | null
+          work_order_no: string
+        }
+        Insert: {
+          amc?: boolean | null
+          amc_end?: string | null
+          amc_start?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          hardware_install?: boolean | null
+          id?: string
+          organization_name: string
+          product_inspection?: boolean | null
+          progress?: number | null
+          software_install?: boolean | null
+          training_done?: boolean | null
+          updated_at?: string | null
+          warranty_till?: string | null
+          work_order_no: string
+        }
+        Update: {
+          amc?: boolean | null
+          amc_end?: string | null
+          amc_start?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          hardware_install?: boolean | null
+          id?: string
+          organization_name?: string
+          product_inspection?: boolean | null
+          progress?: number | null
+          software_install?: boolean | null
+          training_done?: boolean | null
+          updated_at?: string | null
+          warranty_till?: string | null
+          work_order_no?: string
+        }
+        Relationships: []
+      }
+      purchase_products: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          image_url: string | null
+          manufacturer: string
+          model: string
+          name: string
+          price: number | null
+          tech_specs_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          manufacturer: string
+          model: string
+          name: string
+          price?: number | null
+          tech_specs_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          manufacturer?: string
+          model?: string
+          name?: string
+          price?: number | null
+          tech_specs_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      purchase_project_images: {
+        Row: {
+          created_by: string | null
+          file_url: string | null
+          id: string
+          organization_name: string
+          project_name: string
+          uploaded_at: string | null
+          work_order: string | null
+        }
+        Insert: {
+          created_by?: string | null
+          file_url?: string | null
+          id?: string
+          organization_name: string
+          project_name: string
+          uploaded_at?: string | null
+          work_order?: string | null
+        }
+        Update: {
+          created_by?: string | null
+          file_url?: string | null
+          id?: string
+          organization_name?: string
+          project_name?: string
+          uploaded_at?: string | null
+          work_order?: string | null
+        }
+        Relationships: []
+      }
+      purchase_projects: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          dc_report_done: boolean | null
+          id: string
+          installation_done: boolean | null
+          name: string
+          organization_name: string
+          product_name: string
+          proforma_invoice: boolean | null
+          progress: number | null
+          purchase_order: boolean | null
+          quotes_final: boolean | null
+          supply_done: boolean | null
+          training_done: boolean | null
+          updated_at: string | null
+          vendor_discussion: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          dc_report_done?: boolean | null
+          id?: string
+          installation_done?: boolean | null
+          name: string
+          organization_name: string
+          product_name: string
+          proforma_invoice?: boolean | null
+          progress?: number | null
+          purchase_order?: boolean | null
+          quotes_final?: boolean | null
+          supply_done?: boolean | null
+          training_done?: boolean | null
+          updated_at?: string | null
+          vendor_discussion?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          dc_report_done?: boolean | null
+          id?: string
+          installation_done?: boolean | null
+          name?: string
+          organization_name?: string
+          product_name?: string
+          proforma_invoice?: boolean | null
+          progress?: number | null
+          purchase_order?: boolean | null
+          quotes_final?: boolean | null
+          supply_done?: boolean | null
+          training_done?: boolean | null
+          updated_at?: string | null
+          vendor_discussion?: boolean | null
+        }
+        Relationships: []
+      }
+      purchase_quotes: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          file_url: string | null
+          id: string
+          quote_id: string
+          status: string | null
+          subject: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          quote_id: string
+          status?: string | null
+          subject: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          quote_id?: string
+          status?: string | null
+          subject?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      purchase_settings: {
+        Row: {
+          created_at: string | null
+          designation: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          mobile: string | null
+          profile_photo_url: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          designation?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          mobile?: string | null
+          profile_photo_url?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          designation?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          mobile?: string | null
+          profile_photo_url?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      purchase_support_tickets: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string
+          id: string
+          issue: string
+          modified: boolean | null
+          org_name: string
+          priority: string | null
+          report: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          id?: string
+          issue: string
+          modified?: boolean | null
+          org_name: string
+          priority?: string | null
+          report?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          id?: string
+          issue?: string
+          modified?: boolean | null
+          org_name?: string
+          priority?: string | null
+          report?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      purchase_tasks: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string
+          id: string
+          name: string
+          report: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          id?: string
+          name: string
+          report?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          id?: string
+          name?: string
+          report?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      purchase_vendors: {
+        Row: {
+          contact_details: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          contact_details?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          contact_details?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      purchase_work_completions: {
+        Row: {
+          created_by: string | null
+          file_url: string | null
+          id: string
+          name: string
+          organization_name: string
+          project_name: string
+          uploaded_at: string | null
+          work_order_no: string
+        }
+        Insert: {
+          created_by?: string | null
+          file_url?: string | null
+          id?: string
+          name: string
+          organization_name: string
+          project_name: string
+          uploaded_at?: string | null
+          work_order_no: string
+        }
+        Update: {
+          created_by?: string | null
+          file_url?: string | null
+          id?: string
+          name?: string
+          organization_name?: string
+          project_name?: string
+          uploaded_at?: string | null
+          work_order_no?: string
+        }
+        Relationships: []
+      }
       requirements: {
         Row: {
           approved_by: string | null
@@ -1505,6 +2036,7 @@ export type Database = {
         | "employee"
         | "tender_head"
         | "tender_executive"
+        | "purchase"
       task_priority: "low" | "medium" | "high"
       task_status: "pending" | "in_progress" | "completed"
     }
@@ -1646,6 +2178,7 @@ export const Constants = {
         "employee",
         "tender_head",
         "tender_executive",
+        "purchase",
       ],
       task_priority: ["low", "medium", "high"],
       task_status: ["pending", "in_progress", "completed"],

@@ -1,0 +1,1 @@
+ALTER TYPE public.portal_role ADD VALUE IF NOT EXISTS 'purchase';

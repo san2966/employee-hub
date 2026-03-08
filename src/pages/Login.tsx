@@ -14,6 +14,7 @@ const roleLabels: Record<string, string> = {
   employee: "Employee",
   admin: "Admin",
   ithead: "IT Head",
+  purchase: "Purchase",
 };
 
 const Login = () => {
@@ -91,6 +92,10 @@ const Login = () => {
           break;
         case "employee":
           navigate("/employee/dashboard");
+          break;
+        case "purchase":
+          sessionStorage.setItem("purchaseSession", JSON.stringify({ role: "purchase", username }));
+          navigate("/purchase/dashboard");
           break;
         default:
           navigate(`/dashboard/${userRole}`);
