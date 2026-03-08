@@ -6,7 +6,11 @@ const corsHeaders = {
 };
 
 // AES-256-GCM encryption for IT passwords
-const ENCRYPTION_KEY = Deno.env.get("IT_PASSWORD_ENCRYPTION_KEY") || "default-key-change-in-production-32ch";
+const ENCRYPTION_KEY = Deno.env.get("IT_PASSWORD_ENCRYPTION_KEY");
+if (!ENCRYPTION_KEY) {
+  console.error("CRITICAL: IT_PASSWORD_ENCRYPTION_KEY environment variable not configured");
+}
+
 
 async function getEncryptionKey(): Promise<CryptoKey> {
   const encoder = new TextEncoder();
