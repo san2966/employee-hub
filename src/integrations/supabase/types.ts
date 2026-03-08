@@ -2333,6 +2333,7 @@ export type Database = {
         Args: { check_role: string; user_uuid: string }
         Returns: boolean
       }
+      hash_password: { Args: { raw_password: string }; Returns: string }
       verify_password: {
         Args: { input_password: string; stored_hash: string }
         Returns: boolean
