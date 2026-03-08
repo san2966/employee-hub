@@ -12,12 +12,7 @@ import autoTable from "jspdf-autotable";
 const TenderMonitor = () => {
   const [documents, setDocuments] = useState<any[]>([]);
   const [tenders, setTenders] = useState<any[]>([]);
-  const [quotes, setQuotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [rejectOpen, setRejectOpen] = useState(false);
-  const [rejectQuote, setRejectQuote] = useState<any>(null);
-  const [rejectDesc, setRejectDesc] = useState("");
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
