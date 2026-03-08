@@ -3,13 +3,8 @@ import DirectorLayout from "@/components/director/DirectorLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Download, Eye, Check, X } from "lucide-react";
+import { FileText, Download } from "lucide-react";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -17,51 +12,20 @@ import autoTable from "jspdf-autotable";
 const TenderMonitor = () => {
   const [documents, setDocuments] = useState<any[]>([]);
   const [tenders, setTenders] = useState<any[]>([]);
-  const [quotes, setQuotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [rejectOpen, setRejectOpen] = useState(false);
-  const [rejectQuote, setRejectQuote] = useState<any>(null);
-  const [rejectDesc, setRejectDesc] = useState("");
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const [docsRes, tendersRes, quotesRes] = await Promise.all([
+    const [docsRes, tendersRes] = await Promise.all([
       (supabase as any).from("tender_documents").select("*").order("created_at", { ascending: false }),
       (supabase as any).from("tenders").select("*").order("created_at", { ascending: false }),
-      (supabase as any).from("purchase_quotes").select("*").order("created_at", { ascending: false }),
     ]);
     setDocuments(docsRes.data || []);
     setTenders(tendersRes.data || []);
-    setQuotes(quotesRes.data || []);
     setLoading(false);
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
-
-  // Realtime for quotes
-  useEffect(() => {
-    const channel = supabase.channel("director_quotes_realtime").on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "purchase_quotes" },
-      () => { fetchAll(); }
-    ).subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [fetchAll]);
-
-  const handleApprove = async (quoteId: string) => {
-    await (supabase as any).from("purchase_quotes").update({ status: "Approved" }).eq("id", quoteId);
-    fetchAll();
-  };
-
-  const handleReject = async () => {
-    if (!rejectQuote) return;
-    await (supabase as any).from("purchase_quotes").update({ status: "Rejected", description: rejectDesc }).eq("id", rejectQuote.id);
-    setRejectOpen(false);
-    setRejectQuote(null);
-    setRejectDesc("");
-    fetchAll();
-  };
 
   const getTenderForDoc = (docId: string) => tenders.find((t: any) => t.document_id === docId);
 
@@ -111,126 +75,41 @@ const TenderMonitor = () => {
 
   return (
     <DirectorLayout title="Tender Monitor">
-      <Tabs defaultValue="tenders">
-        <TabsList>
-          <TabsTrigger value="tenders">Tenders</TabsTrigger>
-          <TabsTrigger value="quotations">Quotation Manager</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="tenders">
-          {documents.length === 0 ? (
-            <div className="text-center py-16 text-muted-foreground">
-              <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No tenders to monitor</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {documents.map((doc: any) => {
-                const tender = getTenderForDoc(doc.id);
-                return (
-                  <Card key={doc.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-sm">Bid #{doc.bid_number}</h3>
-                        {tender && <Badge variant="secondary">{getStatusLabel(tender.status)}</Badge>}
-                      </div>
-                      <p className="text-xs text-muted-foreground">{doc.organization} • {doc.product}</p>
-                      <p className="text-xs text-muted-foreground">Published: {doc.bid_date}</p>
-                      {tender && (
-                        <div className="text-xs space-y-1">
-                          {tender.technical_opening_date && <p>Tech Open: {tender.technical_opening_date}</p>}
-                          {tender.financial_opening_date && <p>Fin Open: {tender.financial_opening_date}</p>}
-                        </div>
-                      )}
-                      {tender && tender.status === "completed" && (
-                        <Button size="sm" variant="outline" onClick={() => downloadPDF(tender, doc)}>
-                          <Download className="h-3 w-3 mr-1" /> Download Report
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="quotations">
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Quote ID</TableHead>
-                      <TableHead>Subject</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>File</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {quotes.length === 0 ? (
-                      <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No quotations submitted</TableCell></TableRow>
-                    ) : quotes.map((q: any) => (
-                      <TableRow key={q.id}>
-                        <TableCell className="font-medium">{q.quote_id}</TableCell>
-                        <TableCell>{q.subject}</TableCell>
-                        <TableCell>{q.type}</TableCell>
-                        <TableCell>
-                          {q.file_url && (
-                            <div className="flex gap-1">
-                              <Button size="icon" variant="ghost" onClick={() => setPreviewUrl(q.file_url)}><Eye className="h-4 w-4" /></Button>
-                              <Button size="icon" variant="ghost" asChild><a href={q.file_url} download><Download className="h-4 w-4" /></a></Button>
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={q.status === "Approved" ? "default" : q.status === "Rejected" ? "destructive" : "secondary"}>
-                            {q.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {q.status === "Pending" && (
-                            <div className="flex gap-1">
-                              <Button size="sm" variant="outline" className="text-green-600" onClick={() => handleApprove(q.id)}>
-                                <Check className="h-3 w-3 mr-1" /> Approve
-                              </Button>
-                              <Button size="sm" variant="outline" className="text-destructive" onClick={() => { setRejectQuote(q); setRejectDesc(""); setRejectOpen(true); }}>
-                                <X className="h-3 w-3 mr-1" /> Reject
-                              </Button>
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Reject Dialog */}
-      <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Reject Quote: {rejectQuote?.quote_id}</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div><Label>Rejection Reason</Label><Textarea value={rejectDesc} onChange={e => setRejectDesc(e.target.value)} placeholder="Enter reason for rejection" /></div>
-            <Button onClick={handleReject} variant="destructive" className="w-full">Submit Rejection</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Preview Dialog */}
-      <Dialog open={!!previewUrl} onOpenChange={() => setPreviewUrl(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader><DialogTitle>Quote Preview</DialogTitle></DialogHeader>
-          {previewUrl && <img src={previewUrl} alt="Quote" className="w-full rounded-lg" />}
-        </DialogContent>
-      </Dialog>
+      {documents.length === 0 ? (
+        <div className="text-center py-16 text-muted-foreground">
+          <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>No tenders to monitor</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {documents.map((doc: any) => {
+            const tender = getTenderForDoc(doc.id);
+            return (
+              <Card key={doc.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm">Bid #{doc.bid_number}</h3>
+                    {tender && <Badge variant="secondary">{getStatusLabel(tender.status)}</Badge>}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{doc.organization} • {doc.product}</p>
+                  <p className="text-xs text-muted-foreground">Published: {doc.bid_date}</p>
+                  {tender && (
+                    <div className="text-xs space-y-1">
+                      {tender.technical_opening_date && <p>Tech Open: {tender.technical_opening_date}</p>}
+                      {tender.financial_opening_date && <p>Fin Open: {tender.financial_opening_date}</p>}
+                    </div>
+                  )}
+                  {tender && tender.status === "completed" && (
+                    <Button size="sm" variant="outline" onClick={() => downloadPDF(tender, doc)}>
+                      <Download className="h-3 w-3 mr-1" /> Download Report
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </DirectorLayout>
   );
 };

@@ -126,13 +126,19 @@ const ITHeadLogin = () => {
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
+            <div className="mt-6 text-center space-y-2">
               <Link
                 to="/help"
-                className="text-sm text-primary hover:underline"
+                className="text-sm text-primary hover:underline block"
               >
                 Need help signing in?
               </Link>
+              <button
+                onClick={() => navigate("/")}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                ← Back to Home
+              </button>
             </div>
           </div>
         </div>
