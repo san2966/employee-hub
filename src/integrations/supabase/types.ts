@@ -106,6 +106,104 @@ export type Database = {
         }
         Relationships: []
       }
+      approval_requests: {
+        Row: {
+          attendance_id: string | null
+          created_at: string | null
+          date: string
+          employee_id: string
+          hr_notes: string | null
+          id: string
+          location: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          attendance_id?: string | null
+          created_at?: string | null
+          date: string
+          employee_id: string
+          hr_notes?: string | null
+          id?: string
+          location: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          attendance_id?: string | null
+          created_at?: string | null
+          date?: string
+          employee_id?: string
+          hr_notes?: string | null
+          id?: string
+          location?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_requests_attendance_id_fkey"
+            columns: ["attendance_id"]
+            isOneToOne: false
+            referencedRelation: "attendance"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_requests_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendance: {
+        Row: {
+          approved_by: string | null
+          created_at: string | null
+          date: string
+          employee_id: string
+          id: string
+          in_time: string | null
+          location: string
+          out_time: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          approved_by?: string | null
+          created_at?: string | null
+          date: string
+          employee_id: string
+          id?: string
+          in_time?: string | null
+          location: string
+          out_time?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          approved_by?: string | null
+          created_at?: string | null
+          date?: string
+          employee_id?: string
+          id?: string
+          in_time?: string | null
+          location?: string
+          out_time?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
           created_at: string | null
