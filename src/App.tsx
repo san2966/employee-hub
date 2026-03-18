@@ -147,6 +147,7 @@ const App = () => (
           <Route path="/director/quotations" element={<DirectorQuotationManager />} />
           <Route path="/director/records" element={<DirectorRecordManagement />} />
           <Route path="/director/settings" element={<Settings />} />
+          <Route path="/director/attendance" element={<DirectorAttendance />} />
           
           {/* HR Routes */}
           <Route path="/login/hr" element={<HRLogin />} />
