@@ -30,6 +30,7 @@ const menuItems = [
   { icon: FileText, label: "Reports", path: "/director/reports" },
   { icon: Bell, label: "Notice/Announcements", path: "/director/notices" },
   { icon: Calendar, label: "Leave Manager", path: "/director/leaves" },
+  { icon: Calendar, label: "Attendance Manager", path: "/director/attendance" },
   { icon: Package, label: "Requirements", path: "/director/requirements" },
   { icon: Package, label: "Product Manager", path: "/director/products" },
   { icon: Users, label: "Contacts", path: "/director/contacts" },

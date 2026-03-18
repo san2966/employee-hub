@@ -28,6 +28,7 @@ import EmployeeAdd from "./pages/hr/EmployeeAdd";
 import ManageEmployee from "./pages/hr/ManageEmployee";
 import HRSettings from "./pages/hr/HRSettings";
 import HRLeaveManager from "./pages/hr/HRLeaveManager";
+import HRAttendance from "./pages/hr/HRAttendance";
 
 // Accounts Module
 import AccountsLogin from "./pages/accounts/AccountsLogin";
@@ -58,6 +59,7 @@ import AdminInwardOutward from "./pages/admin/AdminInwardOutward";
 import AdminAssets from "./pages/admin/AdminAssets";
 import AdminVehicles from "./pages/admin/AdminVehicles";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminAttendance from "./pages/admin/AdminAttendance";
 
 // Other Dashboards
 import HRDashboard from "./pages/dashboards/HRDashboard";
@@ -82,6 +84,7 @@ import TenderSettings from "./pages/tender/TenderSettings";
 import TenderMonitor from "./pages/director/TenderMonitor";
 import DirectorQuotationManager from "./pages/director/QuotationManager";
 import DirectorRecordManagement from "./pages/director/RecordManagement";
+import DirectorAttendance from "./pages/director/DirectorAttendance";
 
 // IT Head Module
 import ITHeadLogin from "./pages/ithead/ITHeadLogin";
@@ -144,6 +147,7 @@ const App = () => (
           <Route path="/director/quotations" element={<DirectorQuotationManager />} />
           <Route path="/director/records" element={<DirectorRecordManagement />} />
           <Route path="/director/settings" element={<Settings />} />
+          <Route path="/director/attendance" element={<DirectorAttendance />} />
           
           {/* HR Routes */}
           <Route path="/login/hr" element={<HRLogin />} />
@@ -152,6 +156,7 @@ const App = () => (
           <Route path="/hr/manage-employee" element={<ManageEmployee />} />
           <Route path="/hr/leaves" element={<HRLeaveManager />} />
           <Route path="/hr/settings" element={<HRSettings />} />
+          <Route path="/hr/attendance" element={<HRAttendance />} />
           
           {/* Accounts Routes */}
           <Route path="/login/accounts" element={<AccountsLogin />} />
@@ -182,6 +187,7 @@ const App = () => (
           <Route path="/admin/assets" element={<AdminAssets />} />
           <Route path="/admin/vehicles" element={<AdminVehicles />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/admin/attendance" element={<AdminAttendance />} />
           
           {/* IT Head Routes */}
           <Route path="/login/ithead" element={<ITHeadLogin />} />

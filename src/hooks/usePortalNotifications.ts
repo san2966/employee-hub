@@ -8,6 +8,7 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
     "/director/reports": ["daily_reports"],
     "/director/notices": ["notices"],
     "/director/leaves": ["leave_requests"],
+    "/director/attendance": ["attendance"],
     "/director/requirements": ["requirements"],
     "/director/products": ["products"],
     "/director/contacts": ["contacts"],
@@ -19,6 +20,7 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
     "/hr/employee-add": ["employees"],
     "/hr/manage-employee": ["employees"],
     "/hr/leaves": ["leave_requests"],
+    "/hr/attendance": ["attendance", "approval_requests"],
   },
   accounts: {
     "/accounts/vouchers": ["admin_payments", "employee_payments"],
@@ -33,6 +35,7 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
     "/employee/reports": ["daily_reports"],
   },
   admin: {
+    "/admin/attendance": ["attendance"],
     "/admin/payments": ["admin_payments"],
     "/admin/tasks": ["tasks"],
     "/admin/visitors": ["admin_assets"],
