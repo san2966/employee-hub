@@ -84,6 +84,7 @@ import TenderSettings from "./pages/tender/TenderSettings";
 import TenderMonitor from "./pages/director/TenderMonitor";
 import DirectorQuotationManager from "./pages/director/QuotationManager";
 import DirectorRecordManagement from "./pages/director/RecordManagement";
+import DirectorAttendance from "./pages/director/DirectorAttendance";
 
 // IT Head Module
 import ITHeadLogin from "./pages/ithead/ITHeadLogin";
