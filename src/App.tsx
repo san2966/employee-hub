@@ -58,6 +58,7 @@ import AdminInwardOutward from "./pages/admin/AdminInwardOutward";
 import AdminAssets from "./pages/admin/AdminAssets";
 import AdminVehicles from "./pages/admin/AdminVehicles";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminAttendance from "./pages/admin/AdminAttendance";
 
 // Other Dashboards
 import HRDashboard from "./pages/dashboards/HRDashboard";

@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
+  { icon: ClipboardCheck, label: "Attendance Manager", path: "/admin/attendance" },
   { icon: CreditCard, label: "Payments", path: "/admin/payments" },
   { icon: ListTodo, label: "Tasks", path: "/admin/tasks" },
   { icon: Users, label: "Visitor Report", path: "/admin/visitors" },

@@ -35,6 +35,7 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
     "/employee/reports": ["daily_reports"],
   },
   admin: {
+    "/admin/attendance": ["attendance"],
     "/admin/payments": ["admin_payments"],
     "/admin/tasks": ["tasks"],
     "/admin/visitors": ["admin_assets"],

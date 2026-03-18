@@ -19,6 +19,7 @@ const menuItems = [
   { icon: UserPlus, label: "Employee Add", path: "/hr/employee-add" },
   { icon: Users, label: "Manage Employee", path: "/hr/manage-employee" },
   { icon: Calendar, label: "Leave Manager", path: "/hr/leaves" },
+  { icon: Calendar, label: "Attendance Manager", path: "/hr/attendance" },
   { icon: Settings, label: "Settings", path: "/hr/settings" },
 ];
 
