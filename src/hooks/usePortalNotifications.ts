@@ -8,6 +8,7 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
     "/director/reports": ["daily_reports"],
     "/director/notices": ["notices"],
     "/director/leaves": ["leave_requests"],
+    "/director/attendance": ["attendance"],
     "/director/requirements": ["requirements"],
     "/director/products": ["products"],
     "/director/contacts": ["contacts"],
