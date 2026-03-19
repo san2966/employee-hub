@@ -53,6 +53,7 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
     "/ithead/passwords": ["it_passwords"],
     "/ithead/network": ["it_network_images"],
     "/ithead/telephone": ["telephone_directory"],
+    "/ithead/director-tasks": ["director_tasks"],
   },
   tender: {
     "/tender/tasks": ["tender_notes"],
