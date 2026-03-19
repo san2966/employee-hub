@@ -29,6 +29,7 @@ import ManageEmployee from "./pages/hr/ManageEmployee";
 import HRSettings from "./pages/hr/HRSettings";
 import HRLeaveManager from "./pages/hr/HRLeaveManager";
 import HRAttendance from "./pages/hr/HRAttendance";
+import HRDirectorTasks from "./pages/hr/HRDirectorTasks";
 
 // Accounts Module
 import AccountsLogin from "./pages/accounts/AccountsLogin";
