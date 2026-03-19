@@ -7,7 +7,8 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  ClipboardList
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
