@@ -41,7 +41,15 @@ const PurchaseTaskManager = () => {
 
   return (
     <PurchaseLayout title="Task Manager">
-      <Card>
+      <Tabs defaultValue="tasks" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="tasks">Tasks</TabsTrigger>
+          <TabsTrigger value="director-tasks">Director Tasks</TabsTrigger>
+        </TabsList>
+        <TabsContent value="director-tasks">
+          <Card><CardContent className="pt-4"><DirectorTasksTab department="Purchase" /></CardContent></Card>
+        </TabsContent>
+        <TabsContent value="tasks">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Tasks</span>
