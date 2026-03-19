@@ -206,6 +206,7 @@ const App = () => (
           <Route path="/ithead/network" element={<ITHeadNetwork />} />
           <Route path="/ithead/telephone" element={<ITHeadTelephone />} />
           <Route path="/ithead/settings" element={<ITHeadSettings />} />
+          <Route path="/ithead/director-tasks" element={<ITHeadDirectorTasks />} />
           
           {/* Tender Routes */}
           <Route path="/login/tender" element={<TenderLogin />} />
