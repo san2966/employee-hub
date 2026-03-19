@@ -242,6 +242,7 @@ const App = () => (
           <Route path="/operations/media" element={<OperationsMedia />} />
           <Route path="/operations/gr" element={<OperationsGR />} />
           <Route path="/operations/settings" element={<OperationsSettings />} />
+          <Route path="/operations/director-tasks" element={<OperationsDirectorTasks />} />
           
           {/* Other Dashboards */}
           <Route path="/dashboard/hr" element={<HRDashboard />} />
