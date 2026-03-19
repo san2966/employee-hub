@@ -122,6 +122,7 @@ import OperationsPresentations from "./pages/operations/OperationsPresentations"
 import OperationsMedia from "./pages/operations/OperationsMedia";
 import OperationsGR from "./pages/operations/OperationsGR";
 import OperationsSettings from "./pages/operations/OperationsSettings";
+import OperationsDirectorTasks from "./pages/operations/OperationsDirectorTasks";
 const queryClient = new QueryClient();
 
 const App = () => (
