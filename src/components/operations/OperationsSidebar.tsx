@@ -21,6 +21,7 @@ const menuItems = [
   { label: "Presentation Manager", icon: Presentation, path: "/operations/presentations" },
   { label: "Media Manager", icon: Image, path: "/operations/media" },
   { label: "GR Manager", icon: Receipt, path: "/operations/gr" },
+  { label: "Director Tasks", icon: ClipboardList, path: "/operations/director-tasks" },
   { label: "Settings", icon: Settings, path: "/operations/settings" },
 ];
 
