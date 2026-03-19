@@ -117,6 +117,8 @@ const PurchaseTaskManager = () => {
           </div>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+      </Tabs>
     </PurchaseLayout>
   );
 };
