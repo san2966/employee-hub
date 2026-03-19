@@ -40,7 +40,7 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
   admin: {
     "/admin/attendance": ["attendance"],
     "/admin/payments": ["admin_payments"],
-    "/admin/tasks": ["tasks"],
+    "/admin/tasks": ["tasks", "director_tasks"],
     "/admin/visitors": ["admin_assets"],
     "/admin/users": ["portal_users"],
     "/admin/inward-outward": ["inward_outward"],
