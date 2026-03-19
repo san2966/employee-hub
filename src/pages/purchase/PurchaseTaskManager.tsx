@@ -50,6 +50,7 @@ const PurchaseTaskManager = () => {
           <Card><CardContent className="pt-4"><DirectorTasksTab department="Purchase" /></CardContent></Card>
         </TabsContent>
         <TabsContent value="tasks">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Tasks</span>
