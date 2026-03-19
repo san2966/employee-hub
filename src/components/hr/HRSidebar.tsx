@@ -10,7 +10,8 @@ import {
   LogOut,
   Menu,
   X,
-  Calendar
+  Calendar,
+  ClipboardList
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
