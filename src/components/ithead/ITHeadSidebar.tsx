@@ -11,7 +11,8 @@ import {
   LogOut,
   Menu,
   Ticket,
-  X
+  X,
+  ClipboardList
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ const menuItems = [
   { icon: Key, label: "Password Management", path: "/ithead/passwords" },
   { icon: Network, label: "Network Management", path: "/ithead/network" },
   { icon: Phone, label: "Telephone/Intercom", path: "/ithead/telephone" },
+  { icon: ClipboardList, label: "Director Tasks", path: "/ithead/director-tasks" },
   { icon: Settings, label: "Settings", path: "/ithead/settings" },
 ];
 

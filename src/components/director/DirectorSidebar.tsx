@@ -27,6 +27,7 @@ interface DirectorSession {
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/director/dashboard" },
   { icon: ClipboardList, label: "Task Manager", path: "/director/tasks" },
+  { icon: ClipboardList, label: "Department Tasks", path: "/director/department-tasks" },
   { icon: FileText, label: "Reports", path: "/director/reports" },
   { icon: Bell, label: "Notice/Announcements", path: "/director/notices" },
   { icon: Calendar, label: "Leave Manager", path: "/director/leaves" },

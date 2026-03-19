@@ -272,6 +272,45 @@ export type Database = {
           },
         ]
       }
+      director_tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          date: string
+          department: string
+          expected_days: number
+          id: string
+          report: string | null
+          status: string
+          task: string
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          date?: string
+          department: string
+          expected_days?: number
+          id?: string
+          report?: string | null
+          status?: string
+          task: string
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          date?: string
+          department?: string
+          expected_days?: number
+          id?: string
+          report?: string | null
+          status?: string
+          task?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       employee_payments: {
         Row: {
           amount: number

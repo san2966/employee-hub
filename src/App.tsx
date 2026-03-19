@@ -29,12 +29,14 @@ import ManageEmployee from "./pages/hr/ManageEmployee";
 import HRSettings from "./pages/hr/HRSettings";
 import HRLeaveManager from "./pages/hr/HRLeaveManager";
 import HRAttendance from "./pages/hr/HRAttendance";
+import HRDirectorTasks from "./pages/hr/HRDirectorTasks";
 
 // Accounts Module
 import AccountsLogin from "./pages/accounts/AccountsLogin";
 import AccountsDashboardPage from "./pages/accounts/AccountsDashboard";
 import Vouchers from "./pages/accounts/Vouchers";
 import AccountsSettings from "./pages/accounts/AccountsSettings";
+import AccountsDirectorTasks from "./pages/accounts/AccountsDirectorTasks";
 
 // Employee Module
 import EmployeeLogin from "./pages/employee/EmployeeLogin";
@@ -85,6 +87,7 @@ import TenderMonitor from "./pages/director/TenderMonitor";
 import DirectorQuotationManager from "./pages/director/QuotationManager";
 import DirectorRecordManagement from "./pages/director/RecordManagement";
 import DirectorAttendance from "./pages/director/DirectorAttendance";
+import DirectorDepartmentTasks from "./pages/director/DirectorDepartmentTasks";
 
 // IT Head Module
 import ITHeadLogin from "./pages/ithead/ITHeadLogin";
@@ -95,6 +98,7 @@ import ITHeadPasswords from "./pages/ithead/ITHeadPasswords";
 import ITHeadNetwork from "./pages/ithead/ITHeadNetwork";
 import ITHeadTelephone from "./pages/ithead/ITHeadTelephone";
 import ITHeadSettings from "./pages/ithead/ITHeadSettings";
+import ITHeadDirectorTasks from "./pages/ithead/ITHeadDirectorTasks";
 
 // Purchase Module
 import PurchaseLogin from "./pages/purchase/PurchaseLogin";
@@ -118,6 +122,7 @@ import OperationsPresentations from "./pages/operations/OperationsPresentations"
 import OperationsMedia from "./pages/operations/OperationsMedia";
 import OperationsGR from "./pages/operations/OperationsGR";
 import OperationsSettings from "./pages/operations/OperationsSettings";
+import OperationsDirectorTasks from "./pages/operations/OperationsDirectorTasks";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -148,6 +153,7 @@ const App = () => (
           <Route path="/director/records" element={<DirectorRecordManagement />} />
           <Route path="/director/settings" element={<Settings />} />
           <Route path="/director/attendance" element={<DirectorAttendance />} />
+          <Route path="/director/department-tasks" element={<DirectorDepartmentTasks />} />
           
           {/* HR Routes */}
           <Route path="/login/hr" element={<HRLogin />} />
@@ -157,12 +163,14 @@ const App = () => (
           <Route path="/hr/leaves" element={<HRLeaveManager />} />
           <Route path="/hr/settings" element={<HRSettings />} />
           <Route path="/hr/attendance" element={<HRAttendance />} />
+          <Route path="/hr/director-tasks" element={<HRDirectorTasks />} />
           
           {/* Accounts Routes */}
           <Route path="/login/accounts" element={<AccountsLogin />} />
           <Route path="/accounts/dashboard" element={<AccountsDashboardPage />} />
           <Route path="/accounts/vouchers" element={<Vouchers />} />
           <Route path="/accounts/settings" element={<AccountsSettings />} />
+          <Route path="/accounts/director-tasks" element={<AccountsDirectorTasks />} />
           
           {/* Employee Routes */}
           <Route path="/login/employee" element={<EmployeeLogin />} />
@@ -198,6 +206,7 @@ const App = () => (
           <Route path="/ithead/network" element={<ITHeadNetwork />} />
           <Route path="/ithead/telephone" element={<ITHeadTelephone />} />
           <Route path="/ithead/settings" element={<ITHeadSettings />} />
+          <Route path="/ithead/director-tasks" element={<ITHeadDirectorTasks />} />
           
           {/* Tender Routes */}
           <Route path="/login/tender" element={<TenderLogin />} />
@@ -233,6 +242,7 @@ const App = () => (
           <Route path="/operations/media" element={<OperationsMedia />} />
           <Route path="/operations/gr" element={<OperationsGR />} />
           <Route path="/operations/settings" element={<OperationsSettings />} />
+          <Route path="/operations/director-tasks" element={<OperationsDirectorTasks />} />
           
           {/* Other Dashboards */}
           <Route path="/dashboard/hr" element={<HRDashboard />} />

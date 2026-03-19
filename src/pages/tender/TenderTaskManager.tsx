@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useTenderTasks } from "@/hooks/useTenderData";
 import { format } from "date-fns";
+import DirectorTasksTab from "@/components/DirectorTasksTab";
 
 const TenderTaskManager = () => {
   const { data: tasks, add, update } = useTenderTasks();
@@ -59,7 +60,12 @@ const TenderTaskManager = () => {
           <TabsTrigger value={isHead ? "current" : "your"}>
             {isHead ? "Current Tasks" : "Your Tasks"}
           </TabsTrigger>
+          <TabsTrigger value="director-tasks">Director Tasks</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="director-tasks">
+          <Card><CardContent className="pt-4"><DirectorTasksTab department="Tender" /></CardContent></Card>
+        </TabsContent>
 
         {/* Assign/Assigned Tab */}
         <TabsContent value={isHead ? "assign" : "assigned"}>

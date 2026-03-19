@@ -8,10 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
 import { usePurchaseTasks } from "@/hooks/usePurchaseData";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import DirectorTasksTab from "@/components/DirectorTasksTab";
 
 const PurchaseTaskManager = () => {
   const { data: tasks, add, update } = usePurchaseTasks();
@@ -39,6 +41,15 @@ const PurchaseTaskManager = () => {
 
   return (
     <PurchaseLayout title="Task Manager">
+      <Tabs defaultValue="tasks" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="tasks">Tasks</TabsTrigger>
+          <TabsTrigger value="director-tasks">Director Tasks</TabsTrigger>
+        </TabsList>
+        <TabsContent value="director-tasks">
+          <Card><CardContent className="pt-4"><DirectorTasksTab department="Purchase" /></CardContent></Card>
+        </TabsContent>
+        <TabsContent value="tasks">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
@@ -107,6 +118,8 @@ const PurchaseTaskManager = () => {
           </div>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+      </Tabs>
     </PurchaseLayout>
   );
 };

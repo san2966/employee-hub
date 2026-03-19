@@ -7,7 +7,8 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  ClipboardList
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -24,6 +25,7 @@ const AccountsSidebar = () => {
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/accounts/dashboard" },
     { icon: Receipt, label: "Vouchers", path: "/accounts/vouchers" },
+    { icon: ClipboardList, label: "Director Tasks", path: "/accounts/director-tasks" },
     { icon: Settings, label: "Settings", path: "/accounts/settings" },
   ];
 

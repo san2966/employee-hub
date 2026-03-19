@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
   director: {
     "/director/tasks": ["tasks"],
+    "/director/department-tasks": ["director_tasks"],
     "/director/reports": ["daily_reports"],
     "/director/notices": ["notices"],
     "/director/leaves": ["leave_requests"],
@@ -21,9 +22,11 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
     "/hr/manage-employee": ["employees"],
     "/hr/leaves": ["leave_requests"],
     "/hr/attendance": ["attendance", "approval_requests"],
+    "/hr/director-tasks": ["director_tasks"],
   },
   accounts: {
     "/accounts/vouchers": ["admin_payments", "employee_payments"],
+    "/accounts/director-tasks": ["director_tasks"],
   },
   employee: {
     "/employee/tasks": ["tasks"],
@@ -37,7 +40,7 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
   admin: {
     "/admin/attendance": ["attendance"],
     "/admin/payments": ["admin_payments"],
-    "/admin/tasks": ["tasks"],
+    "/admin/tasks": ["tasks", "director_tasks"],
     "/admin/visitors": ["admin_assets"],
     "/admin/users": ["portal_users"],
     "/admin/inward-outward": ["inward_outward"],
@@ -50,9 +53,10 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
     "/ithead/passwords": ["it_passwords"],
     "/ithead/network": ["it_network_images"],
     "/ithead/telephone": ["telephone_directory"],
+    "/ithead/director-tasks": ["director_tasks"],
   },
   tender: {
-    "/tender/tasks": ["tender_notes"],
+    "/tender/tasks": ["tender_notes", "director_tasks"],
     "/tender/companies": ["tender_companies"],
     "/tender/documents": ["tender_documents"],
     "/tender/tenders": ["tenders"],
@@ -61,7 +65,7 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
     "/tender/contacts": ["tender_contacts"],
   },
   purchase: {
-    "/purchase/tasks": ["purchase_tasks"],
+    "/purchase/tasks": ["purchase_tasks", "director_tasks"],
     "/purchase/quotations": ["purchase_quotes"],
     "/purchase/products": ["purchase_products"],
     "/purchase/contacts": ["purchase_contacts"],
@@ -76,6 +80,7 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
     "/operations/presentations": ["operations_presentations"],
     "/operations/media": ["operations_media"],
     "/operations/gr": ["operations_gr"],
+    "/operations/director-tasks": ["director_tasks"],
   },
 };
 
