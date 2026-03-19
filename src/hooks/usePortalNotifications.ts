@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
   director: {
     "/director/tasks": ["tasks"],
+    "/director/department-tasks": ["director_tasks"],
     "/director/reports": ["daily_reports"],
     "/director/notices": ["notices"],
     "/director/leaves": ["leave_requests"],
