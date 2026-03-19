@@ -56,7 +56,7 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
     "/ithead/director-tasks": ["director_tasks"],
   },
   tender: {
-    "/tender/tasks": ["tender_notes"],
+    "/tender/tasks": ["tender_notes", "director_tasks"],
     "/tender/companies": ["tender_companies"],
     "/tender/documents": ["tender_documents"],
     "/tender/tenders": ["tenders"],
