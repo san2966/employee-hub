@@ -98,6 +98,7 @@ import ITHeadPasswords from "./pages/ithead/ITHeadPasswords";
 import ITHeadNetwork from "./pages/ithead/ITHeadNetwork";
 import ITHeadTelephone from "./pages/ithead/ITHeadTelephone";
 import ITHeadSettings from "./pages/ithead/ITHeadSettings";
+import ITHeadDirectorTasks from "./pages/ithead/ITHeadDirectorTasks";
 
 // Purchase Module
 import PurchaseLogin from "./pages/purchase/PurchaseLogin";
