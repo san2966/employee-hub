@@ -163,6 +163,7 @@ const App = () => (
           <Route path="/hr/leaves" element={<HRLeaveManager />} />
           <Route path="/hr/settings" element={<HRSettings />} />
           <Route path="/hr/attendance" element={<HRAttendance />} />
+          <Route path="/hr/director-tasks" element={<HRDirectorTasks />} />
           
           {/* Accounts Routes */}
           <Route path="/login/accounts" element={<AccountsLogin />} />
