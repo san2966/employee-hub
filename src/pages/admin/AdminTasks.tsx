@@ -222,6 +222,8 @@ const AdminTasks = () => {
           )}
         </div>
       </div>
+        </TabsContent>
+      </Tabs>
     </AdminLayout>
   );
 };

@@ -149,6 +149,7 @@ const App = () => (
           <Route path="/director/records" element={<DirectorRecordManagement />} />
           <Route path="/director/settings" element={<Settings />} />
           <Route path="/director/attendance" element={<DirectorAttendance />} />
+          <Route path="/director/department-tasks" element={<DirectorDepartmentTasks />} />
           
           {/* HR Routes */}
           <Route path="/login/hr" element={<HRLogin />} />
