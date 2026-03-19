@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useTenderTasks } from "@/hooks/useTenderData";
 import { format } from "date-fns";
+import DirectorTasksTab from "@/components/DirectorTasksTab";
 
 const TenderTaskManager = () => {
   const { data: tasks, add, update } = useTenderTasks();
