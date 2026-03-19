@@ -56,6 +56,15 @@ const AdminTasks = () => {
 
   return (
     <AdminLayout title="Tasks">
+      <Tabs defaultValue="tasks" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="tasks">Tasks</TabsTrigger>
+          <TabsTrigger value="director-tasks">Director Tasks</TabsTrigger>
+        </TabsList>
+        <TabsContent value="director-tasks">
+          <Card><CardContent className="pt-4"><DirectorTasksTab department="Admin" /></CardContent></Card>
+        </TabsContent>
+        <TabsContent value="tasks">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Task Management</h2>
