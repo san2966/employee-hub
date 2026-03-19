@@ -8,10 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
 import { usePurchaseTasks } from "@/hooks/usePurchaseData";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import DirectorTasksTab from "@/components/DirectorTasksTab";
 
 const PurchaseTaskManager = () => {
   const { data: tasks, add, update } = usePurchaseTasks();
