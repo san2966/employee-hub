@@ -22,9 +22,11 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
     "/hr/manage-employee": ["employees"],
     "/hr/leaves": ["leave_requests"],
     "/hr/attendance": ["attendance", "approval_requests"],
+    "/hr/director-tasks": ["director_tasks"],
   },
   accounts: {
     "/accounts/vouchers": ["admin_payments", "employee_payments"],
+    "/accounts/director-tasks": ["director_tasks"],
   },
   employee: {
     "/employee/tasks": ["tasks"],
