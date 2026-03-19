@@ -65,7 +65,7 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
     "/tender/contacts": ["tender_contacts"],
   },
   purchase: {
-    "/purchase/tasks": ["purchase_tasks"],
+    "/purchase/tasks": ["purchase_tasks", "director_tasks"],
     "/purchase/quotations": ["purchase_quotes"],
     "/purchase/products": ["purchase_products"],
     "/purchase/contacts": ["purchase_contacts"],
@@ -80,6 +80,7 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
     "/operations/presentations": ["operations_presentations"],
     "/operations/media": ["operations_media"],
     "/operations/gr": ["operations_gr"],
+    "/operations/director-tasks": ["director_tasks"],
   },
 };
 
