@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Menu, LayoutDashboard, FileText, BookOpen, Inbox, Presentation,
-  Image, Receipt, Settings, LogOut, X,
+  Image, Receipt, Settings, LogOut, X, ClipboardList,
 } from "lucide-react";
 
 interface OperationsSidebarProps {
