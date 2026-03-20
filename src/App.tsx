@@ -37,6 +37,7 @@ import AccountsDashboardPage from "./pages/accounts/AccountsDashboard";
 import Vouchers from "./pages/accounts/Vouchers";
 import AccountsSettings from "./pages/accounts/AccountsSettings";
 import AccountsDirectorTasks from "./pages/accounts/AccountsDirectorTasks";
+import AccountsTenderPayments from "./pages/accounts/AccountsTenderPayments";
 
 // Employee Module
 import EmployeeLogin from "./pages/employee/EmployeeLogin";
