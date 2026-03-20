@@ -8,7 +8,8 @@ import {
   LogOut,
   Menu,
   X,
-  ClipboardList
+  ClipboardList,
+  IndianRupee
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
