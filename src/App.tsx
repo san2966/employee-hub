@@ -222,6 +222,7 @@ const App = () => (
           <Route path="/tender/research" element={<TenderResearch />} />
           <Route path="/tender/contacts" element={<TenderContacts />} />
           <Route path="/tender/settings" element={<TenderSettings />} />
+          <Route path="/tender/payments" element={<TenderPaymentManagerPage />} />
           
           {/* Purchase Routes */}
           <Route path="/login/purchase" element={<PurchaseLogin />} />

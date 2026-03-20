@@ -51,6 +51,7 @@ const TenderSidebar = () => {
       : []),
     { label: "Tender Manager", icon: FileText, path: "/tender/tenders" },
     { label: "Product Manager", icon: Package, path: "/tender/products" },
+    { label: "Payment Manager", icon: IndianRupee, path: "/tender/payments" },
     { label: "Research & Analysis", icon: Search, path: "/tender/research" },
     { label: "Contacts", icon: Users, path: "/tender/contacts" },
     { label: "Settings", icon: Settings, path: "/tender/settings" },
