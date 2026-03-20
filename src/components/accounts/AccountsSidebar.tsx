@@ -8,7 +8,8 @@ import {
   LogOut,
   Menu,
   X,
-  ClipboardList
+  ClipboardList,
+  IndianRupee
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -25,6 +26,7 @@ const AccountsSidebar = () => {
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/accounts/dashboard" },
     { icon: Receipt, label: "Vouchers", path: "/accounts/vouchers" },
+    { icon: IndianRupee, label: "Tender Payments", path: "/accounts/tender-payments" },
     { icon: ClipboardList, label: "Director Tasks", path: "/accounts/director-tasks" },
     { icon: Settings, label: "Settings", path: "/accounts/settings" },
   ];

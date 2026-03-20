@@ -37,6 +37,7 @@ import AccountsDashboardPage from "./pages/accounts/AccountsDashboard";
 import Vouchers from "./pages/accounts/Vouchers";
 import AccountsSettings from "./pages/accounts/AccountsSettings";
 import AccountsDirectorTasks from "./pages/accounts/AccountsDirectorTasks";
+import AccountsTenderPayments from "./pages/accounts/AccountsTenderPayments";
 
 // Employee Module
 import EmployeeLogin from "./pages/employee/EmployeeLogin";
@@ -81,6 +82,7 @@ import TenderProductManager from "./pages/tender/TenderProductManager";
 import TenderResearch from "./pages/tender/TenderResearch";
 import TenderContacts from "./pages/tender/TenderContacts";
 import TenderSettings from "./pages/tender/TenderSettings";
+import TenderPaymentManagerPage from "./pages/tender/TenderPaymentManager";
 
 // Director Tender Monitor & Record Management
 import TenderMonitor from "./pages/director/TenderMonitor";
@@ -171,6 +173,7 @@ const App = () => (
           <Route path="/accounts/vouchers" element={<Vouchers />} />
           <Route path="/accounts/settings" element={<AccountsSettings />} />
           <Route path="/accounts/director-tasks" element={<AccountsDirectorTasks />} />
+          <Route path="/accounts/tender-payments" element={<AccountsTenderPayments />} />
           
           {/* Employee Routes */}
           <Route path="/login/employee" element={<EmployeeLogin />} />
@@ -219,6 +222,7 @@ const App = () => (
           <Route path="/tender/research" element={<TenderResearch />} />
           <Route path="/tender/contacts" element={<TenderContacts />} />
           <Route path="/tender/settings" element={<TenderSettings />} />
+          <Route path="/tender/payments" element={<TenderPaymentManagerPage />} />
           
           {/* Purchase Routes */}
           <Route path="/login/purchase" element={<PurchaseLogin />} />

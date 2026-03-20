@@ -26,6 +26,7 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
   },
   accounts: {
     "/accounts/vouchers": ["admin_payments", "employee_payments"],
+    "/accounts/tender-payments": ["tender_payments"],
     "/accounts/director-tasks": ["director_tasks"],
   },
   employee: {
@@ -61,6 +62,7 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
     "/tender/documents": ["tender_documents"],
     "/tender/tenders": ["tenders"],
     "/tender/products": ["tender_products"],
+    "/tender/payments": ["tender_payments"],
     "/tender/research": ["tenders"],
     "/tender/contacts": ["tender_contacts"],
   },
