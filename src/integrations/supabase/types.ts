@@ -2012,6 +2012,66 @@ export type Database = {
         }
         Relationships: []
       }
+      tender_payments: {
+        Row: {
+          amount: number
+          bank_name: string | null
+          company_name: string | null
+          created_at: string
+          emd_type: string | null
+          id: string
+          organization_name: string
+          paid: boolean
+          paid_at: string | null
+          payment_date: string | null
+          proof_url: string | null
+          reason_for_payment: string | null
+          remark: string | null
+          return_date: string | null
+          tender_number: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          bank_name?: string | null
+          company_name?: string | null
+          created_at?: string
+          emd_type?: string | null
+          id?: string
+          organization_name: string
+          paid?: boolean
+          paid_at?: string | null
+          payment_date?: string | null
+          proof_url?: string | null
+          reason_for_payment?: string | null
+          remark?: string | null
+          return_date?: string | null
+          tender_number: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          bank_name?: string | null
+          company_name?: string | null
+          created_at?: string
+          emd_type?: string | null
+          id?: string
+          organization_name?: string
+          paid?: boolean
+          paid_at?: string | null
+          payment_date?: string | null
+          proof_url?: string | null
+          reason_for_payment?: string | null
+          remark?: string | null
+          return_date?: string | null
+          tender_number?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tender_products: {
         Row: {
           atc_url: string | null
