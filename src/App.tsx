@@ -82,6 +82,7 @@ import TenderProductManager from "./pages/tender/TenderProductManager";
 import TenderResearch from "./pages/tender/TenderResearch";
 import TenderContacts from "./pages/tender/TenderContacts";
 import TenderSettings from "./pages/tender/TenderSettings";
+import TenderPaymentManagerPage from "./pages/tender/TenderPaymentManager";
 
 // Director Tender Monitor & Record Management
 import TenderMonitor from "./pages/director/TenderMonitor";
