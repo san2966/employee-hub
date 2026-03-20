@@ -16,6 +16,7 @@ import {
   Settings,
   LogOut,
   X,
+  IndianRupee,
 } from "lucide-react";
 
 const TenderSidebar = () => {
