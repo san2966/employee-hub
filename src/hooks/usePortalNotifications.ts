@@ -26,6 +26,7 @@ const PORTAL_PAGE_TABLES: Record<string, Record<string, string[]>> = {
   },
   accounts: {
     "/accounts/vouchers": ["admin_payments", "employee_payments"],
+    "/accounts/tender-payments": ["tender_payments"],
     "/accounts/director-tasks": ["director_tasks"],
   },
   employee: {
