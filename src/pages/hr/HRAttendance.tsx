@@ -205,11 +205,13 @@ const HRAttendance = () => {
                   <TableHead>In Time</TableHead>
                   <TableHead>Out Time</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredRecords.map(record => {
                   const color = LOCATION_COLORS[record.location as LocationType] || LOCATION_COLORS.Office;
+                  const needsAction = ["WFH", "Field", "Half-Day"].includes(record.location) && record.status === "Pending";
                   return (
                     <TableRow key={record.id}>
                       <TableCell className="font-medium">{record.employee_name}</TableCell>
@@ -225,6 +227,27 @@ const HRAttendance = () => {
                         <Badge variant={record.status === "Approved" ? "default" : record.status === "Rejected" ? "destructive" : "secondary"}>
                           {record.status}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {needsAction ? (
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="default" onClick={async () => {
+                              const req = approvalRequests.find(r => r.employee_id === record.employee_id && r.date === record.date && r.status === "Pending");
+                              if (req) await approveRequest(req.id, record.id, true);
+                              else await approveRequest("", record.id, true);
+                            }}>
+                              <Check className="h-4 w-4 mr-1" /> Approve
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => {
+                              const req = approvalRequests.find(r => r.employee_id === record.employee_id && r.date === record.date && r.status === "Pending");
+                              setRejectDialog({ open: true, requestId: req?.id || "", attendanceId: record.id });
+                            }}>
+                              <X className="h-4 w-4 mr-1" /> Denied
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   );
