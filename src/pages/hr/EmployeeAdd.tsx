@@ -100,7 +100,7 @@ const EmployeeAdd = () => {
       case 3:
         return formData.isFresher || !!(formData.organizationName && formData.postHeld);
       case 4:
-        return !!(formData.dateOfJoining && formData.designation && formData.username && formData.password);
+        return !!(formData.dateOfJoining && formData.designation);
       default:
         return true;
     }
