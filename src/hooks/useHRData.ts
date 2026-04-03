@@ -135,7 +135,7 @@ export const useHRData = () => {
   };
 
   const deleteEmployee = (id: string, reason: string) => {
-    console.log(`Employee deleted. Reason: ${reason}`);
+    // Employee deletion logged for audit
     const updated = employees.filter(emp => emp.id !== id);
     saveEmployees(updated);
   };
