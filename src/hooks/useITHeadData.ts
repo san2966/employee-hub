@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from "@/integrations/supabase/client";
 
 export interface ITAsset {
   id: string;
@@ -63,164 +64,299 @@ export interface ITHeadProfile {
   profilePhoto: string;
 }
 
-const getStorageKey = (key: string) => `ithead_${key}`;
+const mapDbToAsset = (a: any): ITAsset => ({
+  id: a.id,
+  registrationNumber: a.registration_number,
+  type: a.asset_type,
+  brand: a.brand,
+  model: a.model,
+  serialNumber: a.serial_number,
+  purchaseDate: a.purchase_date,
+  invoiceUrl: a.invoice_url || "",
+  processor: a.processor || "",
+  ramSize: a.ram_size || "",
+  ramSerial: a.ram_serial || "",
+  storageType: a.storage_type || "",
+  storageSize: a.storage_size || "",
+  storageSerial: a.storage_serial || "",
+  motherboardModel: a.motherboard_model || "",
+  motherboardSerial: a.motherboard_serial || "",
+  displayModel: a.display_model || "",
+  displaySerial: a.display_serial || "",
+  macAddress: a.mac_address || "",
+  warrantyTill: a.warranty_till,
+  assignedTo: a.assigned_to || "",
+  assignedToName: a.employees?.name || "",
+  createdAt: a.created_at || "",
+});
 
-const loadFromStorage = <T>(key: string, defaultValue: T): T => {
+// localStorage for profile (no DB table for IT head profile per se)
+const loadProfile = (): ITHeadProfile => {
   try {
-    const stored = localStorage.getItem(getStorageKey(key));
-    return stored ? JSON.parse(stored) : defaultValue;
+    const stored = localStorage.getItem('ithead_profile');
+    return stored ? JSON.parse(stored) : {
+      firstName: 'IT', lastName: 'Head', mobileNumber: '',
+      designation: 'IT Head', profilePhoto: ''
+    };
   } catch {
-    return defaultValue;
-  }
-};
-
-const saveToStorage = <T>(key: string, value: T): void => {
-  try {
-    localStorage.setItem(getStorageKey(key), JSON.stringify(value));
-  } catch (error) {
-    console.error('Failed to save to localStorage:', error);
+    return { firstName: 'IT', lastName: 'Head', mobileNumber: '', designation: 'IT Head', profilePhoto: '' };
   }
 };
 
 export const useITHeadData = () => {
-  const [assets, setAssets] = useState<ITAsset[]>(() => loadFromStorage('assets', []));
-  const [passwords, setPasswords] = useState<ITPassword[]>(() => loadFromStorage('passwords', []));
-  const [networkImages, setNetworkImages] = useState<NetworkImage[]>(() => loadFromStorage('networkImages', []));
-  const [telephoneImages, setTelephoneImages] = useState<NetworkImage[]>(() => loadFromStorage('telephoneImages', []));
-  const [telephoneEntries, setTelephoneEntries] = useState<TelephoneEntry[]>(() => loadFromStorage('telephoneEntries', []));
-  const [notes, setNotes] = useState<ITNote[]>(() => loadFromStorage('notes', []));
-  const [profile, setProfile] = useState<ITHeadProfile>(() => loadFromStorage('profile', {
-    firstName: 'IT',
-    lastName: 'Head',
-    mobileNumber: '',
-    designation: 'IT Head',
-    profilePhoto: ''
-  }));
+  const [assets, setAssets] = useState<ITAsset[]>([]);
+  const [passwords, setPasswords] = useState<ITPassword[]>([]);
+  const [networkImages, setNetworkImages] = useState<NetworkImage[]>([]);
+  const [telephoneImages, setTelephoneImages] = useState<NetworkImage[]>([]);
+  const [telephoneEntries, setTelephoneEntries] = useState<TelephoneEntry[]>([]);
+  const [notes, setNotes] = useState<ITNote[]>([]);
+  const [profile, setProfile] = useState<ITHeadProfile>(loadProfile);
 
-  // Auto-save to localStorage
-  useEffect(() => { saveToStorage('assets', assets); }, [assets]);
-  useEffect(() => { saveToStorage('passwords', passwords); }, [passwords]);
-  useEffect(() => { saveToStorage('networkImages', networkImages); }, [networkImages]);
-  useEffect(() => { saveToStorage('telephoneImages', telephoneImages); }, [telephoneImages]);
-  useEffect(() => { saveToStorage('telephoneEntries', telephoneEntries); }, [telephoneEntries]);
-  useEffect(() => { saveToStorage('notes', notes); }, [notes]);
-  useEffect(() => { saveToStorage('profile', profile); }, [profile]);
+  useEffect(() => {
+    localStorage.setItem('ithead_profile', JSON.stringify(profile));
+  }, [profile]);
 
-  // Generate registration number: VMCC/Brand/Year/Month/Number
+  // ---- Supabase fetchers ----
+  const fetchAssets = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("it_assets")
+      .select(`*, employees(name)`)
+      .order("created_at", { ascending: false });
+    if (error) { console.error("Error:", error); return; }
+    setAssets((data || []).map(mapDbToAsset));
+  }, []);
+
+  const fetchPasswords = useCallback(async () => {
+    const { data, error } = await supabase.functions.invoke('encrypt-password', {
+      body: { action: 'get' }
+    });
+    if (error) { console.error("Error:", error); return; }
+    setPasswords((data?.passwords || []).map((p: any) => ({
+      id: p.id, portal: p.portal, username: p.username,
+      password: p.decrypted_password || p.encrypted_password || "",
+      createdAt: p.created_at || "",
+    })));
+  }, []);
+
+  const fetchNetworkImages = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("it_network_images")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) { console.error("Error:", error); return; }
+    const mapped = (data || []).map(img => ({
+      id: img.id, name: img.name, url: img.url, createdAt: img.created_at || "",
+      imageType: img.image_type,
+    }));
+    setNetworkImages(mapped.filter(i => i.imageType === "network").map(({ imageType, ...rest }) => rest));
+    setTelephoneImages(mapped.filter(i => i.imageType === "telephone").map(({ imageType, ...rest }) => rest));
+  }, []);
+
+  const fetchTelephoneEntries = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("telephone_directory")
+      .select("*")
+      .order("department", { ascending: true });
+    if (error) { console.error("Error:", error); return; }
+    setTelephoneEntries((data || []).map(t => ({
+      id: t.id, department: t.department, intercom: t.intercom,
+      phoneNumber: t.phone_number, createdAt: t.created_at || "",
+    })));
+  }, []);
+
+  // Notes - still localStorage (no dedicated IT notes table)
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('ithead_notes');
+      if (stored) setNotes(JSON.parse(stored));
+    } catch {}
+  }, []);
+  useEffect(() => {
+    localStorage.setItem('ithead_notes', JSON.stringify(notes));
+  }, [notes]);
+
+  // Initial load
+  useEffect(() => {
+    fetchAssets();
+    fetchPasswords();
+    fetchNetworkImages();
+    fetchTelephoneEntries();
+  }, [fetchAssets, fetchPasswords, fetchNetworkImages, fetchTelephoneEntries]);
+
+  // Realtime
+  useEffect(() => {
+    const channels = [
+      supabase.channel("it-assets-sync").on("postgres_changes", { event: "*", schema: "public", table: "it_assets" }, () => fetchAssets()).subscribe(),
+      supabase.channel("it-images-sync").on("postgres_changes", { event: "*", schema: "public", table: "it_network_images" }, () => fetchNetworkImages()).subscribe(),
+      supabase.channel("it-tel-sync").on("postgres_changes", { event: "*", schema: "public", table: "telephone_directory" }, () => fetchTelephoneEntries()).subscribe(),
+    ];
+    return () => { channels.forEach(ch => supabase.removeChannel(ch)); };
+  }, [fetchAssets, fetchNetworkImages, fetchTelephoneEntries]);
+
+  // ---- Asset operations ----
   const generateRegistrationNumber = useCallback((brand: string): string => {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
-    const existingCount = assets.filter(a => 
+    const existingCount = assets.filter(a =>
       a.registrationNumber.includes(`VMCC/${brand.toUpperCase()}/${year}/${month}`)
     ).length;
     const number = String(existingCount + 1).padStart(3, '0');
     return `VMCC/${brand.toUpperCase()}/${year}/${month}/${number}`;
   }, [assets]);
 
-  // Asset operations
-  const addAsset = useCallback((asset: Omit<ITAsset, 'id' | 'registrationNumber' | 'createdAt'>) => {
-    const newAsset: ITAsset = {
-      ...asset,
-      id: crypto.randomUUID(),
-      registrationNumber: generateRegistrationNumber(asset.brand),
-      createdAt: new Date().toISOString()
-    };
-    setAssets(prev => [newAsset, ...prev]);
-    return newAsset;
-  }, [generateRegistrationNumber]);
+  const addAsset = useCallback(async (asset: Omit<ITAsset, 'id' | 'registrationNumber' | 'createdAt'>) => {
+    const registration_number = generateRegistrationNumber(asset.brand);
+    const { data, error } = await supabase
+      .from("it_assets")
+      .insert({
+        registration_number,
+        asset_type: asset.type,
+        brand: asset.brand,
+        model: asset.model,
+        serial_number: asset.serialNumber,
+        purchase_date: asset.purchaseDate,
+        invoice_url: asset.invoiceUrl || null,
+        processor: asset.processor || null,
+        ram_size: asset.ramSize || null,
+        ram_serial: asset.ramSerial || null,
+        storage_type: asset.storageType || null,
+        storage_size: asset.storageSize || null,
+        storage_serial: asset.storageSerial || null,
+        motherboard_model: asset.motherboardModel || null,
+        motherboard_serial: asset.motherboardSerial || null,
+        display_model: asset.displayModel || null,
+        display_serial: asset.displaySerial || null,
+        mac_address: asset.macAddress || null,
+        warranty_till: asset.warrantyTill,
+        assigned_to: asset.assignedTo || null,
+      })
+      .select()
+      .single();
 
-  const updateAsset = useCallback((id: string, updates: Partial<ITAsset>) => {
-    setAssets(prev => prev.map(asset => 
-      asset.id === id ? { ...asset, ...updates } : asset
-    ));
-  }, []);
+    if (error) throw error;
+    await fetchAssets();
+    return { ...asset, id: data.id, registrationNumber: registration_number, createdAt: data.created_at || "" };
+  }, [generateRegistrationNumber, fetchAssets]);
 
-  const deleteAsset = useCallback((id: string) => {
-    setAssets(prev => prev.filter(asset => asset.id !== id));
-  }, []);
+  const updateAsset = useCallback(async (id: string, updates: Partial<ITAsset>) => {
+    const dbUpdates: any = {};
+    if (updates.type) dbUpdates.asset_type = updates.type;
+    if (updates.brand) dbUpdates.brand = updates.brand;
+    if (updates.model) dbUpdates.model = updates.model;
+    if (updates.serialNumber) dbUpdates.serial_number = updates.serialNumber;
+    if (updates.assignedTo !== undefined) dbUpdates.assigned_to = updates.assignedTo || null;
+    if (updates.warrantyTill) dbUpdates.warranty_till = updates.warrantyTill;
+    if (updates.processor !== undefined) dbUpdates.processor = updates.processor || null;
+    if (updates.ramSize !== undefined) dbUpdates.ram_size = updates.ramSize || null;
 
-  const assignAsset = useCallback((id: string, employeeId: string, employeeName: string) => {
-    updateAsset(id, { assignedTo: employeeId, assignedToName: employeeName });
+    const { error } = await supabase.from("it_assets").update(dbUpdates).eq("id", id);
+    if (error) throw error;
+    await fetchAssets();
+  }, [fetchAssets]);
+
+  const deleteAsset = useCallback(async (id: string) => {
+    const { error } = await supabase.from("it_assets").delete().eq("id", id);
+    if (error) throw error;
+    await fetchAssets();
+  }, [fetchAssets]);
+
+  const assignAsset = useCallback(async (id: string, employeeId: string, _employeeName: string) => {
+    await updateAsset(id, { assignedTo: employeeId });
   }, [updateAsset]);
 
-  // Password operations
-  const addPassword = useCallback((portal: string, username: string, password: string) => {
-    const newEntry: ITPassword = {
-      id: crypto.randomUUID(),
-      portal,
-      username,
-      password,
-      createdAt: new Date().toISOString()
-    };
-    setPasswords(prev => [newEntry, ...prev]);
-  }, []);
+  // ---- Password operations ----
+  const addPassword = useCallback(async (portal: string, username: string, password: string) => {
+    const { data, error } = await supabase.functions.invoke('encrypt-password', {
+      body: { action: 'save', portal, username, password }
+    });
+    if (error || data?.error) throw new Error(error?.message || data?.error);
+    await fetchPasswords();
+  }, [fetchPasswords]);
 
-  const updatePassword = useCallback((id: string, updates: Partial<ITPassword>) => {
-    setPasswords(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
-  }, []);
+  const updatePassword = useCallback(async (id: string, updates: Partial<ITPassword>) => {
+    if (updates.password) {
+      const { data: encData, error: encError } = await supabase.functions.invoke('encrypt-password', {
+        body: { action: 'encrypt', password: updates.password }
+      });
+      if (encError || encData?.error) throw new Error(encError?.message || encData?.error);
 
-  const deletePassword = useCallback((id: string) => {
-    setPasswords(prev => prev.filter(p => p.id !== id));
-  }, []);
+      const dbUpdates: any = { encrypted_password: encData.encrypted };
+      if (updates.portal) dbUpdates.portal = updates.portal;
+      if (updates.username) dbUpdates.username = updates.username;
 
-  // Network image operations
-  const addNetworkImage = useCallback((name: string, url: string) => {
-    const newImage: NetworkImage = {
-      id: crypto.randomUUID(),
-      name,
-      url,
-      createdAt: new Date().toISOString()
-    };
-    setNetworkImages(prev => [newImage, ...prev]);
-  }, []);
+      const { error } = await supabase.from("it_passwords").update(dbUpdates).eq("id", id);
+      if (error) throw error;
+    } else {
+      const dbUpdates: any = {};
+      if (updates.portal) dbUpdates.portal = updates.portal;
+      if (updates.username) dbUpdates.username = updates.username;
+      const { error } = await supabase.from("it_passwords").update(dbUpdates).eq("id", id);
+      if (error) throw error;
+    }
+    await fetchPasswords();
+  }, [fetchPasswords]);
 
-  const deleteNetworkImage = useCallback((id: string) => {
-    setNetworkImages(prev => prev.filter(img => img.id !== id));
-  }, []);
+  const deletePassword = useCallback(async (id: string) => {
+    const { data, error } = await supabase.functions.invoke('encrypt-password', {
+      body: { action: 'delete', id }
+    });
+    if (error || data?.error) throw new Error(error?.message || data?.error);
+    await fetchPasswords();
+  }, [fetchPasswords]);
 
-  // Telephone image operations
-  const addTelephoneImage = useCallback((name: string, url: string) => {
-    const newImage: NetworkImage = {
-      id: crypto.randomUUID(),
-      name,
-      url,
-      createdAt: new Date().toISOString()
-    };
-    setTelephoneImages(prev => [newImage, ...prev]);
-  }, []);
+  // ---- Network image operations ----
+  const addNetworkImage = useCallback(async (name: string, url: string) => {
+    const { error } = await supabase.from("it_network_images").insert({ name, url, image_type: "network" });
+    if (error) throw error;
+    await fetchNetworkImages();
+  }, [fetchNetworkImages]);
 
-  const deleteTelephoneImage = useCallback((id: string) => {
-    setTelephoneImages(prev => prev.filter(img => img.id !== id));
-  }, []);
+  const deleteNetworkImage = useCallback(async (id: string) => {
+    const { error } = await supabase.from("it_network_images").delete().eq("id", id);
+    if (error) throw error;
+    await fetchNetworkImages();
+  }, [fetchNetworkImages]);
 
-  // Telephone entry operations
-  const addTelephoneEntry = useCallback((department: string, intercom: string, phoneNumber: string) => {
-    const newEntry: TelephoneEntry = {
-      id: crypto.randomUUID(),
-      department,
-      intercom,
-      phoneNumber,
-      createdAt: new Date().toISOString()
-    };
-    setTelephoneEntries(prev => [newEntry, ...prev]);
-  }, []);
+  // ---- Telephone image operations ----
+  const addTelephoneImage = useCallback(async (name: string, url: string) => {
+    const { error } = await supabase.from("it_network_images").insert({ name, url, image_type: "telephone" });
+    if (error) throw error;
+    await fetchNetworkImages();
+  }, [fetchNetworkImages]);
 
-  const updateTelephoneEntry = useCallback((id: string, updates: Partial<TelephoneEntry>) => {
-    setTelephoneEntries(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
-  }, []);
+  const deleteTelephoneImage = useCallback(async (id: string) => {
+    const { error } = await supabase.from("it_network_images").delete().eq("id", id);
+    if (error) throw error;
+    await fetchNetworkImages();
+  }, [fetchNetworkImages]);
 
-  const deleteTelephoneEntry = useCallback((id: string) => {
-    setTelephoneEntries(prev => prev.filter(t => t.id !== id));
-  }, []);
+  // ---- Telephone entry operations ----
+  const addTelephoneEntry = useCallback(async (department: string, intercom: string, phoneNumber: string) => {
+    const { error } = await supabase.from("telephone_directory").insert({ department, intercom, phone_number: phoneNumber });
+    if (error) throw error;
+    await fetchTelephoneEntries();
+  }, [fetchTelephoneEntries]);
 
-  // Notes operations
+  const updateTelephoneEntry = useCallback(async (id: string, updates: Partial<TelephoneEntry>) => {
+    const dbUpdates: any = {};
+    if (updates.department) dbUpdates.department = updates.department;
+    if (updates.intercom) dbUpdates.intercom = updates.intercom;
+    if (updates.phoneNumber) dbUpdates.phone_number = updates.phoneNumber;
+    const { error } = await supabase.from("telephone_directory").update(dbUpdates).eq("id", id);
+    if (error) throw error;
+    await fetchTelephoneEntries();
+  }, [fetchTelephoneEntries]);
+
+  const deleteTelephoneEntry = useCallback(async (id: string) => {
+    const { error } = await supabase.from("telephone_directory").delete().eq("id", id);
+    if (error) throw error;
+    await fetchTelephoneEntries();
+  }, [fetchTelephoneEntries]);
+
+  // ---- Notes operations (localStorage) ----
   const addNote = useCallback((content: string) => {
-    const newNote: ITNote = {
-      id: crypto.randomUUID(),
-      content,
-      createdAt: new Date().toISOString()
-    };
+    const newNote: ITNote = { id: crypto.randomUUID(), content, createdAt: new Date().toISOString() };
     setNotes(prev => [newNote, ...prev]);
   }, []);
 
@@ -232,44 +368,19 @@ export const useITHeadData = () => {
     setNotes(prev => prev.filter(n => n.id !== id));
   }, []);
 
-  // Profile operations
+  // ---- Profile operations (localStorage) ----
   const updateProfile = useCallback((updates: Partial<ITHeadProfile>) => {
     setProfile(prev => ({ ...prev, ...updates }));
   }, []);
 
   return {
-    // Data
-    assets,
-    passwords,
-    networkImages,
-    telephoneImages,
-    telephoneEntries,
-    notes,
-    profile,
-    // Asset operations
-    addAsset,
-    updateAsset,
-    deleteAsset,
-    assignAsset,
-    generateRegistrationNumber,
-    // Password operations
-    addPassword,
-    updatePassword,
-    deletePassword,
-    // Network image operations
-    addNetworkImage,
-    deleteNetworkImage,
-    // Telephone operations
-    addTelephoneImage,
-    deleteTelephoneImage,
-    addTelephoneEntry,
-    updateTelephoneEntry,
-    deleteTelephoneEntry,
-    // Notes operations
-    addNote,
-    updateNote,
-    deleteNote,
-    // Profile operations
-    updateProfile
+    assets, passwords, networkImages, telephoneImages, telephoneEntries, notes, profile,
+    addAsset, updateAsset, deleteAsset, assignAsset, generateRegistrationNumber,
+    addPassword, updatePassword, deletePassword,
+    addNetworkImage, deleteNetworkImage,
+    addTelephoneImage, deleteTelephoneImage,
+    addTelephoneEntry, updateTelephoneEntry, deleteTelephoneEntry,
+    addNote, updateNote, deleteNote,
+    updateProfile,
   };
 };

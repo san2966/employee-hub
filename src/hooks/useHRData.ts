@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface Employee {
   id: string;
-  // Basic Information
   name: string;
   photo?: string;
   address: string;
@@ -16,7 +15,6 @@ export interface Employee {
   fatherMobile: string;
   motherName: string;
   motherMobile: string;
-  // Educational Information
   highestEducation: string;
   degreeName: string;
   specialization: string;
@@ -26,7 +24,6 @@ export interface Employee {
   passedOrAppearing: "passed" | "appearing";
   marksPercentage?: string;
   certifications?: string;
-  // Experience Information
   isFresher: boolean;
   organizationName?: string;
   postHeld?: string;
@@ -35,14 +32,12 @@ export interface Employee {
   reasonOfLeaving?: string;
   previousCTC?: string;
   totalExperience?: string;
-  // Office Use
   dateOfJoining: string;
   designation: string;
   additionalCharge?: string;
   responsibilities: string;
   username: string;
   password: string;
-  // System
   createdAt: string;
   leaveBalance: {
     paid: number;
@@ -64,38 +59,131 @@ export interface LeaveRequest {
   workingDate?: string;
   workingReason?: string;
   createdAt: string;
-  isAddLeave?: boolean; // For exchange leave - true if adding leave, false if taking leave
+  isAddLeave?: boolean;
 }
+
+// Map DB employee to local Employee interface
+const mapDbToEmployee = (emp: any): Employee => ({
+  id: emp.id,
+  name: emp.name,
+  photo: emp.photo || "",
+  address: emp.address,
+  phone: emp.phone,
+  email: emp.email,
+  aadhaarNumber: emp.aadhaar_number,
+  panNumber: emp.pan_number,
+  bloodGroup: emp.blood_group,
+  fatherName: emp.father_name,
+  fatherMobile: emp.father_mobile || "",
+  motherName: emp.mother_name,
+  motherMobile: emp.mother_mobile || "",
+  highestEducation: emp.highest_education,
+  degreeName: emp.degree_name,
+  specialization: emp.specialization || "",
+  schoolCollege: emp.school_college,
+  boardUniversity: emp.board_university,
+  yearOfPassing: emp.year_of_passing,
+  passedOrAppearing: emp.passed_or_appearing as "passed" | "appearing",
+  marksPercentage: emp.marks_percentage || "",
+  certifications: emp.certifications || "",
+  isFresher: emp.is_fresher ?? true,
+  organizationName: emp.organization_name || "",
+  postHeld: emp.post_held || "",
+  jobPeriodFrom: emp.job_period_from || "",
+  jobPeriodTo: emp.job_period_to || "",
+  reasonOfLeaving: emp.reason_of_leaving || "",
+  previousCTC: emp.previous_ctc || "",
+  totalExperience: emp.total_experience || "",
+  dateOfJoining: emp.date_of_joining,
+  designation: emp.designation,
+  additionalCharge: emp.additional_charge || "",
+  responsibilities: emp.responsibilities,
+  username: emp.username,
+  password: "",
+  createdAt: emp.created_at,
+  leaveBalance: {
+    paid: emp.paid_leave_balance ?? 12,
+    medical: emp.medical_leave_balance ?? 6,
+    exchange: emp.exchange_leave_balance ?? 0,
+  },
+});
+
+const mapDbToLeave = (req: any): LeaveRequest => ({
+  id: req.id,
+  employeeId: req.employee_id,
+  employeeName: req.employees?.name || "Unknown",
+  date: req.date,
+  reason: req.reason,
+  type: req.leave_type as "paid" | "medical" | "exchange",
+  status: req.status as "pending" | "approved" | "rejected",
+  rejectionReason: req.rejection_reason,
+  medicalCertificate: req.medical_certificate,
+  workingDate: req.working_date,
+  workingReason: req.working_reason,
+  createdAt: req.created_at,
+  isAddLeave: req.is_add_leave,
+});
 
 export const useHRData = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [allLeaves, setAllLeaves] = useState<LeaveRequest[]>([]);
 
-  useEffect(() => {
-    const savedEmployees = localStorage.getItem("hr_employees");
-    if (savedEmployees) {
-      setEmployees(JSON.parse(savedEmployees));
+  const fetchEmployees = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("employees")
+      .select("*")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching employees:", error);
+      return;
     }
-    loadAllLeaves();
+
+    setEmployees((data || []).map(mapDbToEmployee));
   }, []);
 
-  const loadAllLeaves = useCallback(() => {
-    const directorLeaves = JSON.parse(localStorage.getItem("director_leaves") || "[]");
-    setAllLeaves(directorLeaves);
+  const fetchLeaves = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("leave_requests")
+      .select(`*, employees(name)`)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching leave requests:", error);
+      return;
+    }
+
+    setAllLeaves((data || []).map(mapDbToLeave));
   }, []);
 
-  // Refresh leaves periodically
+  // Initial load
   useEffect(() => {
-    const interval = setInterval(loadAllLeaves, 2000);
-    return () => clearInterval(interval);
-  }, [loadAllLeaves]);
+    fetchEmployees();
+    fetchLeaves();
+  }, [fetchEmployees, fetchLeaves]);
 
-  const saveEmployees = (newEmployees: Employee[]) => {
-    setEmployees(newEmployees);
-    localStorage.setItem("hr_employees", JSON.stringify(newEmployees));
-    // Also update director's view
-    localStorage.setItem("director_employees", JSON.stringify(newEmployees));
-  };
+  // Realtime subscriptions
+  useEffect(() => {
+    const empChannel = supabase
+      .channel("hr-employees-sync")
+      .on("postgres_changes", { event: "*", schema: "public", table: "employees" }, () => {
+        fetchEmployees();
+      })
+      .subscribe();
+
+    const leaveChannel = supabase
+      .channel("hr-leaves-sync")
+      .on("postgres_changes", { event: "*", schema: "public", table: "leave_requests" }, () => {
+        fetchLeaves();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(empChannel);
+      supabase.removeChannel(leaveChannel);
+    };
+  }, [fetchEmployees, fetchLeaves]);
 
   const addEmployee = async (employee: Omit<Employee, "id" | "createdAt" | "leaveBalance">) => {
     const { data, error } = await supabase.functions.invoke("create-employee", {
@@ -111,6 +199,8 @@ export const useHRData = () => {
       throw new Error(data.error);
     }
 
+    await fetchEmployees();
+
     const newEmployee: Employee = {
       ...employee,
       id: data?.employee?.id || crypto.randomUUID(),
@@ -122,32 +212,52 @@ export const useHRData = () => {
       },
     };
 
-    const updated = [...employees, newEmployee];
-    saveEmployees(updated);
     return newEmployee;
   };
 
-  const updateEmployee = (id: string, updates: Partial<Employee>) => {
-    const updated = employees.map(emp => 
-      emp.id === id ? { ...emp, ...updates } : emp
-    );
-    saveEmployees(updated);
+  const updateEmployee = async (id: string, updates: Partial<Employee>) => {
+    const dbUpdates: any = {};
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
+    if (updates.email !== undefined) dbUpdates.email = updates.email;
+    if (updates.designation !== undefined) dbUpdates.designation = updates.designation;
+    if (updates.address !== undefined) dbUpdates.address = updates.address;
+    if (updates.responsibilities !== undefined) dbUpdates.responsibilities = updates.responsibilities;
+    if (updates.additionalCharge !== undefined) dbUpdates.additional_charge = updates.additionalCharge;
+
+    const { error } = await supabase
+      .from("employees")
+      .update(dbUpdates)
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error updating employee:", error);
+      throw error;
+    }
+
+    await fetchEmployees();
   };
 
-  const deleteEmployee = (id: string, reason: string) => {
-    // Employee deletion logged for audit
-    const updated = employees.filter(emp => emp.id !== id);
-    saveEmployees(updated);
+  const deleteEmployee = async (id: string, _reason: string) => {
+    const { error } = await supabase
+      .from("employees")
+      .update({ is_active: false })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error deleting employee:", error);
+      throw error;
+    }
+
+    await fetchEmployees();
   };
 
   const getEmployeeById = (id: string) => {
     return employees.find(emp => emp.id === id);
   };
 
-  // HR Leave Management
-  const getAllLeaveRequests = useCallback(() => {
-    return allLeaves;
-  }, [allLeaves]);
+  // Leave Management
+  const getAllLeaveRequests = useCallback(() => allLeaves, [allLeaves]);
 
   const getLeavesByType = useCallback((type: "paid" | "medical" | "exchange") => {
     return allLeaves.filter(l => l.type === type);
@@ -157,23 +267,34 @@ export const useHRData = () => {
     return allLeaves.filter(l => l.employeeId === employeeId);
   }, [allLeaves]);
 
-  // HR-only: Clear/delete leave records
-  const clearLeaveRecord = useCallback((leaveId: string) => {
-    const directorLeaves: LeaveRequest[] = JSON.parse(localStorage.getItem("director_leaves") || "[]");
-    const updated = directorLeaves.filter(l => l.id !== leaveId);
-    localStorage.setItem("director_leaves", JSON.stringify(updated));
-    setAllLeaves(updated);
-  }, []);
+  const clearLeaveRecord = useCallback(async (leaveId: string) => {
+    const { error } = await supabase
+      .from("leave_requests")
+      .delete()
+      .eq("id", leaveId);
 
-  // HR-only: Clear all leaves for an employee
-  const clearEmployeeLeaves = useCallback((employeeId: string) => {
-    const directorLeaves: LeaveRequest[] = JSON.parse(localStorage.getItem("director_leaves") || "[]");
-    const updated = directorLeaves.filter(l => l.employeeId !== employeeId);
-    localStorage.setItem("director_leaves", JSON.stringify(updated));
-    setAllLeaves(updated);
-  }, []);
+    if (error) {
+      console.error("Error clearing leave record:", error);
+      throw error;
+    }
 
-  // Get leave statistics
+    await fetchLeaves();
+  }, [fetchLeaves]);
+
+  const clearEmployeeLeaves = useCallback(async (employeeId: string) => {
+    const { error } = await supabase
+      .from("leave_requests")
+      .delete()
+      .eq("employee_id", employeeId);
+
+    if (error) {
+      console.error("Error clearing employee leaves:", error);
+      throw error;
+    }
+
+    await fetchLeaves();
+  }, [fetchLeaves]);
+
   const getLeaveStats = useCallback(() => {
     const pending = allLeaves.filter(l => l.status === "pending").length;
     const approved = allLeaves.filter(l => l.status === "approved").length;
@@ -191,13 +312,12 @@ export const useHRData = () => {
     updateEmployee,
     deleteEmployee,
     getEmployeeById,
-    // Leave Management
     getAllLeaveRequests,
     getLeavesByType,
     getLeavesByEmployee,
     clearLeaveRecord,
     clearEmployeeLeaves,
     getLeaveStats,
-    refreshLeaves: loadAllLeaves,
+    refreshLeaves: fetchLeaves,
   };
 };
