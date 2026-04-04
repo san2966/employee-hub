@@ -37,11 +37,7 @@ const AdminAssets = () => {
     image: "",
   });
 
-  const hrEmployees = JSON.parse(localStorage.getItem("hr_employees") || "[]");
-  const allEmployees = [
-    ...employees.map(e => ({ id: e.id, name: e.name })),
-    ...hrEmployees.map((e: any) => ({ id: e.id, name: `${e.firstName} ${e.lastName}` })),
-  ];
+  const allEmployees = employees.map(e => ({ id: e.id, name: e.name }));
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
