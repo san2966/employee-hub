@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 // Types
 export interface CalendarEvent {
@@ -87,7 +88,7 @@ export interface LeaveRequest {
   workingDate?: string;
   workingReason?: string;
   createdAt: string;
-  isAddLeave?: boolean; // For exchange leave - true if adding leave, false if taking leave
+  isAddLeave?: boolean;
 }
 
 export interface Report {
@@ -113,47 +114,252 @@ export interface Notice {
   read?: boolean;
 }
 
-const getEmployeeStorageKey = (employeeId: string, key: string) => 
+const getEmployeeStorageKey = (employeeId: string, key: string) =>
   `employee_${employeeId}_${key}`;
 
 export const useEmployeeData = (employeeId: string) => {
+  // localStorage items (personal, no DB table)
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [personalTasks, setPersonalTasks] = useState<Task[]>([]);
+
+  // Supabase items
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [travelExpenses, setTravelExpenses] = useState<TravelExpense[]>([]);
   const [miscPayments, setMiscPayments] = useState<MiscPayment[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
-  const [leaveBalance, setLeaveBalance] = useState({ paid: 12, medical: 6, exchange: 0 }); // Exchange starts at 0
+  const [leaveBalance, setLeaveBalance] = useState({ paid: 12, medical: 6, exchange: 0 });
 
-  // Load employee-specific data
+  // Load localStorage items
   useEffect(() => {
     if (!employeeId) return;
-    
-    const loadData = <T>(key: string, defaultVal: T): T => {
+    const loadData = <T,>(key: string, defaultVal: T): T => {
       const data = localStorage.getItem(getEmployeeStorageKey(employeeId, key));
       return data ? JSON.parse(data) : defaultVal;
     };
-
     setEvents(loadData("events", []));
     setNotes(loadData("notes", []));
     setPersonalTasks(loadData("personal_tasks", []));
-    setContacts(loadData("contacts", []));
-    setRequirements(loadData("requirements", []));
-    setTravelExpenses(loadData("travel_expenses", []));
-    setMiscPayments(loadData("misc_payments", []));
-    setLeaveRequests(loadData("leave_requests", []));
-    setReports(loadData("reports", []));
-    setLeaveBalance(loadData("leave_balance", { paid: 12, medical: 6, exchange: 0 }));
   }, [employeeId]);
 
-  const saveData = <T>(key: string, data: T) => {
+  const saveData = <T,>(key: string, data: T) => {
     localStorage.setItem(getEmployeeStorageKey(employeeId, key), JSON.stringify(data));
   };
 
-  // Calendar Events
+  // ─── Supabase: Contacts (read from shared contacts table) ───
+  const fetchContacts = useCallback(async () => {
+    const { data } = await supabase.from("contacts").select("*").eq("is_active", true);
+    if (data) {
+      setContacts(data.map(c => ({
+        id: c.id,
+        name: c.name,
+        phone: c.phone,
+        designation: c.designation || undefined,
+        department: c.department || undefined,
+        organization: c.department || "",
+        email: c.email || undefined,
+      })));
+    }
+  }, []);
+
+  // ─── Supabase: Leave Requests ───
+  const fetchLeaveRequests = useCallback(async () => {
+    if (!employeeId) return;
+    const { data } = await supabase
+      .from("leave_requests")
+      .select("*, employees!leave_requests_employee_id_fkey(name)")
+      .eq("employee_id", employeeId)
+      .order("created_at", { ascending: false });
+    if (data) {
+      setLeaveRequests(data.map(l => ({
+        id: l.id,
+        employeeId: l.employee_id,
+        employeeName: (l.employees as any)?.name || "",
+        date: l.date,
+        reason: l.reason,
+        type: l.leave_type as LeaveRequest["type"],
+        status: (l.status || "pending") as LeaveRequest["status"],
+        rejectionReason: l.rejection_reason || undefined,
+        medicalCertificate: l.medical_certificate || undefined,
+        workingDate: l.working_date || undefined,
+        workingReason: l.working_reason || undefined,
+        createdAt: l.created_at || new Date().toISOString(),
+        isAddLeave: l.is_add_leave || false,
+      })));
+    }
+  }, [employeeId]);
+
+  // ─── Supabase: Employee Payments (travel + misc) ───
+  const fetchPayments = useCallback(async () => {
+    if (!employeeId) return;
+    const { data } = await supabase
+      .from("employee_payments")
+      .select("*, employees!employee_payments_employee_id_fkey(name)")
+      .eq("employee_id", employeeId)
+      .order("created_at", { ascending: false });
+    if (data) {
+      const travel: TravelExpense[] = [];
+      const misc: MiscPayment[] = [];
+      data.forEach(p => {
+        const empName = (p.employees as any)?.name || "";
+        if (p.category === "travel") {
+          // Parse description for from/to/purpose
+          let from = "", to = "", purpose = p.description;
+          try {
+            const parsed = JSON.parse(p.description);
+            from = parsed.from || "";
+            to = parsed.to || "";
+            purpose = parsed.purpose || p.description;
+          } catch { /* plain text */ }
+          travel.push({
+            id: p.id,
+            employeeId: p.employee_id,
+            employeeName: empName,
+            from, to, purpose,
+            date: p.date,
+            receiptUrl: p.receipt_url || undefined,
+            amount: Number(p.amount),
+            timestamp: p.created_at || new Date().toISOString(),
+          });
+        } else {
+          misc.push({
+            id: p.id,
+            employeeId: p.employee_id,
+            employeeName: empName,
+            date: p.date,
+            purpose: p.description,
+            receiptUrl: p.receipt_url || undefined,
+            amount: Number(p.amount),
+            timestamp: p.created_at || new Date().toISOString(),
+          });
+        }
+      });
+      setTravelExpenses(travel);
+      setMiscPayments(misc);
+    }
+  }, [employeeId]);
+
+  // ─── Supabase: Reports (daily_reports) ───
+  const fetchReports = useCallback(async () => {
+    if (!employeeId) return;
+    const { data } = await supabase
+      .from("daily_reports")
+      .select("*, employees!daily_reports_employee_id_fkey(name)")
+      .eq("employee_id", employeeId)
+      .order("created_at", { ascending: false });
+    if (data) {
+      setReports(data.map(r => {
+        const empName = (r.employees as any)?.name || "";
+        let parsed: any = {};
+        try { parsed = JSON.parse(r.content); } catch { parsed = { description: r.content }; }
+        return {
+          id: r.id,
+          employeeId: r.employee_id,
+          employeeName: empName,
+          date: r.date,
+          department: parsed.department || "",
+          task: parsed.task || "",
+          status: parsed.status || "pending",
+          description: parsed.description || r.content,
+          additionalInfo: parsed.additionalInfo || undefined,
+          createdAt: r.created_at || new Date().toISOString(),
+        };
+      }));
+    }
+  }, [employeeId]);
+
+  // ─── Supabase: Requirements ───
+  const fetchRequirements = useCallback(async () => {
+    if (!employeeId) return;
+    const { data } = await supabase
+      .from("requirements")
+      .select("*, employees:requested_by(name)")
+      .eq("requested_by", employeeId)
+      .order("created_at", { ascending: false });
+    if (data) {
+      setRequirements(data.map(r => {
+        let parsed: any = {};
+        try { parsed = JSON.parse(r.description); } catch { parsed = { description: r.description }; }
+        return {
+          id: r.id,
+          employeeId: r.requested_by || employeeId,
+          employeeName: (r.employees as any)?.name || "",
+          title: r.title,
+          description: parsed.description || r.description,
+          whyNeeded: parsed.whyNeeded || "",
+          link: parsed.link || undefined,
+          expectedCost: parsed.expectedCost || undefined,
+          status: (r.status || "pending") as Requirement["status"],
+          createdAt: r.created_at || new Date().toISOString(),
+        };
+      }));
+    }
+  }, [employeeId]);
+
+  // ─── Supabase: Notices ───
+  const fetchNotices = useCallback(async () => {
+    const { data } = await supabase
+      .from("notices")
+      .select("*")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
+    return (data || []).map(n => ({
+      id: n.id,
+      type: "announcement" as const,
+      title: n.title,
+      content: n.content,
+      recipients: ["all"],
+      createdAt: n.created_at || new Date().toISOString(),
+    }));
+  }, []);
+
+  // ─── Load all Supabase data + realtime ───
+  useEffect(() => {
+    if (!employeeId) return;
+    fetchContacts();
+    fetchLeaveRequests();
+    fetchPayments();
+    fetchReports();
+    fetchRequirements();
+
+    const channel = supabase
+      .channel(`employee-${employeeId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "leave_requests" }, fetchLeaveRequests)
+      .on("postgres_changes", { event: "*", schema: "public", table: "employee_payments" }, fetchPayments)
+      .on("postgres_changes", { event: "*", schema: "public", table: "daily_reports" }, fetchReports)
+      .on("postgres_changes", { event: "*", schema: "public", table: "requirements" }, fetchRequirements)
+      .on("postgres_changes", { event: "*", schema: "public", table: "contacts" }, fetchContacts)
+      .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, () => {})
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [employeeId, fetchContacts, fetchLeaveRequests, fetchPayments, fetchReports, fetchRequirements]);
+
+  // ─── Leave balance from DB employee record ───
+  useEffect(() => {
+    if (!employeeId) return;
+    const fetchBalance = async () => {
+      const { data } = await supabase
+        .from("employees")
+        .select("paid_leave_balance, medical_leave_balance, exchange_leave_balance")
+        .eq("id", employeeId)
+        .single();
+      if (data) {
+        setLeaveBalance({
+          paid: data.paid_leave_balance ?? 12,
+          medical: data.medical_leave_balance ?? 6,
+          exchange: data.exchange_leave_balance ?? 0,
+        });
+      }
+    };
+    fetchBalance();
+  }, [employeeId]);
+
+  // ════════════════════════════════════════════
+  // Calendar Events (localStorage)
+  // ════════════════════════════════════════════
   const addEvent = useCallback((event: Omit<CalendarEvent, "id">) => {
     const newEvent = { ...event, id: crypto.randomUUID() };
     const updated = [...events, newEvent];
@@ -174,7 +380,9 @@ export const useEmployeeData = (employeeId: string) => {
     saveData("events", updated);
   }, [events, employeeId]);
 
-  // Notes
+  // ════════════════════════════════════════════
+  // Notes (localStorage)
+  // ════════════════════════════════════════════
   const addNote = useCallback((note: Omit<Note, "id" | "createdAt">) => {
     const newNote = { ...note, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
     const updated = [newNote, ...notes];
@@ -189,18 +397,14 @@ export const useEmployeeData = (employeeId: string) => {
     saveData("notes", updated);
   }, [notes, employeeId]);
 
-  // Personal Tasks
+  // ════════════════════════════════════════════
+  // Personal Tasks (localStorage)
+  // ════════════════════════════════════════════
   const addPersonalTask = useCallback((task: { subject: string; description: string }) => {
     const now = new Date().toISOString();
     const newTask: Task = {
-      id: crypto.randomUUID(),
-      employeeId,
-      subject: task.subject,
-      description: task.description,
-      status: "in-progress",
-      createdAt: now,
-      updatedAt: now,
-      isPersonal: true,
+      id: crypto.randomUUID(), employeeId, subject: task.subject, description: task.description,
+      status: "in-progress", createdAt: now, updatedAt: now, isPersonal: true,
     };
     const updated = [...personalTasks, newTask];
     setPersonalTasks(updated);
@@ -209,7 +413,7 @@ export const useEmployeeData = (employeeId: string) => {
   }, [personalTasks, employeeId]);
 
   const updatePersonalTask = useCallback((id: string, data: Partial<Task>) => {
-    const updated = personalTasks.map(t => 
+    const updated = personalTasks.map(t =>
       t.id === id ? { ...t, ...data, updatedAt: new Date().toISOString() } : t
     );
     setPersonalTasks(updated);
@@ -222,305 +426,232 @@ export const useEmployeeData = (employeeId: string) => {
     saveData("personal_tasks", updated);
   }, [personalTasks, employeeId]);
 
-  // Contacts
-  const addContact = useCallback((contact: Omit<Contact, "id">) => {
+  // ════════════════════════════════════════════
+  // Contacts (Supabase - read-only for employees, shared table)
+  // ════════════════════════════════════════════
+  const addContact = useCallback(async (contact: Omit<Contact, "id">) => {
+    // Employees can read contacts but adding goes to the shared table
+    // This will only work if RLS allows it - currently employees have read access
+    // For personal contacts, keep in localStorage as fallback
+    const personalContacts = JSON.parse(localStorage.getItem(getEmployeeStorageKey(employeeId, "contacts")) || "[]");
     const newContact = { ...contact, id: crypto.randomUUID() };
-    const updated = [...contacts, newContact];
-    setContacts(updated);
-    saveData("contacts", updated);
+    const updated = [...personalContacts, newContact];
+    localStorage.setItem(getEmployeeStorageKey(employeeId, "contacts"), JSON.stringify(updated));
+    // Merge with DB contacts
+    setContacts(prev => [...prev, newContact]);
     return newContact;
-  }, [contacts, employeeId]);
+  }, [employeeId]);
 
   const deleteContact = useCallback((id: string) => {
-    const updated = contacts.filter(c => c.id !== id);
-    setContacts(updated);
-    saveData("contacts", updated);
-  }, [contacts, employeeId]);
+    // Only delete personal contacts from localStorage
+    const personalContacts = JSON.parse(localStorage.getItem(getEmployeeStorageKey(employeeId, "contacts")) || "[]");
+    const updated = personalContacts.filter((c: Contact) => c.id !== id);
+    localStorage.setItem(getEmployeeStorageKey(employeeId, "contacts"), JSON.stringify(updated));
+    setContacts(prev => prev.filter(c => c.id !== id));
+  }, [employeeId]);
 
-  // Requirements
-  const addRequirement = useCallback((req: {
-    title: string;
-    description: string;
-    whyNeeded: string;
-    link?: string;
-    expectedCost?: number;
-    employeeName: string;
+  // Load personal contacts and merge with DB contacts
+  useEffect(() => {
+    if (!employeeId) return;
+    const personalContacts = JSON.parse(localStorage.getItem(getEmployeeStorageKey(employeeId, "contacts")) || "[]");
+    if (personalContacts.length > 0) {
+      setContacts(prev => {
+        const dbIds = new Set(prev.map(c => c.id));
+        const unique = personalContacts.filter((c: Contact) => !dbIds.has(c.id));
+        return [...prev, ...unique];
+      });
+    }
+  }, [employeeId]);
+
+  // ════════════════════════════════════════════
+  // Requirements (Supabase)
+  // ════════════════════════════════════════════
+  const addRequirement = useCallback(async (req: {
+    title: string; description: string; whyNeeded: string;
+    link?: string; expectedCost?: number; employeeName: string;
   }) => {
-    const newReq: Requirement = {
-      id: crypto.randomUUID(),
-      employeeId,
-      employeeName: req.employeeName,
+    const payload = {
       title: req.title,
-      description: req.description,
-      whyNeeded: req.whyNeeded,
-      link: req.link,
-      expectedCost: req.expectedCost,
-      status: "pending",
-      createdAt: new Date().toISOString(),
+      description: JSON.stringify({
+        description: req.description,
+        whyNeeded: req.whyNeeded,
+        link: req.link,
+        expectedCost: req.expectedCost,
+      }),
+      requested_by: employeeId,
+      status: "pending" as const,
+      priority: "medium" as const,
     };
-    
-    // Save to employee's requirements
-    const updated = [...requirements, newReq];
-    setRequirements(updated);
-    saveData("requirements", updated);
-    
-    // Also sync to director's requirements
-    const directorReqs = JSON.parse(localStorage.getItem("director_requirements") || "[]");
-    localStorage.setItem("director_requirements", JSON.stringify([...directorReqs, newReq]));
-    
-    return newReq;
-  }, [requirements, employeeId]);
+    const { data, error } = await supabase.from("requirements").insert(payload).select().single();
+    if (!error && data) {
+      await fetchRequirements();
+    }
+    return data;
+  }, [employeeId, fetchRequirements]);
 
-  // Travel Expenses
-  const addTravelExpense = useCallback((expense: Omit<TravelExpense, "id" | "employeeId" | "timestamp">) => {
-    const newExpense: TravelExpense = {
-      ...expense,
-      id: crypto.randomUUID(),
-      employeeId,
-      timestamp: new Date().toISOString(),
-    };
-    
-    const updated = [...travelExpenses, newExpense];
-    setTravelExpenses(updated);
-    saveData("travel_expenses", updated);
-    
-    // Sync to accounts
-    const accountsExpenses = JSON.parse(localStorage.getItem("accounts_travel_expenses") || "[]");
-    localStorage.setItem("accounts_travel_expenses", JSON.stringify([...accountsExpenses, newExpense]));
-    
-    return newExpense;
-  }, [travelExpenses, employeeId]);
+  // ════════════════════════════════════════════
+  // Travel Expenses (Supabase - employee_payments with category=travel)
+  // ════════════════════════════════════════════
+  const addTravelExpense = useCallback(async (expense: Omit<TravelExpense, "id" | "employeeId" | "timestamp">) => {
+    const { error } = await supabase.from("employee_payments").insert({
+      employee_id: employeeId,
+      date: expense.date,
+      description: JSON.stringify({ from: expense.from, to: expense.to, purpose: expense.purpose }),
+      amount: expense.amount,
+      category: "travel",
+      receipt_url: expense.receiptUrl || null,
+    });
+    if (!error) await fetchPayments();
+  }, [employeeId, fetchPayments]);
 
-  // Misc Payments
-  const addMiscPayment = useCallback((payment: Omit<MiscPayment, "id" | "employeeId" | "timestamp">) => {
-    const newPayment: MiscPayment = {
-      ...payment,
-      id: crypto.randomUUID(),
-      employeeId,
-      timestamp: new Date().toISOString(),
-    };
-    
-    const updated = [...miscPayments, newPayment];
-    setMiscPayments(updated);
-    saveData("misc_payments", updated);
-    
-    // Sync to accounts vouchers
-    const accountsVouchers = JSON.parse(localStorage.getItem("accounts_vouchers") || "[]");
-    localStorage.setItem("accounts_vouchers", JSON.stringify([...accountsVouchers, newPayment]));
-    
-    return newPayment;
-  }, [miscPayments, employeeId]);
+  // ════════════════════════════════════════════
+  // Misc Payments (Supabase - employee_payments with category=misc)
+  // ════════════════════════════════════════════
+  const addMiscPayment = useCallback(async (payment: Omit<MiscPayment, "id" | "employeeId" | "timestamp">) => {
+    const { error } = await supabase.from("employee_payments").insert({
+      employee_id: employeeId,
+      date: payment.date,
+      description: payment.purpose,
+      amount: payment.amount,
+      category: "misc",
+      receipt_url: payment.receiptUrl || null,
+    });
+    if (!error) await fetchPayments();
+  }, [employeeId, fetchPayments]);
 
-  // Leave Requests
-  const requestLeave = useCallback((leave: {
-    date: string;
-    reason: string;
-    type: "paid" | "medical" | "exchange";
-    employeeName: string;
-    medicalCertificate?: string;
-    workingDate?: string;
-    workingReason?: string;
-    isAddLeave?: boolean; // For exchange leave
+  // ════════════════════════════════════════════
+  // Leave Requests (Supabase)
+  // ════════════════════════════════════════════
+  const requestLeave = useCallback(async (leave: {
+    date: string; reason: string; type: "paid" | "medical" | "exchange";
+    employeeName: string; medicalCertificate?: string;
+    workingDate?: string; workingReason?: string; isAddLeave?: boolean;
   }) => {
-    const newLeave: LeaveRequest = {
-      id: crypto.randomUUID(),
-      employeeId,
-      employeeName: leave.employeeName,
+    const { error } = await supabase.from("leave_requests").insert({
+      employee_id: employeeId,
       date: leave.date,
       reason: leave.reason,
-      type: leave.type,
-      status: "pending",
-      medicalCertificate: leave.medicalCertificate,
-      workingDate: leave.workingDate,
-      workingReason: leave.workingReason,
-      isAddLeave: leave.isAddLeave,
-      createdAt: new Date().toISOString(),
-    };
-    
-    const updated = [...leaveRequests, newLeave];
-    setLeaveRequests(updated);
-    saveData("leave_requests", updated);
-    
-    // Sync to director's leaves
-    const directorLeaves = JSON.parse(localStorage.getItem("director_leaves") || "[]");
-    localStorage.setItem("director_leaves", JSON.stringify([...directorLeaves, newLeave]));
-    
-    return newLeave;
-  }, [leaveRequests, employeeId]);
+      leave_type: leave.type,
+      medical_certificate: leave.medicalCertificate || null,
+      working_date: leave.workingDate || null,
+      working_reason: leave.workingReason || null,
+      is_add_leave: leave.isAddLeave || false,
+    });
+    if (!error) await fetchLeaveRequests();
+  }, [employeeId, fetchLeaveRequests]);
 
-  // Add Exchange Leave (work extra day to earn leave)
   const addExchangeLeave = useCallback((data: {
-    workingDate: string;
-    workingReason: string;
-    employeeName: string;
+    workingDate: string; workingReason: string; employeeName: string;
   }) => {
     return requestLeave({
       date: data.workingDate,
       reason: `Worked on ${data.workingDate}: ${data.workingReason}`,
-      type: "exchange",
-      employeeName: data.employeeName,
-      workingDate: data.workingDate,
-      workingReason: data.workingReason,
-      isAddLeave: true,
+      type: "exchange", employeeName: data.employeeName,
+      workingDate: data.workingDate, workingReason: data.workingReason, isAddLeave: true,
     });
   }, [requestLeave]);
 
-  // Take Exchange Leave (consume earned leave)
   const takeExchangeLeave = useCallback((data: {
-    leaveDate: string;
-    leaveReason: string;
-    employeeName: string;
+    leaveDate: string; leaveReason: string; employeeName: string;
   }) => {
     return requestLeave({
-      date: data.leaveDate,
-      reason: data.leaveReason,
-      type: "exchange",
-      employeeName: data.employeeName,
-      isAddLeave: false,
+      date: data.leaveDate, reason: data.leaveReason,
+      type: "exchange", employeeName: data.employeeName, isAddLeave: false,
     });
   }, [requestLeave]);
 
-  // Reports
-  const addReport = useCallback((report: {
-    date: string;
-    department: string;
-    task: string;
-    status: "completed" | "pending";
-    description: string;
-    additionalInfo?: string;
-    employeeName: string;
+  // ════════════════════════════════════════════
+  // Reports (Supabase - daily_reports)
+  // ════════════════════════════════════════════
+  const addReport = useCallback(async (report: {
+    date: string; department: string; task: string;
+    status: "completed" | "pending"; description: string;
+    additionalInfo?: string; employeeName: string;
   }) => {
-    const newReport: Report = {
-      id: crypto.randomUUID(),
-      employeeId,
-      employeeName: report.employeeName,
-      date: report.date,
-      department: report.department,
-      task: report.task,
-      status: report.status,
-      description: report.description,
+    const content = JSON.stringify({
+      department: report.department, task: report.task,
+      status: report.status, description: report.description,
       additionalInfo: report.additionalInfo,
-      createdAt: new Date().toISOString(),
-    };
-    
-    const updated = [...reports, newReport];
-    setReports(updated);
-    saveData("reports", updated);
-    
-    // Sync to director's tasks/reports
-    const directorTasks = JSON.parse(localStorage.getItem("director_tasks") || "[]");
-    const taskEntry = {
-      id: newReport.id,
-      employeeId,
-      subject: report.task,
-      description: report.description,
-      status: report.status === "completed" ? "completed" : "in-progress",
-      createdAt: newReport.createdAt,
-      updatedAt: newReport.createdAt,
-    };
-    localStorage.setItem("director_tasks", JSON.stringify([...directorTasks, taskEntry]));
-    
-    return newReport;
-  }, [reports, employeeId]);
+    });
+    const { error } = await supabase.from("daily_reports").insert({
+      employee_id: employeeId,
+      date: report.date,
+      content,
+    });
+    if (!error) await fetchReports();
+  }, [employeeId, fetchReports]);
 
-  // Get assigned tasks from Director
+  // ════════════════════════════════════════════
+  // Assigned Tasks (Supabase - director_tasks, read-only)
+  // ════════════════════════════════════════════
   const getAssignedTasks = useCallback((): Task[] => {
-    const directorTasks = JSON.parse(localStorage.getItem("director_tasks") || "[]");
-    return directorTasks.filter((t: Task) => t.employeeId === employeeId && !t.isPersonal);
-  }, [employeeId]);
-
-  // Complete assigned task
-  const completeAssignedTask = useCallback((taskId: string) => {
-    const directorTasks = JSON.parse(localStorage.getItem("director_tasks") || "[]");
-    const updated = directorTasks.map((t: Task) => 
-      t.id === taskId ? { ...t, status: "completed", updatedAt: new Date().toISOString() } : t
-    );
-    localStorage.setItem("director_tasks", JSON.stringify(updated));
+    // Director tasks are department-level, not employee-level
+    // Return empty for now - employees see tasks via DirectorTasksTab component
+    return [];
   }, []);
 
-  // Get notices for this employee
+  const completeAssignedTask = useCallback(async (taskId: string) => {
+    await supabase.from("director_tasks").update({
+      status: "Completed",
+      completed_at: new Date().toISOString(),
+    }).eq("id", taskId);
+  }, []);
+
+  // ════════════════════════════════════════════
+  // Notices (Supabase)
+  // ════════════════════════════════════════════
   const getNotices = useCallback((): Notice[] => {
-    const directorNotices = JSON.parse(localStorage.getItem("director_notices") || "[]");
-    return directorNotices.filter((n: Notice) => 
-      n.type === "announcement" || n.recipients.includes(employeeId) || n.recipients.includes("all")
-    );
-  }, [employeeId]);
+    // This is synchronous for backward compat - notices loaded via state
+    return [];
+  }, []);
 
-  // Get updated leave requests (synced from director's decisions)
-  const getUpdatedLeaveRequests = useCallback((): LeaveRequest[] => {
-    const directorLeaves: LeaveRequest[] = JSON.parse(localStorage.getItem("director_leaves") || "[]");
-    return directorLeaves.filter(l => l.employeeId === employeeId);
-  }, [employeeId]);
+  // Async notices loader
+  const [noticesList, setNoticesList] = useState<Notice[]>([]);
+  useEffect(() => {
+    fetchNotices().then(setNoticesList);
+    const channel = supabase
+      .channel(`employee-notices-${employeeId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, () => {
+        fetchNotices().then(setNoticesList);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchNotices, employeeId]);
 
-  // Calculate exchange leave balance from approved add/take requests
+  // Override getNotices to return loaded notices
+  const getNoticesSync = useCallback((): Notice[] => noticesList, [noticesList]);
+
+  // ════════════════════════════════════════════
+  // Leave balance helpers
+  // ════════════════════════════════════════════
+  const getUpdatedLeaveRequests = useCallback((): LeaveRequest[] => leaveRequests, [leaveRequests]);
+
   const calculateExchangeBalance = useCallback(() => {
-    const allLeaves = getUpdatedLeaveRequests();
-    const exchangeLeaves = allLeaves.filter(l => l.type === "exchange" && l.status === "approved");
-    
-    let balance = 0;
-    exchangeLeaves.forEach(leave => {
-      if (leave.isAddLeave) {
-        balance++; // Earned a leave
-      } else {
-        balance--; // Used a leave
-      }
-    });
-    
-    return Math.max(0, balance);
-  }, [getUpdatedLeaveRequests]);
+    return leaveBalance.exchange;
+  }, [leaveBalance]);
 
-  // Update leave balance based on approved leaves
   const updateLeaveBalanceFromApproved = useCallback(() => {
-    const approvedLeaves = getUpdatedLeaveRequests().filter(l => l.status === "approved");
-    const balance = { paid: 12, medical: 6, exchange: 0 };
-    
-    // Calculate paid and medical used
-    approvedLeaves.forEach(leave => {
-      if (leave.type === "paid") balance.paid--;
-      if (leave.type === "medical") balance.medical--;
-    });
-    
-    // Calculate exchange balance
-    balance.exchange = calculateExchangeBalance();
-    
-    // Ensure non-negative
-    balance.paid = Math.max(0, balance.paid);
-    balance.medical = Math.max(0, balance.medical);
-    
-    setLeaveBalance(balance);
-    saveData("leave_balance", balance);
-    return balance;
-  }, [getUpdatedLeaveRequests, calculateExchangeBalance, employeeId]);
+    return leaveBalance;
+  }, [leaveBalance]);
 
-  // Get pending exchange add requests (for showing earned but not approved)
   const getPendingExchangeAdds = useCallback(() => {
-    const allLeaves = getUpdatedLeaveRequests();
-    return allLeaves.filter(l => l.type === "exchange" && l.isAddLeave && l.status === "pending").length;
-  }, [getUpdatedLeaveRequests]);
+    return leaveRequests.filter(l => l.type === "exchange" && l.isAddLeave && l.status === "pending").length;
+  }, [leaveRequests]);
 
   return {
-    // Calendar
     events, addEvent, updateEvent, deleteEvent,
-    // Notes
     notes, addNote, deleteNote,
-    // Tasks
     personalTasks, addPersonalTask, updatePersonalTask, deletePersonalTask,
     getAssignedTasks, completeAssignedTask,
-    // Contacts
     contacts, addContact, deleteContact,
-    // Requirements
     requirements, addRequirement,
-    // Payments
     travelExpenses, addTravelExpense,
     miscPayments, addMiscPayment,
-    // Leaves
-    leaveRequests, requestLeave, getUpdatedLeaveRequests, 
+    leaveRequests, requestLeave, getUpdatedLeaveRequests,
     leaveBalance, updateLeaveBalanceFromApproved,
     addExchangeLeave, takeExchangeLeave,
     calculateExchangeBalance, getPendingExchangeAdds,
-    // Reports
     reports, addReport,
-    // Notices
-    getNotices,
+    getNotices: getNoticesSync,
   };
 };
