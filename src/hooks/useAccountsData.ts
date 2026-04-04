@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface PaymentRecord {
   id: string;
@@ -38,64 +39,102 @@ export interface TravelExpense {
 export const useAccountsData = () => {
   const [vouchers, setVouchers] = useState<VoucherRecord[]>([]);
   const [travelExpenses, setTravelExpenses] = useState<TravelExpense[]>([]);
-  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Real-time sync function - polls every 2 seconds for new data
-  const syncAllData = useCallback(() => {
-    // Aggregate vouchers from multiple sources
-    const employeeVouchers: VoucherRecord[] = JSON.parse(localStorage.getItem("accounts_vouchers") || "[]");
-    const adminPayments = JSON.parse(localStorage.getItem("admin_payments") || "[]");
-    
-    // Transform admin payments to voucher format
-    const adminVouchers: VoucherRecord[] = adminPayments.map((p: any) => ({
-      id: p.id,
-      employeeName: p.employeeName || "Admin",
-      amount: typeof p.amount === "number" ? p.amount : parseFloat(p.amount) || 0,
-      date: p.date,
-      receiptUrl: p.document || p.receiptUrl,
-      purpose: p.purpose,
-      timestamp: p.createdAt || p.timestamp || new Date().toISOString(),
-      source: "admin" as const,
-    }));
+  const fetchData = useCallback(async () => {
+    // Fetch admin payments
+    const { data: adminData, error: adminError } = await supabase
+      .from("admin_payments")
+      .select("*")
+      .order("date", { ascending: false });
 
-    // Merge and deduplicate vouchers
-    const allVouchersMap = new Map<string, VoucherRecord>();
-    [...employeeVouchers, ...adminVouchers].forEach(v => {
-      if (!allVouchersMap.has(v.id)) {
-        allVouchersMap.set(v.id, v);
+    // Fetch employee payments
+    const { data: empData, error: empError } = await supabase
+      .from("employee_payments")
+      .select(`*, employees(name)`)
+      .order("date", { ascending: false });
+
+    if (adminError) console.error("Error fetching admin payments:", adminError);
+    if (empError) console.error("Error fetching employee payments:", empError);
+
+    const allVouchers: VoucherRecord[] = [];
+    const allTravel: TravelExpense[] = [];
+
+    // Map admin payments to vouchers
+    (adminData || []).forEach(p => {
+      allVouchers.push({
+        id: p.id,
+        employeeName: p.paid_to || "Admin",
+        amount: p.amount,
+        date: p.date,
+        receiptUrl: p.receipt_url || undefined,
+        purpose: p.purpose,
+        timestamp: p.created_at || "",
+        source: "admin",
+      });
+    });
+
+    // Map employee payments
+    (empData || []).forEach((p: any) => {
+      const empName = p.employees?.name || "Unknown";
+      if (p.category === "traveling") {
+        allTravel.push({
+          id: p.id,
+          employeeName: empName,
+          from: "",
+          to: "",
+          date: p.date,
+          amount: p.amount,
+          receiptUrl: p.receipt_url || undefined,
+          purpose: p.description,
+          timestamp: p.created_at || "",
+        });
+      } else {
+        allVouchers.push({
+          id: p.id,
+          employeeName: empName,
+          amount: p.amount,
+          date: p.date,
+          receiptUrl: p.receipt_url || undefined,
+          purpose: p.description,
+          timestamp: p.created_at || "",
+          source: "employee",
+        });
       }
     });
-    const mergedVouchers = Array.from(allVouchersMap.values()).sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
-    setVouchers(mergedVouchers);
 
-    // Aggregate travel expenses
-    const accountsTravelExpenses: TravelExpense[] = JSON.parse(localStorage.getItem("accounts_travel_expenses") || "[]");
-    const sortedTravel = [...accountsTravelExpenses].sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
-    setTravelExpenses(sortedTravel);
+    // Sort by date descending
+    allVouchers.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    allTravel.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+    setVouchers(allVouchers);
+    setTravelExpenses(allTravel);
   }, []);
 
-  // Initial load and periodic sync
+  // Initial load
   useEffect(() => {
-    syncAllData();
+    fetchData();
+  }, [fetchData]);
 
-    // Real-time polling every 2 seconds
-    const interval = setInterval(() => {
-      syncAllData();
-    }, 2000);
+  // Realtime subscriptions
+  useEffect(() => {
+    const ch1 = supabase
+      .channel("accounts-admin-payments")
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_payments" }, () => fetchData())
+      .subscribe();
 
-    return () => clearInterval(interval);
-  }, [syncAllData, refreshKey]);
+    const ch2 = supabase
+      .channel("accounts-emp-payments")
+      .on("postgres_changes", { event: "*", schema: "public", table: "employee_payments" }, () => fetchData())
+      .subscribe();
 
-  // Manual refresh trigger
-  const refresh = useCallback(() => {
-    setRefreshKey(prev => prev + 1);
-  }, []);
+    return () => {
+      supabase.removeChannel(ch1);
+      supabase.removeChannel(ch2);
+    };
+  }, [fetchData]);
 
-  // Filter functions
+  const refresh = useCallback(() => { fetchData(); }, [fetchData]);
+
   const filterByEmployeeAndDate = useCallback((
     records: any[],
     employeeName?: string,
@@ -128,7 +167,6 @@ export const useAccountsData = () => {
     return filteredExpenses.reduce((sum, t) => sum + (t.amount || 0), 0);
   }, []);
 
-  // Get unique employee names for filters
   const getUniqueEmployees = useCallback(() => {
     const allNames = [
       ...vouchers.map(v => v.employeeName),
@@ -137,7 +175,6 @@ export const useAccountsData = () => {
     return [...new Set(allNames)].sort();
   }, [vouchers, travelExpenses]);
 
-  // Get available years from records
   const getAvailableYears = useCallback(() => {
     const allDates = [
       ...vouchers.map(v => new Date(v.date).getFullYear()),
