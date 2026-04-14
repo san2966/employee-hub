@@ -16,7 +16,7 @@ async function getEncryptionKey(): Promise<CryptoKey> {
   const encoder = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
-    encoder.encode(ENCRYPTION_KEY.padEnd(32, "0").substring(0, 32)),
+    encoder.encode(ENCRYPTION_KEY!.padEnd(32, "0").substring(0, 32)),
     { name: "PBKDF2" },
     false,
     ["deriveKey"]
@@ -71,7 +71,7 @@ async function decryptPassword(encryptedBase64: string): Promise<string> {
   return new TextDecoder().decode(decrypted);
 }
 
-async function verifyITHeadRole(supabase: ReturnType<typeof createClient>, authHeader: string): Promise<boolean> {
+async function verifyITHeadRole(supabase: any, authHeader: string): Promise<boolean> {
   if (!authHeader?.startsWith("Bearer ")) {
     return false;
   }

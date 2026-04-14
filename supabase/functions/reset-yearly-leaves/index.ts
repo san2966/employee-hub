@@ -14,7 +14,7 @@ interface Employee {
   exchange_leave_balance: number;
 }
 
-async function verifyAdminOrHRRole(supabase: ReturnType<typeof createClient>, authHeader: string): Promise<boolean> {
+async function verifyAdminOrHRRole(supabase: any, authHeader: string): Promise<boolean> {
   if (!authHeader?.startsWith("Bearer ")) {
     return false;
   }
