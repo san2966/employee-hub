@@ -34,7 +34,7 @@ function resetRateLimit(key: string): void {
 }
 
 async function verifyPasswordWithDb(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   password: string,
   hash: string
 ): Promise<boolean> {

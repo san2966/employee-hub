@@ -44,7 +44,7 @@ function validateEmail(email: string): boolean {
   return emailRegex.test(email) && email.length <= 254;
 }
 
-async function verifyITHeadRole(supabase: ReturnType<typeof createClient>, authHeader: string): Promise<boolean> {
+async function verifyITHeadRole(supabase: any, authHeader: string): Promise<boolean> {
   if (!authHeader?.startsWith("Bearer ")) {
     return false;
   }
