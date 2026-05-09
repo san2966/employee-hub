@@ -115,6 +115,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const itHeadEmail = "it.headvmcc@gmail.com";
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    const RESEND_FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") || "Support <onboarding@resend.dev>";
 
     if (!RESEND_API_KEY) {
       console.error("RESEND_API_KEY not configured");
@@ -153,7 +154,7 @@ const handler = async (req: Request): Promise<Response> => {
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: "Support <onboarding@resend.dev>",
+          from: RESEND_FROM_EMAIL,
           to,
           subject: emailSubject,
           html,
