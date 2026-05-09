@@ -133,7 +133,7 @@ export const useITHeadData = () => {
     if (error) { console.error("Error:", error); return; }
     setPasswords((data?.passwords || []).map((p: any) => ({
       id: p.id, portal: p.portal, username: p.username,
-      password: p.decrypted_password || p.encrypted_password || "",
+      password: p.password || p.decrypted_password || "",
       createdAt: p.created_at || "",
     })));
   }, []);
