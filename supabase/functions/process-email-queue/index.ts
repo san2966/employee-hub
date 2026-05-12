@@ -1,6 +1,6 @@
 // Self-hosted queue dispatcher: drains pgmq email queues and sends via Resend.
 // Schedule with pg_cron every minute, or invoke manually with the service-role key.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const MAX_RETRIES = 5;
 const BATCH_SIZE = 25;
