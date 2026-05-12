@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -115,10 +115,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     const itHeadEmail = "it.headvmcc@gmail.com";
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    const RESEND_FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") || "Support <onboarding@resend.dev>";
+    const RESEND_FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL");
 
-    if (!RESEND_API_KEY) {
-      console.error("RESEND_API_KEY not configured");
+    if (!RESEND_API_KEY || !RESEND_FROM_EMAIL) {
+      console.error("RESEND_API_KEY or RESEND_FROM_EMAIL not configured");
       return new Response(
         JSON.stringify({ error: "Email service not configured" }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }

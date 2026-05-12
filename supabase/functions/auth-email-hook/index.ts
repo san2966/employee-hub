@@ -1,7 +1,5 @@
-// Self-hosted auth email hook - delivers Supabase Auth emails via Resend.
-// Configure Supabase Auth -> Hooks -> "Send Email Hook" to point at this
-// function and set SEND_EMAIL_HOOK_SECRET in your Supabase env.
-import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
+// Self-hosted auth email hook - delivers Auth emails via Resend.
+// Configure Auth -> Hooks -> "Send Email Hook" to point at this function.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,6 +18,29 @@ const SUBJECTS: Record<string, string> = {
   email_change: `Confirm your new email - ${SITE_NAME}`,
   reauthentication: `Your verification code - ${SITE_NAME}`,
 };
+
+async function sha256Hex(input: string): Promise<string> {
+  const encoded = new TextEncoder().encode(input);
+  const digest = await crypto.subtle.digest("SHA-256", encoded);
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function verifyHookSignature(req: Request, rawBody: string, secret: string): Promise<boolean> {
+  const signature = req.headers.get("webhook-signature") || "";
+  const timestamp = req.headers.get("webhook-timestamp") || "";
+  const webhookId = req.headers.get("webhook-id") || "";
+
+  if (!signature || !timestamp || !webhookId) return false;
+
+  const normalizedSecret = secret.replace(/^v1,whsec_/, "").replace(/^whsec_/, "");
+  const signedPayload = `${webhookId}.${timestamp}.${rawBody}.${normalizedSecret}`;
+  const digest = await sha256Hex(signedPayload);
+
+  return signature.split(" ").some((part) => {
+    const value = part.includes(",") ? part.split(",").pop() : part;
+    return value?.trim().replace(/^v1,/, "") === digest;
+  });
+}
 
 function renderEmail(action: string, data: Record<string, string>): string {
   const link = data.confirmation_url || data.url || "";
@@ -65,11 +86,12 @@ Deno.serve(async (req) => {
     const rawBody = await req.text();
     let payload: any;
 
-    // Verify Supabase Auth webhook signature when secret is configured.
+    // Verify webhook signature when secret is configured.
     if (HOOK_SECRET) {
       try {
-        const wh = new Webhook(HOOK_SECRET.replace(/^v1,whsec_/, "").replace(/^whsec_/, ""));
-        payload = wh.verify(rawBody, Object.fromEntries(req.headers));
+        const valid = await verifyHookSignature(req, rawBody, HOOK_SECRET);
+        if (!valid) throw new Error("Signature mismatch");
+        payload = JSON.parse(rawBody);
       } catch (err) {
         console.error("Webhook signature invalid:", err);
         return new Response(JSON.stringify({ error: "Invalid signature" }),
