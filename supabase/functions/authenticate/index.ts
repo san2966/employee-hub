@@ -147,6 +147,7 @@ Deno.serve(async (req) => {
 
     // Create or get Supabase Auth user
     const authEmail = `${portalUser.id}@portal.internal`;
+    const internalPassword = `portal_${portalUser.id}_${portalUser.role}`;
     let session = null;
     let userId = null;
 
@@ -155,29 +156,24 @@ Deno.serve(async (req) => {
 
     if (existingUser) {
       userId = existingUser.id;
-      const { data: sessionData, error: sessionError } = await adminClient.auth.admin.generateLink({
-        type: "magiclink",
-        email: authEmail,
+      // Ensure the internal password is current (in case it changed across deploys)
+      await adminClient.auth.admin.updateUserById(existingUser.id, {
+        password: internalPassword,
+        email_confirm: true,
       });
-
-      if (!sessionError && sessionData) {
-        const tokenHash = new URL(sessionData.properties.action_link).searchParams.get("token");
-        if (tokenHash) {
-          // Use a separate throwaway client for verifyOtp so admin client stays clean
-          const otpClient = createClient(supabaseUrl, supabaseServiceKey, {
-            auth: { autoRefreshToken: false, persistSession: false },
-          });
-          const { data: verifyData, error: verifyError } = await otpClient.auth.verifyOtp({
-            token_hash: tokenHash,
-            type: "magiclink",
-          });
-          if (!verifyError && verifyData.session) {
-            session = verifyData.session;
-          }
-        }
+      const signInClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      const { data: signInData, error: signInError } = await signInClient.auth.signInWithPassword({
+        email: authEmail,
+        password: internalPassword,
+      });
+      if (signInError) {
+        console.error("signInWithPassword (existing) failed:", signInError);
+      } else if (signInData.session) {
+        session = signInData.session;
       }
     } else {
-      const internalPassword = `portal_${portalUser.id}_${portalUser.role}`;
       const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
         email: authEmail,
         password: internalPassword,
@@ -191,26 +187,20 @@ Deno.serve(async (req) => {
 
       if (!createError && newUser.user) {
         userId = newUser.user.id;
-        const { data: sessionData, error: sessionError } = await adminClient.auth.admin.generateLink({
-          type: "magiclink",
-          email: authEmail,
+        const signInClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+          auth: { autoRefreshToken: false, persistSession: false },
         });
-
-        if (!sessionError && sessionData) {
-          const tokenHash = new URL(sessionData.properties.action_link).searchParams.get("token");
-          if (tokenHash) {
-            const otpClient = createClient(supabaseUrl, supabaseServiceKey, {
-              auth: { autoRefreshToken: false, persistSession: false },
-            });
-            const { data: verifyData } = await otpClient.auth.verifyOtp({
-              token_hash: tokenHash,
-              type: "magiclink",
-            });
-            if (verifyData?.session) {
-              session = verifyData.session;
-            }
-          }
+        const { data: signInData, error: signInError } = await signInClient.auth.signInWithPassword({
+          email: authEmail,
+          password: internalPassword,
+        });
+        if (signInError) {
+          console.error("signInWithPassword (new) failed:", signInError);
+        } else if (signInData.session) {
+          session = signInData.session;
         }
+      } else if (createError) {
+        console.error("createUser failed:", createError);
       }
     }
 
