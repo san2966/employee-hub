@@ -131,6 +131,7 @@ export const useEmployeeData = (employeeId: string) => {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [leaveBalance, setLeaveBalance] = useState({ paid: 12, medical: 6, exchange: 0 });
+  const [assignedTasks, setAssignedTasks] = useState<Task[]>([]);
 
   // Load localStorage items
   useEffect(() => {
@@ -298,6 +299,28 @@ export const useEmployeeData = (employeeId: string) => {
     }
   }, [employeeId]);
 
+  // ─── Supabase: Tasks assigned to this employee (from Director / Manager) ───
+  const fetchAssignedTasks = useCallback(async () => {
+    if (!employeeId) return;
+    const { data } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("assigned_to", employeeId)
+      .order("created_at", { ascending: false });
+    if (data) {
+      setAssignedTasks(data.map((t: any) => ({
+        id: t.id,
+        employeeId: t.assigned_to || employeeId,
+        subject: t.title,
+        description: t.description || "",
+        status: t.status === "completed" ? "completed" : "in-progress",
+        createdAt: t.created_at,
+        updatedAt: t.updated_at,
+        isPersonal: false,
+      })));
+    }
+  }, [employeeId]);
+
   // ─── Supabase: Notices ───
   const fetchNotices = useCallback(async () => {
     const { data } = await supabase
@@ -323,6 +346,7 @@ export const useEmployeeData = (employeeId: string) => {
     fetchPayments();
     fetchReports();
     fetchRequirements();
+    fetchAssignedTasks();
 
     const channel = supabase
       .channel(`employee-${employeeId}`)
@@ -331,11 +355,12 @@ export const useEmployeeData = (employeeId: string) => {
       .on("postgres_changes", { event: "*", schema: "public", table: "daily_reports" }, fetchReports)
       .on("postgres_changes", { event: "*", schema: "public", table: "requirements" }, fetchRequirements)
       .on("postgres_changes", { event: "*", schema: "public", table: "contacts" }, fetchContacts)
+      .on("postgres_changes", { event: "*", schema: "public", table: "tasks" }, fetchAssignedTasks)
       .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, () => {})
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [employeeId, fetchContacts, fetchLeaveRequests, fetchPayments, fetchReports, fetchRequirements]);
+  }, [employeeId, fetchContacts, fetchLeaveRequests, fetchPayments, fetchReports, fetchRequirements, fetchAssignedTasks]);
 
   // ─── Leave balance from DB employee record ───
   useEffect(() => {
@@ -582,20 +607,17 @@ export const useEmployeeData = (employeeId: string) => {
   }, [employeeId, fetchReports]);
 
   // ════════════════════════════════════════════
-  // Assigned Tasks (Supabase - director_tasks, read-only)
+  // Assigned Tasks (Supabase - tasks table, read-only for employees)
   // ════════════════════════════════════════════
-  const getAssignedTasks = useCallback((): Task[] => {
-    // Director tasks are department-level, not employee-level
-    // Return empty for now - employees see tasks via DirectorTasksTab component
-    return [];
-  }, []);
+  const getAssignedTasks = useCallback((): Task[] => assignedTasks, [assignedTasks]);
 
   const completeAssignedTask = useCallback(async (taskId: string) => {
-    await supabase.from("director_tasks").update({
-      status: "Completed",
+    await supabase.from("tasks").update({
+      status: "completed",
       completed_at: new Date().toISOString(),
     }).eq("id", taskId);
-  }, []);
+    await fetchAssignedTasks();
+  }, [fetchAssignedTasks]);
 
   // ════════════════════════════════════════════
   // Notices (Supabase)
