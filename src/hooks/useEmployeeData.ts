@@ -607,20 +607,17 @@ export const useEmployeeData = (employeeId: string) => {
   }, [employeeId, fetchReports]);
 
   // ════════════════════════════════════════════
-  // Assigned Tasks (Supabase - director_tasks, read-only)
+  // Assigned Tasks (Supabase - tasks table, read-only for employees)
   // ════════════════════════════════════════════
-  const getAssignedTasks = useCallback((): Task[] => {
-    // Director tasks are department-level, not employee-level
-    // Return empty for now - employees see tasks via DirectorTasksTab component
-    return [];
-  }, []);
+  const getAssignedTasks = useCallback((): Task[] => assignedTasks, [assignedTasks]);
 
   const completeAssignedTask = useCallback(async (taskId: string) => {
-    await supabase.from("director_tasks").update({
-      status: "Completed",
+    await supabase.from("tasks").update({
+      status: "completed",
       completed_at: new Date().toISOString(),
     }).eq("id", taskId);
-  }, []);
+    await fetchAssignedTasks();
+  }, [fetchAssignedTasks]);
 
   // ════════════════════════════════════════════
   // Notices (Supabase)
