@@ -405,9 +405,10 @@ export const useDirectorData = () => {
     // Update stock in products table
     const product = products.find(p => p.id === id);
     if (!product) return;
+    const currentStock = ((product as any)?.stock_quantity ?? 0) as number;
     const { error } = await supabase
       .from("products")
-      .update({ stock_quantity: (products.find(p => p.id === id) as any)?.stock_quantity || 0 + quantity })
+      .update({ stock_quantity: currentStock + quantity })
       .eq("id", id);
     if (error) throw error;
     await fetchProducts();

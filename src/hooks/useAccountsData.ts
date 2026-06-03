@@ -76,7 +76,7 @@ export const useAccountsData = () => {
     // Map employee payments
     (empData || []).forEach((p: any) => {
       const empName = p.employees?.name || "Unknown";
-      if (p.category === "traveling") {
+      if (p.category === "travel" || p.category === "traveling") {
         allTravel.push({
           id: p.id,
           employeeName: empName,
