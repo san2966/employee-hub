@@ -56,23 +56,27 @@ const EmployeeSettings = () => {
         setPhoto(parsed.photo || "");
         return;
       }
-      const { data, error } = await supabase
+      // Prefer the dedicated employee_settings row; fall back to employees table.
+      const { data: settings } = await supabase
+        .from("employee_settings")
+        .select("first_name, last_name, mobile, designation, photo")
+        .eq("employee_id", parsed.employeeId)
+        .maybeSingle();
+
+      const { data: emp } = await supabase
         .from("employees")
         .select("first_name, last_name, mobile, phone, designation, photo, name")
         .eq("id", parsed.employeeId)
         .maybeSingle();
-      if (error) {
-        console.error("Failed to load employee profile:", error);
-        return;
-      }
-      const fallback = (data?.name || "").split(" ");
+
+      const fallback = (emp?.name || "").split(" ");
       setForm({
-        firstName: data?.first_name || fallback[0] || "",
-        lastName: data?.last_name || fallback.slice(1).join(" ") || "",
-        mobile: data?.mobile || data?.phone || "",
-        designation: data?.designation || "",
+        firstName: settings?.first_name || emp?.first_name || fallback[0] || "",
+        lastName:  settings?.last_name  || emp?.last_name  || fallback.slice(1).join(" ") || "",
+        mobile:    settings?.mobile     || emp?.mobile || emp?.phone || "",
+        designation: settings?.designation || emp?.designation || "",
       });
-      setPhoto(data?.photo || "");
+      setPhoto(settings?.photo || emp?.photo || "");
     })();
   }, [navigate]);
 
@@ -82,6 +86,20 @@ const EmployeeSettings = () => {
     try {
       if (session.employeeId) {
         const fullName = `${form.firstName} ${form.lastName}`.trim();
+        // Upsert the dedicated settings row.
+        const { error: setErr } = await supabase
+          .from("employee_settings")
+          .upsert({
+            employee_id: session.employeeId,
+            first_name: form.firstName || null,
+            last_name: form.lastName || null,
+            mobile: form.mobile || null,
+            designation: form.designation || null,
+            photo: photo || null,
+          }, { onConflict: "employee_id" });
+        if (setErr) throw setErr;
+
+        // Keep the employees row in sync so other modules display the latest info.
         const { error } = await supabase
           .from("employees")
           .update({
