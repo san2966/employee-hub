@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { User, Camera } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EmployeeSession {
   employeeId: string;
@@ -32,37 +33,85 @@ const EmployeeSettings = () => {
     designation: "",
   });
   const [photo, setPhoto] = useState<string>("");
-  
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => {
     const storedSession = sessionStorage.getItem("employee_session");
     if (!storedSession) {
       navigate("/login/employee");
       return;
     }
-    const parsed = JSON.parse(storedSession);
+    const parsed: EmployeeSession = JSON.parse(storedSession);
     setSession(parsed);
-    setForm({
-      firstName: parsed.firstName || "",
-      lastName: parsed.lastName || "",
-      mobile: parsed.mobile || "",
-      designation: parsed.designation || "",
-    });
-    setPhoto(parsed.photo || "");
+
+    // Load profile from the database (persists across logins)
+    (async () => {
+      if (!parsed.employeeId) {
+        setForm({
+          firstName: parsed.firstName || "",
+          lastName: parsed.lastName || "",
+          mobile: parsed.mobile || "",
+          designation: parsed.designation || "",
+        });
+        setPhoto(parsed.photo || "");
+        return;
+      }
+      const { data, error } = await supabase
+        .from("employees")
+        .select("first_name, last_name, mobile, phone, designation, photo, name")
+        .eq("id", parsed.employeeId)
+        .maybeSingle();
+      if (error) {
+        console.error("Failed to load employee profile:", error);
+        return;
+      }
+      const fallback = (data?.name || "").split(" ");
+      setForm({
+        firstName: data?.first_name || fallback[0] || "",
+        lastName: data?.last_name || fallback.slice(1).join(" ") || "",
+        mobile: data?.mobile || data?.phone || "",
+        designation: data?.designation || "",
+      });
+      setPhoto(data?.photo || "");
+    })();
   }, [navigate]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!session) return;
-    
-    const updatedSession = {
-      ...session,
-      ...form,
-      photo,
-    };
-    
-    sessionStorage.setItem("employee_session", JSON.stringify(updatedSession));
-    setSession(updatedSession);
-    
-    toast({ title: "Settings saved", description: "Your profile has been updated" });
+    setSaving(true);
+    try {
+      if (session.employeeId) {
+        const fullName = `${form.firstName} ${form.lastName}`.trim();
+        const { error } = await supabase
+          .from("employees")
+          .update({
+            first_name: form.firstName || null,
+            last_name: form.lastName || null,
+            mobile: form.mobile || null,
+            phone: form.mobile || null,
+            designation: form.designation || null,
+            photo: photo || null,
+            ...(fullName ? { name: fullName } : {}),
+          })
+          .eq("id", session.employeeId);
+        if (error) throw error;
+      }
+
+      const updatedSession = { ...session, ...form, photo };
+      sessionStorage.setItem("employee_session", JSON.stringify(updatedSession));
+      sessionStorage.setItem("employeeSession", JSON.stringify(updatedSession));
+      setSession(updatedSession);
+
+      toast({ title: "Settings saved", description: "Your profile has been updated" });
+    } catch (e: any) {
+      toast({
+        title: "Save failed",
+        description: e?.message || "Could not save your profile",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,8 +211,8 @@ const EmployeeSettings = () => {
               />
             </div>
             
-            <Button className="w-full mt-4" onClick={handleSave}>
-              Save Changes
+            <Button className="w-full mt-4" onClick={handleSave} disabled={saving}>
+              {saving ? "Saving..." : "Save Changes"}
             </Button>
           </CardContent>
         </Card>
