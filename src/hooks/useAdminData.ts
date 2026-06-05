@@ -157,15 +157,13 @@ export const useAdminData = () => {
 
   // Still localStorage (no DB tables)
   const [tasks, setTasks] = useState<AdminTask[]>(() => loadFromStorage("tasks", []));
-  const [vehicleAssignments, setVehicleAssignments] = useState<VehicleAssignment[]>(() => loadFromStorage("vehicleAssignments", []));
-  const [fuelEntries, setFuelEntries] = useState<FuelEntry[]>(() => loadFromStorage("fuelEntries", []));
+  const [vehicleAssignments, setVehicleAssignments] = useState<VehicleAssignment[]>([]);
+  const [fuelEntries, setFuelEntries] = useState<FuelEntry[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(() => loadFromStorage("calendarEvents", []));
   const [notes, setNotes] = useState<Note[]>(() => loadFromStorage("notes", []));
 
   // Persist localStorage items
   useEffect(() => saveToStorage("tasks", tasks), [tasks]);
-  useEffect(() => saveToStorage("vehicleAssignments", vehicleAssignments), [vehicleAssignments]);
-  useEffect(() => saveToStorage("fuelEntries", fuelEntries), [fuelEntries]);
   useEffect(() => saveToStorage("calendarEvents", calendarEvents), [calendarEvents]);
   useEffect(() => saveToStorage("notes", notes), [notes]);
 
@@ -270,6 +268,33 @@ export const useAdminData = () => {
     })));
   }, []);
 
+  const fetchVehicleAssignments = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("vehicle_assignments")
+      .select("*")
+      .order("date", { ascending: false });
+    if (error) { console.error("Error fetching vehicle assignments:", error); return; }
+    setVehicleAssignments((data || []).map((a: any) => ({
+      id: a.id, vehicleId: a.vehicle_id || "", vehicleInfo: a.vehicle_info || "",
+      date: a.date, employeeName: a.employee_name,
+      previousKm: Number(a.previous_km) || 0, currentKm: Number(a.current_km) || 0,
+      image: a.image || "", createdAt: a.created_at || "",
+    })));
+  }, []);
+
+  const fetchFuelEntries = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("fuel_entries")
+      .select("*")
+      .order("date", { ascending: false });
+    if (error) { console.error("Error fetching fuel entries:", error); return; }
+    setFuelEntries((data || []).map((f: any) => ({
+      id: f.id, vehicleId: f.vehicle_id || "", vehicleInfo: f.vehicle_info || "",
+      date: f.date, quantity: Number(f.quantity) || 0,
+      amount: Number(f.amount) || 0, createdAt: f.created_at || "",
+    })));
+  }, []);
+
   // Initial load
   useEffect(() => {
     fetchPayments();
@@ -278,7 +303,9 @@ export const useAdminData = () => {
     fetchInwardOutward();
     fetchAssets();
     fetchVehicles();
-  }, [fetchPayments, fetchVisitors, fetchEmployees, fetchInwardOutward, fetchAssets, fetchVehicles]);
+    fetchVehicleAssignments();
+    fetchFuelEntries();
+  }, [fetchPayments, fetchVisitors, fetchEmployees, fetchInwardOutward, fetchAssets, fetchVehicles, fetchVehicleAssignments, fetchFuelEntries]);
 
   // Realtime subscriptions
   useEffect(() => {
@@ -289,12 +316,14 @@ export const useAdminData = () => {
       supabase.channel("admin-io-sync").on("postgres_changes", { event: "*", schema: "public", table: "inward_outward" }, () => fetchInwardOutward()).subscribe(),
       supabase.channel("admin-assets-sync").on("postgres_changes", { event: "*", schema: "public", table: "admin_assets" }, () => fetchAssets()).subscribe(),
       supabase.channel("admin-vehicles-sync").on("postgres_changes", { event: "*", schema: "public", table: "vehicles" }, () => fetchVehicles()).subscribe(),
+      supabase.channel("admin-va-sync").on("postgres_changes", { event: "*", schema: "public", table: "vehicle_assignments" }, () => fetchVehicleAssignments()).subscribe(),
+      supabase.channel("admin-fe-sync").on("postgres_changes", { event: "*", schema: "public", table: "fuel_entries" }, () => fetchFuelEntries()).subscribe(),
     ];
 
     return () => {
       channels.forEach(ch => supabase.removeChannel(ch));
     };
-  }, [fetchPayments, fetchVisitors, fetchEmployees, fetchInwardOutward, fetchAssets, fetchVehicles]);
+  }, [fetchPayments, fetchVisitors, fetchEmployees, fetchInwardOutward, fetchAssets, fetchVehicles, fetchVehicleAssignments, fetchFuelEntries]);
 
   // ---- CRUD Operations (Supabase-backed) ----
 
@@ -493,16 +522,40 @@ export const useAdminData = () => {
     setTasks(prev => prev.filter(t => t.id !== id));
   };
 
-  const addVehicleAssignment = (assignment: Omit<VehicleAssignment, "id" | "createdAt">) => {
-    const newAssignment: VehicleAssignment = { ...assignment, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
-    setVehicleAssignments(prev => [...prev, newAssignment]);
-    return newAssignment;
+  const addVehicleAssignment = async (assignment: Omit<VehicleAssignment, "id" | "createdAt">) => {
+    const { data, error } = await supabase
+      .from("vehicle_assignments")
+      .insert({
+        vehicle_id: assignment.vehicleId || null,
+        vehicle_info: assignment.vehicleInfo,
+        date: assignment.date,
+        employee_name: assignment.employeeName,
+        previous_km: assignment.previousKm,
+        current_km: assignment.currentKm,
+        image: assignment.image || null,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    await fetchVehicleAssignments();
+    return { ...assignment, id: data.id, createdAt: data.created_at || "" };
   };
 
-  const addFuelEntry = (entry: Omit<FuelEntry, "id" | "createdAt">) => {
-    const newEntry: FuelEntry = { ...entry, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
-    setFuelEntries(prev => [...prev, newEntry]);
-    return newEntry;
+  const addFuelEntry = async (entry: Omit<FuelEntry, "id" | "createdAt">) => {
+    const { data, error } = await supabase
+      .from("fuel_entries")
+      .insert({
+        vehicle_id: entry.vehicleId || null,
+        vehicle_info: entry.vehicleInfo,
+        date: entry.date,
+        quantity: entry.quantity,
+        amount: entry.amount,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    await fetchFuelEntries();
+    return { ...entry, id: data.id, createdAt: data.created_at || "" };
   };
 
   const addCalendarEvent = (event: Omit<CalendarEvent, "id" | "createdAt">) => {

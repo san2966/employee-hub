@@ -86,66 +86,72 @@ const AdminVehicles = () => {
     }
   };
 
-  const handleAddVehicle = () => {
+  const handleAddVehicle = async () => {
     if (!vehicleForm.type || !vehicleForm.brand || !vehicleForm.model || !vehicleForm.numberPlate) {
       toast({ title: "Error", description: "Please fill all required fields", variant: "destructive" });
       return;
     }
-
-    addVehicle({
-      type: vehicleForm.type as "Bike" | "Car" | "Other",
-      brand: vehicleForm.brand,
-      model: vehicleForm.model,
-      numberPlate: vehicleForm.numberPlate,
-    });
-
-    setVehicleForm({ type: "", brand: "", model: "", numberPlate: "" });
-    setVehicleDialogOpen(false);
-    toast({ title: "Success", description: "Vehicle added successfully" });
+    try {
+      await addVehicle({
+        type: vehicleForm.type as "Bike" | "Car" | "Other",
+        brand: vehicleForm.brand,
+        model: vehicleForm.model,
+        numberPlate: vehicleForm.numberPlate,
+      });
+      setVehicleForm({ type: "", brand: "", model: "", numberPlate: "" });
+      setVehicleDialogOpen(false);
+      toast({ title: "Success", description: "Vehicle added successfully" });
+    } catch (e: any) {
+      toast({ title: "Failed to add vehicle", description: e?.message || "Database rejected the request", variant: "destructive" });
+    }
   };
 
-  const handleAssignVehicle = () => {
+  const handleAssignVehicle = async () => {
     if (!assignForm.vehicleId || !assignForm.date || !assignForm.employeeName || !assignForm.previousKm || !assignForm.currentKm) {
       toast({ title: "Error", description: "Please fill all required fields", variant: "destructive" });
       return;
     }
 
     const vehicle = vehicles.find(v => v.id === assignForm.vehicleId);
-    
-    addVehicleAssignment({
-      vehicleId: assignForm.vehicleId,
-      vehicleInfo: vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.numberPlate})` : "",
-      date: assignForm.date,
-      employeeName: assignForm.employeeName,
-      previousKm: parseFloat(assignForm.previousKm),
-      currentKm: parseFloat(assignForm.currentKm),
-      image: assignForm.image,
-    });
-
-    setAssignForm({ vehicleId: "", date: "", employeeName: "", previousKm: "", currentKm: "", image: "" });
-    setAssignDialogOpen(false);
-    toast({ title: "Success", description: "Vehicle assignment recorded" });
+    try {
+      await addVehicleAssignment({
+        vehicleId: assignForm.vehicleId,
+        vehicleInfo: vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.numberPlate})` : "",
+        date: assignForm.date,
+        employeeName: assignForm.employeeName,
+        previousKm: parseFloat(assignForm.previousKm),
+        currentKm: parseFloat(assignForm.currentKm),
+        image: assignForm.image,
+      });
+      setAssignForm({ vehicleId: "", date: "", employeeName: "", previousKm: "", currentKm: "", image: "" });
+      setAssignDialogOpen(false);
+      toast({ title: "Success", description: "Vehicle assignment recorded" });
+    } catch (e: any) {
+      toast({ title: "Failed to assign", description: e?.message || "Database rejected the request", variant: "destructive" });
+    }
   };
 
-  const handleAddFuelEntry = () => {
+  const handleAddFuelEntry = async () => {
     if (!fuelForm.vehicleId || !fuelForm.date || !fuelForm.quantity || !fuelForm.amount) {
       toast({ title: "Error", description: "Please fill all required fields", variant: "destructive" });
       return;
     }
 
     const vehicle = vehicles.find(v => v.id === fuelForm.vehicleId);
-
-    addFuelEntry({
-      vehicleId: fuelForm.vehicleId,
-      vehicleInfo: vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.numberPlate})` : "",
-      date: fuelForm.date,
-      quantity: parseFloat(fuelForm.quantity),
-      amount: parseFloat(fuelForm.amount),
-    });
-
-    setFuelForm({ vehicleId: "", date: "", quantity: "", amount: "" });
-    setFuelDialogOpen(false);
-    toast({ title: "Success", description: "Fuel entry recorded" });
+    try {
+      await addFuelEntry({
+        vehicleId: fuelForm.vehicleId,
+        vehicleInfo: vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.numberPlate})` : "",
+        date: fuelForm.date,
+        quantity: parseFloat(fuelForm.quantity),
+        amount: parseFloat(fuelForm.amount),
+      });
+      setFuelForm({ vehicleId: "", date: "", quantity: "", amount: "" });
+      setFuelDialogOpen(false);
+      toast({ title: "Success", description: "Fuel entry recorded" });
+    } catch (e: any) {
+      toast({ title: "Failed to add fuel entry", description: e?.message || "Database rejected the request", variant: "destructive" });
+    }
   };
 
   return (
