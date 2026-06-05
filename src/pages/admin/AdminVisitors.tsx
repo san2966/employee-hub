@@ -40,7 +40,7 @@ const AdminVisitors = () => {
     setStep(2);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.whomToMeet || !form.purpose) {
       toast({ title: "Error", description: "Please fill all required fields", variant: "destructive" });
       return;
@@ -50,19 +50,26 @@ const AdminVisitors = () => {
       return;
     }
 
-    addVisitor({
-      name: form.name,
-      mobile: form.mobile,
-      organization: form.organization,
-      whomToMeet: form.whomToMeet,
-      purpose: form.purpose,
-      purposeDescription: form.purposeDescription,
-    });
-
-    setForm({ name: "", mobile: "", organization: "", whomToMeet: "", purpose: "", purposeDescription: "" });
-    setStep(1);
-    setDialogOpen(false);
-    toast({ title: "Success", description: "Visitor added successfully" });
+    try {
+      await addVisitor({
+        name: form.name,
+        mobile: form.mobile,
+        organization: form.organization,
+        whomToMeet: form.whomToMeet,
+        purpose: form.purpose,
+        purposeDescription: form.purposeDescription,
+      });
+      setForm({ name: "", mobile: "", organization: "", whomToMeet: "", purpose: "", purposeDescription: "" });
+      setStep(1);
+      setDialogOpen(false);
+      toast({ title: "Success", description: "Visitor added successfully" });
+    } catch (e: any) {
+      toast({
+        title: "Failed to add visitor",
+        description: e?.message || "Database rejected the request",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredVisitors = visitors.filter(visitor => {
