@@ -157,15 +157,13 @@ export const useAdminData = () => {
 
   // Still localStorage (no DB tables)
   const [tasks, setTasks] = useState<AdminTask[]>(() => loadFromStorage("tasks", []));
-  const [vehicleAssignments, setVehicleAssignments] = useState<VehicleAssignment[]>(() => loadFromStorage("vehicleAssignments", []));
-  const [fuelEntries, setFuelEntries] = useState<FuelEntry[]>(() => loadFromStorage("fuelEntries", []));
+  const [vehicleAssignments, setVehicleAssignments] = useState<VehicleAssignment[]>([]);
+  const [fuelEntries, setFuelEntries] = useState<FuelEntry[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(() => loadFromStorage("calendarEvents", []));
   const [notes, setNotes] = useState<Note[]>(() => loadFromStorage("notes", []));
 
   // Persist localStorage items
   useEffect(() => saveToStorage("tasks", tasks), [tasks]);
-  useEffect(() => saveToStorage("vehicleAssignments", vehicleAssignments), [vehicleAssignments]);
-  useEffect(() => saveToStorage("fuelEntries", fuelEntries), [fuelEntries]);
   useEffect(() => saveToStorage("calendarEvents", calendarEvents), [calendarEvents]);
   useEffect(() => saveToStorage("notes", notes), [notes]);
 
