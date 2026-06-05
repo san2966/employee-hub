@@ -407,9 +407,13 @@ export type Database = {
           date: string
           description: string
           employee_id: string
+          employee_name: string | null
+          from_location: string | null
           id: string
+          purpose: string | null
           receipt_url: string | null
           status: Database["public"]["Enums"]["payment_status"] | null
+          to_location: string | null
           updated_at: string | null
         }
         Insert: {
@@ -420,9 +424,13 @@ export type Database = {
           date: string
           description: string
           employee_id: string
+          employee_name?: string | null
+          from_location?: string | null
           id?: string
+          purpose?: string | null
           receipt_url?: string | null
           status?: Database["public"]["Enums"]["payment_status"] | null
+          to_location?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -433,9 +441,13 @@ export type Database = {
           date?: string
           description?: string
           employee_id?: string
+          employee_name?: string | null
+          from_location?: string | null
           id?: string
+          purpose?: string | null
           receipt_url?: string | null
           status?: Database["public"]["Enums"]["payment_status"] | null
+          to_location?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -443,6 +455,53 @@ export type Database = {
             foreignKeyName: "employee_payments_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_settings: {
+        Row: {
+          created_at: string
+          designation: string | null
+          employee_id: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          mobile: string | null
+          photo: string | null
+          preferences: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          designation?: string | null
+          employee_id: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          mobile?: string | null
+          photo?: string | null
+          preferences?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          designation?: string | null
+          employee_id?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          mobile?: string | null
+          photo?: string | null
+          preferences?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_settings_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: true
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
@@ -1406,6 +1465,7 @@ export type Database = {
       }
       purchase_documents: {
         Row: {
+          created_at: string
           created_by: string | null
           custom_type: string | null
           file_url: string | null
@@ -1415,6 +1475,7 @@ export type Database = {
           uploaded_at: string | null
         }
         Insert: {
+          created_at?: string
           created_by?: string | null
           custom_type?: string | null
           file_url?: string | null
@@ -1424,6 +1485,7 @@ export type Database = {
           uploaded_at?: string | null
         }
         Update: {
+          created_at?: string
           created_by?: string | null
           custom_type?: string | null
           file_url?: string | null

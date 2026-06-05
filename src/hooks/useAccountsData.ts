@@ -75,17 +75,17 @@ export const useAccountsData = () => {
 
     // Map employee payments
     (empData || []).forEach((p: any) => {
-      const empName = p.employees?.name || "Unknown";
+      const empName = p.employee_name || p.employees?.name || "Unknown";
       if (p.category === "travel" || p.category === "traveling") {
         allTravel.push({
           id: p.id,
           employeeName: empName,
-          from: "",
-          to: "",
+          from: p.from_location || "",
+          to: p.to_location || "",
           date: p.date,
           amount: p.amount,
           receiptUrl: p.receipt_url || undefined,
-          purpose: p.description,
+          purpose: p.purpose || p.description,
           timestamp: p.created_at || "",
         });
       } else {
@@ -95,7 +95,7 @@ export const useAccountsData = () => {
           amount: p.amount,
           date: p.date,
           receiptUrl: p.receipt_url || undefined,
-          purpose: p.description,
+          purpose: p.purpose || p.description,
           timestamp: p.created_at || "",
           source: "employee",
         });
