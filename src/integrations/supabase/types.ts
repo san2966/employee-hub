@@ -464,14 +464,17 @@ export type Database = {
           exchange_leave_balance: number | null
           father_mobile: string | null
           father_name: string
+          first_name: string | null
           highest_education: string
           id: string
           is_active: boolean | null
           is_fresher: boolean | null
           job_period_from: string | null
           job_period_to: string | null
+          last_name: string | null
           marks_percentage: string | null
           medical_leave_balance: number | null
+          mobile: string | null
           mother_mobile: string | null
           mother_name: string
           name: string
@@ -507,14 +510,17 @@ export type Database = {
           exchange_leave_balance?: number | null
           father_mobile?: string | null
           father_name: string
+          first_name?: string | null
           highest_education: string
           id?: string
           is_active?: boolean | null
           is_fresher?: boolean | null
           job_period_from?: string | null
           job_period_to?: string | null
+          last_name?: string | null
           marks_percentage?: string | null
           medical_leave_balance?: number | null
+          mobile?: string | null
           mother_mobile?: string | null
           mother_name: string
           name: string
@@ -550,14 +556,17 @@ export type Database = {
           exchange_leave_balance?: number | null
           father_mobile?: string | null
           father_name?: string
+          first_name?: string | null
           highest_education?: string
           id?: string
           is_active?: boolean | null
           is_fresher?: boolean | null
           job_period_from?: string | null
           job_period_to?: string | null
+          last_name?: string | null
           marks_percentage?: string | null
           medical_leave_balance?: number | null
+          mobile?: string | null
           mother_mobile?: string | null
           mother_name?: string
           name?: string
@@ -579,6 +588,44 @@ export type Database = {
           year_of_passing?: string
         }
         Relationships: []
+      }
+      fuel_entries: {
+        Row: {
+          amount: number
+          created_at: string
+          date: string
+          id: string
+          quantity: number
+          vehicle_id: string | null
+          vehicle_info: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          date: string
+          id?: string
+          quantity?: number
+          vehicle_id?: string | null
+          vehicle_info?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          date?: string
+          id?: string
+          quantity?: number
+          vehicle_id?: string | null
+          vehicle_info?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fuel_entries_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inward_outward: {
         Row: {
@@ -2520,6 +2567,50 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_assignments: {
+        Row: {
+          created_at: string
+          current_km: number
+          date: string
+          employee_name: string
+          id: string
+          image: string | null
+          previous_km: number
+          vehicle_id: string | null
+          vehicle_info: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_km?: number
+          date: string
+          employee_name: string
+          id?: string
+          image?: string | null
+          previous_km?: number
+          vehicle_id?: string | null
+          vehicle_info?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_km?: number
+          date?: string
+          employee_name?: string
+          id?: string
+          image?: string | null
+          previous_km?: number
+          vehicle_id?: string | null
+          vehicle_info?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_assignments_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
             referencedColumns: ["id"]
           },
         ]
