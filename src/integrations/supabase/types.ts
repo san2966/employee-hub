@@ -1618,6 +1618,7 @@ export type Database = {
       }
       purchase_project_images: {
         Row: {
+          created_at: string
           created_by: string | null
           file_url: string | null
           id: string
@@ -1627,6 +1628,7 @@ export type Database = {
           work_order: string | null
         }
         Insert: {
+          created_at?: string
           created_by?: string | null
           file_url?: string | null
           id?: string
@@ -1636,6 +1638,7 @@ export type Database = {
           work_order?: string | null
         }
         Update: {
+          created_at?: string
           created_by?: string | null
           file_url?: string | null
           id?: string
@@ -1879,6 +1882,7 @@ export type Database = {
       }
       purchase_work_completions: {
         Row: {
+          created_at: string
           created_by: string | null
           file_url: string | null
           id: string
@@ -1889,6 +1893,7 @@ export type Database = {
           work_order_no: string
         }
         Insert: {
+          created_at?: string
           created_by?: string | null
           file_url?: string | null
           id?: string
@@ -1899,6 +1904,7 @@ export type Database = {
           work_order_no: string
         }
         Update: {
+          created_at?: string
           created_by?: string | null
           file_url?: string | null
           id?: string

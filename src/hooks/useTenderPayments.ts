@@ -110,7 +110,7 @@ export function useTenderPayments() {
   };
 
   const getProofUrl = async (path: string): Promise<string | null> => {
-    const { data } = await supabase.storage.from("tender-payments").createSignedUrl(path, 3600);
+    const { data } = await supabase.storage.from("tender-payments").createSignedUrl(path, 315360000);
     return data?.signedUrl || null;
   };
 

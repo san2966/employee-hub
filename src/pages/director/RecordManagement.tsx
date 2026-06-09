@@ -88,7 +88,7 @@ const DirectorRecordManagement = () => {
     if (fileUrl.includes("operations-files")) {
       const match = fileUrl.match(/operations-files\/(.+?)(\?|$)/);
       if (match) {
-        const { data } = await supabase.storage.from("operations-files").createSignedUrl(match[1], 3600);
+        const { data } = await supabase.storage.from("operations-files").createSignedUrl(match[1], 315360000);
         if (data?.signedUrl) window.open(data.signedUrl, "_blank");
         return;
       }
