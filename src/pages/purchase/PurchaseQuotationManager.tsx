@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 const quoteTypes = ["L1", "L2", "L3", "L4", "L5", "L6", "Proposal Commercials", "Other"];
 
 const PurchaseQuotationManager = () => {
-  const { data: quotes, add, loading } = usePurchaseQuotes();
+  const { data: quotes, add, loading, fetch: refetch } = usePurchaseQuotes();
   const { upload } = useUploadFile();
   const [addOpen, setAddOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -26,11 +26,11 @@ const PurchaseQuotationManager = () => {
   useEffect(() => {
     const channel = supabase.channel("purchase_quotes_realtime").on(
       "postgres_changes",
-      { event: "UPDATE", schema: "public", table: "purchase_quotes" },
-      () => { window.location.reload(); }
+      { event: "*", schema: "public", table: "purchase_quotes" },
+      () => { refetch(); }
     ).subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [refetch]);
 
   const handleAdd = async () => {
     if (!form.quote_id.trim() || !form.subject.trim() || !form.type) return;
