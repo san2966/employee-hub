@@ -72,7 +72,7 @@ export function useOperationsData() {
     const path = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
     const { error } = await supabase.storage.from("operations-files").upload(path, file);
     if (error) throw error;
-    const { data } = await supabase.storage.from("operations-files").createSignedUrl(path, 3600);
+    const { data } = await supabase.storage.from("operations-files").createSignedUrl(path, 315360000);
     return data?.signedUrl || "";
   }, []);
 
@@ -82,13 +82,13 @@ export function useOperationsData() {
       if (path && path.includes("operations-files")) {
         const match = path.match(/operations-files\/(.+?)(\?|$)/);
         if (match) {
-          const { data } = await supabase.storage.from("operations-files").createSignedUrl(match[1], 3600);
+          const { data } = await supabase.storage.from("operations-files").createSignedUrl(match[1], 315360000);
           return data?.signedUrl || path;
         }
       }
       return path;
     }
-    const { data } = await supabase.storage.from("operations-files").createSignedUrl(path, 3600);
+    const { data } = await supabase.storage.from("operations-files").createSignedUrl(path, 315360000);
     return data?.signedUrl || "";
   }, []);
 
