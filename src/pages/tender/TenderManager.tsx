@@ -66,6 +66,18 @@ const TenderManager = () => {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
+  // Realtime sync — refresh when any tender data changes (e.g. Director updates, multi-user)
+  useEffect(() => {
+    const channel = supabase
+      .channel("tender_manager_realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "tenders" }, () => fetchAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "tender_documents" }, () => fetchAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "tender_companies" }, () => fetchAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "tender_company_links" }, () => fetchAll())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchAll]);
+
   const fetchLinks = async (tenderId: string) => {
     const { data } = await (supabase as any).from("tender_company_links").select("*").eq("tender_id", tenderId);
     if (data) {

@@ -27,6 +27,17 @@ const TenderMonitor = () => {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
+  // Realtime sync with Tender Manager
+  useEffect(() => {
+    const channel = supabase
+      .channel("director_tender_monitor_realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "tenders" }, () => fetchAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "tender_documents" }, () => fetchAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "tender_company_links" }, () => fetchAll())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchAll]);
+
   const getTenderForDoc = (docId: string) => tenders.find((t: any) => t.document_id === docId);
 
   const getStatusLabel = (status: string) => {
