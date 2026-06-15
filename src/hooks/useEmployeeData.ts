@@ -380,6 +380,15 @@ export const useEmployeeData = (employeeId: string) => {
       }
     };
     fetchBalance();
+    const channel = supabase
+      .channel(`employee-balance-${employeeId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "employees", filter: `id=eq.${employeeId}` },
+        () => fetchBalance()
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [employeeId]);
 
   // ════════════════════════════════════════════
