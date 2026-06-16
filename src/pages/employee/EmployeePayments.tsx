@@ -42,38 +42,42 @@ const EmployeePayments = () => {
     receiptUrl: "",
   });
   
-  const handleTravelSave = () => {
+  const handleTravelSave = async () => {
     if (!travelForm.from || !travelForm.to || !travelForm.purpose || !travelForm.date || !travelForm.amount) {
       toast({ variant: "destructive", title: "Error", description: "Please fill required fields" });
       return;
     }
-    
-    addTravelExpense({
-      ...travelForm,
-      amount: parseFloat(travelForm.amount),
-      employeeName,
-    });
-    
-    toast({ title: "Travel expense added", description: "Your expense has been synced to Accounts" });
-    setTravelDialog(false);
-    setTravelForm({ from: "", to: "", purpose: "", date: "", amount: "", receiptUrl: "" });
+    try {
+      await addTravelExpense({
+        ...travelForm,
+        amount: parseFloat(travelForm.amount),
+        employeeName,
+      });
+      toast({ title: "Travel expense added", description: "Your expense has been synced to Accounts" });
+      setTravelDialog(false);
+      setTravelForm({ from: "", to: "", purpose: "", date: "", amount: "", receiptUrl: "" });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Save failed", description: err?.message || "Unable to save expense" });
+    }
   };
   
-  const handleMiscSave = () => {
+  const handleMiscSave = async () => {
     if (!miscForm.date || !miscForm.purpose || !miscForm.amount) {
       toast({ variant: "destructive", title: "Error", description: "Please fill required fields" });
       return;
     }
-    
-    addMiscPayment({
-      ...miscForm,
-      amount: parseFloat(miscForm.amount),
-      employeeName,
-    });
-    
-    toast({ title: "Payment added", description: "Your payment has been synced to Accounts" });
-    setMiscDialog(false);
-    setMiscForm({ date: "", purpose: "", amount: "", receiptUrl: "" });
+    try {
+      await addMiscPayment({
+        ...miscForm,
+        amount: parseFloat(miscForm.amount),
+        employeeName,
+      });
+      toast({ title: "Payment added", description: "Your payment has been synced to Accounts" });
+      setMiscDialog(false);
+      setMiscForm({ date: "", purpose: "", amount: "", receiptUrl: "" });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Save failed", description: err?.message || "Unable to save payment" });
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: "travel" | "misc") => {
