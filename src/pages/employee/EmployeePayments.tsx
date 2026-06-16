@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plane, CreditCard, Plus, Download, Receipt } from "lucide-react";
 import { ExportButtons } from "@/components/ExportButtons";
 import { EXPORT_COLUMNS } from "@/lib/exportUtils";
+import { uploadPaymentReceipt, openPaymentReceipt } from "@/lib/paymentReceipt";
 
 const EmployeePayments = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
@@ -77,15 +78,17 @@ const EmployeePayments = () => {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: "travel" | "misc") => {
     const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      if (type === "travel") {
-        setTravelForm({ ...travelForm, receiptUrl: url });
-      } else {
-        setMiscForm({ ...miscForm, receiptUrl: url });
-      }
-      toast({ title: "Document uploaded" });
-    }
+    if (!file) return;
+    uploadPaymentReceipt(file, employeeId)
+      .then((path) => {
+        if (type === "travel") setTravelForm((f) => ({ ...f, receiptUrl: path }));
+        else setMiscForm((f) => ({ ...f, receiptUrl: path }));
+        toast({ title: "Document uploaded" });
+      })
+      .catch((err) => {
+        console.error(err);
+        toast({ variant: "destructive", title: "Upload failed", description: err.message });
+      });
   };
 
   return (
@@ -209,14 +212,13 @@ const EmployeePayments = () => {
                           <div className="text-right">
                             <p className="font-bold text-success">₹{expense.amount.toLocaleString()}</p>
                             {expense.receiptUrl && (
-                              <a 
-                                href={expense.receiptUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <button
+                                type="button"
+                                onClick={() => openPaymentReceipt(expense.receiptUrl!)}
                                 className="text-xs text-primary hover:underline flex items-center gap-1 justify-end mt-1"
                               >
                                 <Download className="h-3 w-3" /> Receipt
-                              </a>
+                              </button>
                             )}
                           </div>
                         </div>
@@ -309,14 +311,13 @@ const EmployeePayments = () => {
                           <div className="text-right">
                             <p className="font-bold text-success">₹{payment.amount.toLocaleString()}</p>
                             {payment.receiptUrl && (
-                              <a 
-                                href={payment.receiptUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <button
+                                type="button"
+                                onClick={() => openPaymentReceipt(payment.receiptUrl!)}
                                 className="text-xs text-primary hover:underline flex items-center gap-1 justify-end mt-1"
                               >
                                 <Download className="h-3 w-3" /> Receipt
-                              </a>
+                              </button>
                             )}
                           </div>
                         </div>
