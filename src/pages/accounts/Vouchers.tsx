@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Download, Search, Filter, Receipt, Plane, X } from "lucide-react";
 import { ExportButtons } from "@/components/ExportButtons";
 import { EXPORT_COLUMNS } from "@/lib/exportUtils";
+import { openPaymentReceipt } from "@/lib/paymentReceipt";
 
 const MONTHS = [
   { value: "1", label: "January" },
@@ -245,15 +246,14 @@ const Vouchers = () => {
                             </TableCell>
                             <TableCell>
                               {voucher.receiptUrl ? (
-                                <a 
-                                  href={voucher.receiptUrl} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
+                                <button
+                                  type="button"
+                                  onClick={() => openPaymentReceipt(voucher.receiptUrl!)}
                                   className="text-primary hover:underline flex items-center gap-1"
                                 >
                                   <Download className="h-4 w-4" />
                                   Download
-                                </a>
+                                </button>
                               ) : (
                                 <span className="text-muted-foreground">No receipt</span>
                               )}
@@ -386,15 +386,14 @@ const Vouchers = () => {
                             </TableCell>
                             <TableCell>
                               {expense.receiptUrl ? (
-                                <a 
-                                  href={expense.receiptUrl} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
+                                <button
+                                  type="button"
+                                  onClick={() => openPaymentReceipt(expense.receiptUrl!)}
                                   className="text-primary hover:underline flex items-center gap-1"
                                 >
                                   <Download className="h-4 w-4" />
                                   Download
-                                </a>
+                                </button>
                               ) : (
                                 <span className="text-muted-foreground">No receipt</span>
                               )}
