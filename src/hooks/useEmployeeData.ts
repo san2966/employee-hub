@@ -529,13 +529,21 @@ export const useEmployeeData = (employeeId: string) => {
   const addTravelExpense = useCallback(async (expense: Omit<TravelExpense, "id" | "employeeId" | "timestamp">) => {
     const { error } = await supabase.from("employee_payments").insert({
       employee_id: employeeId,
+      employee_name: expense.employeeName,
       date: expense.date,
       description: JSON.stringify({ from: expense.from, to: expense.to, purpose: expense.purpose }),
+      from_location: expense.from,
+      to_location: expense.to,
+      purpose: expense.purpose,
       amount: expense.amount,
       category: "travel",
       receipt_url: expense.receiptUrl || null,
     });
-    if (!error) await fetchPayments();
+    if (error) {
+      console.error("addTravelExpense failed:", error);
+      throw error;
+    }
+    await fetchPayments();
   }, [employeeId, fetchPayments]);
 
   // ════════════════════════════════════════════
@@ -544,13 +552,19 @@ export const useEmployeeData = (employeeId: string) => {
   const addMiscPayment = useCallback(async (payment: Omit<MiscPayment, "id" | "employeeId" | "timestamp">) => {
     const { error } = await supabase.from("employee_payments").insert({
       employee_id: employeeId,
+      employee_name: payment.employeeName,
       date: payment.date,
       description: payment.purpose,
+      purpose: payment.purpose,
       amount: payment.amount,
       category: "misc",
       receipt_url: payment.receiptUrl || null,
     });
-    if (!error) await fetchPayments();
+    if (error) {
+      console.error("addMiscPayment failed:", error);
+      throw error;
+    }
+    await fetchPayments();
   }, [employeeId, fetchPayments]);
 
   // ════════════════════════════════════════════
