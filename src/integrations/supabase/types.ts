@@ -450,15 +450,7 @@ export type Database = {
           to_location?: string | null
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "employee_payments_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       employee_settings: {
         Row: {
