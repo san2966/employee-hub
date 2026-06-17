@@ -107,6 +107,9 @@ export interface Requirement {
   employeeName: string;
   title: string;
   description: string;
+  whyNeeded?: string;
+  link?: string;
+  expectedCost?: number;
   status: "pending" | "approved" | "rejected";
   createdAt: string;
 }
