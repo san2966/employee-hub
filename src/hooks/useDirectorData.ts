@@ -538,7 +538,7 @@ export const useDirectorData = () => {
   const refreshLeaves = () => { fetchLeaves(); };
 
   const updateRequirementStatus = async (id: string, status: "approved" | "rejected") => {
-    const { error } = await supabase.from("requirements").update({ status }).eq("id", id);
+    const { error } = await supabase.from("requirements").update({ status: status as any }).eq("id", id);
     if (error) { console.error("updateRequirementStatus failed:", error); return; }
     await fetchRequirements();
   };
