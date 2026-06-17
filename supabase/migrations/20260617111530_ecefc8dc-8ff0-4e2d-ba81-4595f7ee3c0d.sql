@@ -1,0 +1,2 @@
+-- Drop FK constraint that breaks payments when portal_users.employee_id references a non-existent employees row
+ALTER TABLE public.employee_payments DROP CONSTRAINT IF EXISTS employee_payments_employee_id_fkey;
