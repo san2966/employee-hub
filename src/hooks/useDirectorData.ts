@@ -241,13 +241,21 @@ export const useDirectorData = () => {
       .select(`*, employees(name)`)
       .order("created_at", { ascending: false });
     if (error) { console.error("Error:", error); return; }
-    setRequirements((data || []).map((r: any) => ({
-      id: r.id, employeeId: r.requested_by || "",
-      employeeName: r.employees?.name || "Unknown",
-      title: r.title, description: r.description,
-      status: r.status as "pending" | "approved" | "rejected",
-      createdAt: r.created_at,
-    })));
+    setRequirements((data || []).map((r: any) => {
+      let parsed: any = {};
+      try { parsed = JSON.parse(r.description); } catch { parsed = { description: r.description }; }
+      return {
+        id: r.id, employeeId: r.requested_by || "",
+        employeeName: r.employees?.name || "Unknown",
+        title: r.title,
+        description: parsed.description || r.description,
+        whyNeeded: parsed.whyNeeded || "",
+        link: parsed.link || "",
+        expectedCost: parsed.expectedCost,
+        status: r.status as "pending" | "approved" | "rejected",
+        createdAt: r.created_at,
+      };
+    }));
   }, []);
 
   // Initial load
@@ -529,6 +537,12 @@ export const useDirectorData = () => {
 
   const refreshLeaves = () => { fetchLeaves(); };
 
+  const updateRequirementStatus = async (id: string, status: "approved" | "rejected") => {
+    const { error } = await supabase.from("requirements").update({ status }).eq("id", id);
+    if (error) { console.error("updateRequirementStatus failed:", error); return; }
+    await fetchRequirements();
+  };
+
   return {
     events, addEvent, updateEvent, deleteEvent,
     notes, addNote, updateNote, deleteNote,
@@ -539,6 +553,6 @@ export const useDirectorData = () => {
     contacts, addContact, deleteContact,
     leaves, updateLeave, setLeaves, getLeaveStats, refreshLeaves,
     notices, addNotice,
-    requirements, setRequirements,
+    requirements, setRequirements, updateRequirementStatus,
   };
 };
