@@ -1,9 +1,10 @@
 import DirectorLayout from "@/components/director/DirectorLayout";
 import { useDirectorData } from "@/hooks/useDirectorData";
-import { Package } from "lucide-react";
+import { Package, Check, X, Link as LinkIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Requirements = () => {
-  const { requirements } = useDirectorData();
+  const { requirements, updateRequirementStatus } = useDirectorData();
 
   return (
     <DirectorLayout title="Requirements">
@@ -22,11 +23,13 @@ const Requirements = () => {
               <table className="w-full">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="text-left p-4 text-sm font-medium">Employee</th>
+                    <th className="text-left p-4 text-sm font-medium">Name</th>
                     <th className="text-left p-4 text-sm font-medium">Title</th>
                     <th className="text-left p-4 text-sm font-medium">Description</th>
-                    <th className="text-left p-4 text-sm font-medium">Date</th>
-                    <th className="text-left p-4 text-sm font-medium">Status</th>
+                    <th className="text-left p-4 text-sm font-medium">Why Needed</th>
+                    <th className="text-left p-4 text-sm font-medium">Link</th>
+                    <th className="text-left p-4 text-sm font-medium">Cost</th>
+                    <th className="text-left p-4 text-sm font-medium">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -37,17 +40,40 @@ const Requirements = () => {
                       <td className="p-4 text-sm text-muted-foreground max-w-xs truncate">
                         {req.description}
                       </td>
-                      <td className="p-4 text-sm text-muted-foreground">
-                        {new Date(req.createdAt).toLocaleDateString()}
+                      <td className="p-4 text-sm text-muted-foreground max-w-xs truncate">
+                        {req.whyNeeded || "—"}
+                      </td>
+                      <td className="p-4 text-sm">
+                        {req.link ? (
+                          <a href={req.link} target="_blank" rel="noopener noreferrer"
+                             className="text-primary hover:underline inline-flex items-center gap-1">
+                            <LinkIcon className="h-3 w-3" /> Open
+                          </a>
+                        ) : "—"}
+                      </td>
+                      <td className="p-4 text-sm">
+                        {req.expectedCost ? `₹${req.expectedCost.toLocaleString()}` : "—"}
                       </td>
                       <td className="p-4">
-                        <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${
-                          req.status === "approved" ? "bg-success/10 text-success" :
-                          req.status === "rejected" ? "bg-destructive/10 text-destructive" :
-                          "bg-warning/10 text-warning"
-                        }`}>
-                          {req.status}
-                        </span>
+                        {req.status === "pending" ? (
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="default"
+                              onClick={() => updateRequirementStatus(req.id, "approved")}>
+                              <Check className="h-3 w-3 mr-1" /> Approve
+                            </Button>
+                            <Button size="sm" variant="destructive"
+                              onClick={() => updateRequirementStatus(req.id, "rejected")}>
+                              <X className="h-3 w-3 mr-1" /> Reject
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${
+                            req.status === "approved" ? "bg-success/10 text-success" :
+                            "bg-destructive/10 text-destructive"
+                          }`}>
+                            {req.status}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
