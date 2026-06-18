@@ -9,7 +9,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   CONTAINER_NAME: emp-cms
-  HOST_PORT: "80"
+  HOST_PORT: "8080"
 
 jobs:
   build-and-push:
