@@ -295,8 +295,8 @@ const TenderManager = () => {
                       }}>Manage</Button>
                     )}
 
-                    {/* Technical Update - on technical opening date */}
-                    {tender && status === "technical_pending" && tender.technical_opening_date && tender.technical_opening_date <= today && (
+                    {/* Technical Update - available once technical date is set */}
+                    {tender && status === "technical_pending" && (
                       <Button size="sm" onClick={async () => {
                         setSelectedTenderId(tender.id);
                         await fetchLinks(tender.id);
@@ -314,11 +314,11 @@ const TenderManager = () => {
                       }}>Update</Button>
                     )}
 
-                    {/* Financial Update - on financial opening date */}
-                    {tender && status === "financial_pending" && tender.financial_opening_date && tender.financial_opening_date <= today && (
+                    {/* Financial Update - available once financial date is set */}
+                    {tender && status === "financial_pending" && (
                       <Button size="sm" onClick={async () => {
                         setSelectedTenderId(tender.id);
-                        const links = await fetchLinks(tender.id);
+                        await fetchLinks(tender.id);
                         setCompanyDecisions({});
                         setFinUpdateOpen(true);
                       }}>Financial Update</Button>
