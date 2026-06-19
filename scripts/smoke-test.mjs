@@ -101,8 +101,10 @@ try {
   const v = await rest("/visitors", {
     method: "POST",
     body: JSON.stringify({
-      name: TAG, phone: "0000000000", purpose: "smoke",
-      visit_date: new Date().toISOString().slice(0, 10),
+      name: TAG,
+      phone: "0000000000",
+      purpose: "smoke",
+      person_to_meet: "smoke-test",
     }),
   });
   ids.visitors = v[0].id;
@@ -136,7 +138,7 @@ try {
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
     body: JSON.stringify({
-      email: SMOKE_TEST_EMAIL,
+      username: SMOKE_TEST_EMAIL,
       password: SMOKE_TEST_PASSWORD,
     }),
   });
