@@ -12,16 +12,22 @@ import autoTable from "jspdf-autotable";
 const TenderMonitor = () => {
   const [documents, setDocuments] = useState<any[]>([]);
   const [tenders, setTenders] = useState<any[]>([]);
+  const [links, setLinks] = useState<any[]>([]);
+  const [companies, setCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const [docsRes, tendersRes] = await Promise.all([
+    const [docsRes, tendersRes, linksRes, compsRes] = await Promise.all([
       (supabase as any).from("tender_documents").select("*").order("created_at", { ascending: false }),
       (supabase as any).from("tenders").select("*").order("created_at", { ascending: false }),
+      (supabase as any).from("tender_company_links").select("*"),
+      (supabase as any).from("tender_companies").select("*"),
     ]);
     setDocuments(docsRes.data || []);
     setTenders(tendersRes.data || []);
+    setLinks(linksRes.data || []);
+    setCompanies(compsRes.data || []);
     setLoading(false);
   }, []);
 
@@ -39,6 +45,8 @@ const TenderMonitor = () => {
   }, [fetchAll]);
 
   const getTenderForDoc = (docId: string) => tenders.find((t: any) => t.document_id === docId);
+  const compName = (id: string) => companies.find((c: any) => c.id === id)?.name || "Unknown";
+  const linksFor = (tenderId: string) => links.filter((l: any) => l.tender_id === tenderId);
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
@@ -49,18 +57,10 @@ const TenderMonitor = () => {
   };
 
   const downloadPDF = async (tender: any, doc: any) => {
-    const { data: links } = await (supabase as any).from("tender_company_links").select("*").eq("tender_id", tender.id);
-    let companyNames: string[] = [];
-    let techApproved: string[] = [];
-    let finApproved: string[] = [];
-    if (links && links.length > 0) {
-      const compIds = links.map((l: any) => l.company_id);
-      const { data: comps } = await (supabase as any).from("tender_companies").select("*").in("id", compIds);
-      const compMap = new Map((comps || []).map((c: any) => [c.id, c.name]));
-      companyNames = links.map((l: any) => compMap.get(l.company_id) || "Unknown");
-      techApproved = links.filter((l: any) => l.technical_status === "accepted").map((l: any) => compMap.get(l.company_id) || "Unknown");
-      finApproved = links.filter((l: any) => l.financial_status === "accepted").map((l: any) => compMap.get(l.company_id) || "Unknown");
-    }
+    const tLinks = linksFor(tender.id);
+    const companyNames = tLinks.map((l: any) => compName(l.company_id));
+    const techApproved = tLinks.filter((l: any) => l.technical_status === "accepted").map((l: any) => compName(l.company_id));
+    const finApproved = tLinks.filter((l: any) => l.financial_status === "accepted").map((l: any) => compName(l.company_id));
 
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -136,6 +136,10 @@ const TenderMonitor = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {documents.map((doc: any) => {
             const tender = getTenderForDoc(doc.id);
+            const tLinks = tender ? linksFor(tender.id) : [];
+            const applied = tLinks.map((l: any) => compName(l.company_id));
+            const techOk = tLinks.filter((l: any) => l.technical_status === "accepted").map((l: any) => compName(l.company_id));
+            const finOk = tLinks.filter((l: any) => l.financial_status === "accepted").map((l: any) => compName(l.company_id));
             return (
               <Card key={doc.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-4 space-y-3">
@@ -146,9 +150,18 @@ const TenderMonitor = () => {
                   <p className="text-xs text-muted-foreground">{doc.organization} • {doc.product}</p>
                   <p className="text-xs text-muted-foreground">Published: {doc.bid_date}</p>
                   {tender && (
-                    <div className="text-xs space-y-1">
-                      {tender.technical_opening_date && <p>Tech Open: {tender.technical_opening_date}</p>}
-                      {tender.financial_opening_date && <p>Fin Open: {tender.financial_opening_date}</p>}
+                    <div className="text-xs space-y-1 border-t pt-2">
+                      {applied.length > 0 && <p><span className="font-medium">Companies Applied:</span> {applied.join(", ")}</p>}
+                      {tender.technical_opening_date && <p><span className="font-medium">Tech Open:</span> {tender.technical_opening_date}</p>}
+                      {techOk.length > 0 && <p><span className="font-medium">Tech Approved:</span> {techOk.join(", ")}</p>}
+                      {tender.financial_opening_date && <p><span className="font-medium">Fin Open:</span> {tender.financial_opening_date}</p>}
+                      {finOk.length > 0 && <p><span className="font-medium">Fin Approved:</span> {finOk.join(", ")}</p>}
+                      {tender.work_order_url && (
+                        <p>
+                          <span className="font-medium">Work Order:</span>{" "}
+                          <a href={tender.work_order_url} target="_blank" rel="noreferrer" className="text-primary underline">View</a>
+                        </p>
+                      )}
                     </div>
                   )}
                   {tender && tender.status === "completed" && (
