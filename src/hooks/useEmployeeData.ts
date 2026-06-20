@@ -280,22 +280,18 @@ export const useEmployeeData = (employeeId: string) => {
       .eq("requested_by", employeeId)
       .order("created_at", { ascending: false });
     if (data) {
-      setRequirements(data.map(r => {
-        let parsed: any = {};
-        try { parsed = JSON.parse(r.description); } catch { parsed = { description: r.description }; }
-        return {
-          id: r.id,
-          employeeId: r.requested_by || employeeId,
-          employeeName: (r.employees as any)?.name || "",
-          title: r.title,
-          description: parsed.description || r.description,
-          whyNeeded: parsed.whyNeeded || "",
-          link: parsed.link || undefined,
-          expectedCost: parsed.expectedCost || undefined,
-          status: (r.status || "pending") as Requirement["status"],
-          createdAt: r.created_at || new Date().toISOString(),
-        };
-      }));
+      setRequirements(data.map((r: any) => ({
+        id: r.id,
+        employeeId: r.requested_by || employeeId,
+        employeeName: r.employee_name || r.employees?.name || "",
+        title: r.title,
+        description: r.description || "",
+        whyNeeded: r.why_needed || "",
+        link: r.link_url || undefined,
+        expectedCost: r.expected_cost ? Number(r.expected_cost) : undefined,
+        status: (r.status || "pending") as Requirement["status"],
+        createdAt: r.created_at || new Date().toISOString(),
+      })));
     }
   }, [employeeId]);
 
@@ -504,22 +500,23 @@ export const useEmployeeData = (employeeId: string) => {
     title: string; description: string; whyNeeded: string;
     link?: string; expectedCost?: number; employeeName: string;
   }) => {
-    const payload = {
+    const payload: any = {
       title: req.title,
-      description: JSON.stringify({
-        description: req.description,
-        whyNeeded: req.whyNeeded,
-        link: req.link,
-        expectedCost: req.expectedCost,
-      }),
-      requested_by: employeeId,
+      description: req.description,
+      why_needed: req.whyNeeded,
+      link_url: req.link || null,
+      expected_cost: req.expectedCost ?? null,
+      employee_name: req.employeeName,
+      requested_by: employeeId || null,
       status: "pending" as const,
       priority: "medium" as const,
     };
     const { data, error } = await supabase.from("requirements").insert(payload).select().single();
-    if (!error && data) {
-      await fetchRequirements();
+    if (error) {
+      console.error("addRequirement failed:", error);
+      throw error;
     }
+    await fetchRequirements();
     return data;
   }, [employeeId, fetchRequirements]);
 

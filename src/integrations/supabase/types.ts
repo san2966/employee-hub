@@ -1913,34 +1913,46 @@ export type Database = {
           approved_by: string | null
           created_at: string | null
           description: string
+          employee_name: string | null
+          expected_cost: number | null
           id: string
+          link_url: string | null
           priority: Database["public"]["Enums"]["task_priority"] | null
           requested_by: string | null
           status: Database["public"]["Enums"]["task_status"] | null
           title: string
           updated_at: string | null
+          why_needed: string | null
         }
         Insert: {
           approved_by?: string | null
           created_at?: string | null
           description: string
+          employee_name?: string | null
+          expected_cost?: number | null
           id?: string
+          link_url?: string | null
           priority?: Database["public"]["Enums"]["task_priority"] | null
           requested_by?: string | null
           status?: Database["public"]["Enums"]["task_status"] | null
           title: string
           updated_at?: string | null
+          why_needed?: string | null
         }
         Update: {
           approved_by?: string | null
           created_at?: string | null
           description?: string
+          employee_name?: string | null
+          expected_cost?: number | null
           id?: string
+          link_url?: string | null
           priority?: Database["public"]["Enums"]["task_priority"] | null
           requested_by?: string | null
           status?: Database["public"]["Enums"]["task_status"] | null
           title?: string
           updated_at?: string | null
+          why_needed?: string | null
         }
         Relationships: [
           {
