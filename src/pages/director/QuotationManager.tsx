@@ -37,13 +37,13 @@ const DirectorQuotationManager = () => {
   }, [fetchQuotes]);
 
   const handleApprove = async (quoteId: string) => {
-    await (supabase as any).from("purchase_quotes").update({ status: "Accepted", description: null }).eq("id", quoteId);
+    await (supabase as any).from("purchase_quotes").update({ status: "accepted", description: null }).eq("id", quoteId);
     fetchQuotes();
   };
 
   const handleReject = async () => {
     if (!rejectQuote) return;
-    await (supabase as any).from("purchase_quotes").update({ status: "Rejected", description: rejectDesc }).eq("id", rejectQuote.id);
+    await (supabase as any).from("purchase_quotes").update({ status: "rejected", description: rejectDesc }).eq("id", rejectQuote.id);
     setRejectOpen(false);
     setRejectQuote(null);
     setRejectDesc("");
@@ -74,7 +74,10 @@ const DirectorQuotationManager = () => {
                     <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     No quotations submitted
                   </TableCell></TableRow>
-                ) : quotes.map((q: any) => (
+                ) : quotes.map((q: any) => {
+                  const status = String(q.status || "pending").toLowerCase();
+                  const isFinal = status === "accepted" || status === "approved" || status === "rejected";
+                  return (
                   <TableRow key={q.id}>
                     <TableCell className="font-medium">{q.quote_id}</TableCell>
                     <TableCell>{q.subject}</TableCell>
@@ -88,26 +91,22 @@ const DirectorQuotationManager = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={q.status === "Accepted" || q.status === "Approved" ? "default" : q.status === "Rejected" ? "destructive" : "secondary"}>
+                      <Badge variant={status === "accepted" || status === "approved" ? "default" : status === "rejected" ? "destructive" : "secondary"}>
                         {q.status || "Pending"}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {q.status !== "Accepted" && q.status !== "Approved" && q.status !== "Rejected" ? (
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="outline" className="text-green-600" onClick={() => handleApprove(q.id)}>
-                            <Check className="h-3 w-3 mr-1" /> Accept
-                          </Button>
-                          <Button size="sm" variant="outline" className="text-destructive" onClick={() => { setRejectQuote(q); setRejectDesc(""); setRejectOpen(true); }}>
-                            <X className="h-3 w-3 mr-1" /> Reject
-                          </Button>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="outline" className="text-green-600" disabled={isFinal} onClick={() => handleApprove(q.id)}>
+                          <Check className="h-3 w-3 mr-1" /> Accept
+                        </Button>
+                        <Button size="sm" variant="outline" className="text-destructive" disabled={isFinal} onClick={() => { setRejectQuote(q); setRejectDesc(""); setRejectOpen(true); }}>
+                          <X className="h-3 w-3 mr-1" /> Reject
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                );})}
               </TableBody>
             </Table>
           </div>
