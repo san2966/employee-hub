@@ -2814,6 +2814,13 @@ export type Database = {
         Returns: number
       }
       get_employee_id: { Args: { user_uuid: string }; Returns: string }
+      get_tender_users: {
+        Args: never
+        Returns: {
+          role: string
+          username: string
+        }[]
+      }
       get_user_role: { Args: { user_uuid: string }; Returns: string }
       has_role: {
         Args: { check_role: string; user_uuid: string }
