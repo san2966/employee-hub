@@ -79,6 +79,57 @@ psql -h localhost -U postgres -d postgres -f /tmp/pre-patch-backup.sql
 
 ---
 
+## Emergency force repair — `2026-06-21_force_repair_quotation_tender_tasks.sql`
+
+Use this when the VPS still shows these two symptoms after code deployment:
+
+1. Director → Quotation Manager has no **Accept** / **Reject** actions.
+2. Tender Head → Task Manager records do not appear in Tender Executive → Assigned Tasks.
+
+### Run on VPS
+
+```bash
+# 1. SSH into the VPS
+ssh user@notify.emp-cms.in
+
+# 2. Pull the latest repo, or copy this file to /tmp
+cd /path/to/your/project
+git pull origin main
+
+# 3. Apply the force repair patch
+psql -h localhost -U postgres -d postgres \
+  -f scripts/vps-patches/2026-06-21_force_repair_quotation_tender_tasks.sql
+```
+
+### What this force patch does
+
+- Makes `purchase_quotes` readable/updatable for logged-in portal users so Director can accept/reject even if `user_roles` links are broken.
+- Makes `tender_tasks` readable/writable for logged-in portal users so Tender Head and Tender Executive see the same rows.
+- Recreates `get_tender_users()` so the Assign Task dropdown uses real Tender login usernames.
+- Enables realtime publication for `purchase_quotes` and `tender_tasks`.
+- Converts old `purchase_quotes.status = 'Approved'` to `accepted`.
+- Repairs old Tender Head tasks where `assigned_to` is not an email/login, mapping them to the first Tender Executive login.
+
+### Verify immediately
+
+```bash
+psql -h localhost -U postgres -d postgres -c \
+"SELECT id, quote_id, status FROM purchase_quotes ORDER BY created_at DESC LIMIT 5;
+ SELECT id, assigned_by, assigned_to, task_title FROM tender_tasks ORDER BY created_at DESC LIMIT 5;
+ SELECT username, role FROM get_tender_users();"
+```
+
+### If it still fails
+
+| Symptom | Check | Fix |
+|--------|-------|-----|
+| Buttons still not visible | Browser hard refresh / clear cache; confirm latest code is deployed. | Re-run GitHub deploy pipeline, then Ctrl+F5. |
+| Accept/Reject click fails | Browser Network tab must show `purchase_quotes` update returning 200/204. | Re-run this SQL patch and confirm grants/policies output has `purchase_quotes_update`. |
+| Executive still cannot see assigned task | In DB, `assigned_to` must exactly equal the executive login email. | `UPDATE tender_tasks SET assigned_to='tender.executive@vmcc-india.com' WHERE id='<task id>';` |
+| Dropdown has no executive | `SELECT username, role FROM get_tender_users();` must return tender users. | Check `portal_users.role` values are exactly `tender_head` / `tender_executive`. |
+
+---
+
 ## Tender module — DB tables reference
 
 No schema changes needed for the Tender fix. For reference, the Tender module
