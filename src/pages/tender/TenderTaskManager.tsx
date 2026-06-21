@@ -32,11 +32,8 @@ const TenderTaskManager = () => {
 
   useEffect(() => {
     (async () => {
-      const { data } = await (supabase as any)
-        .from("portal_users")
-        .select("username, role")
-        .in("role", ["tender_head", "tender_executive"]);
-      setTenderUsers(data || []);
+      const { data } = await (supabase as any).rpc("get_tender_users");
+      setTenderUsers((data as any[]) || []);
     })();
   }, []);
 
