@@ -37,7 +37,7 @@ const DirectorQuotationManager = () => {
   }, [fetchQuotes]);
 
   const handleApprove = async (quoteId: string) => {
-    await (supabase as any).from("purchase_quotes").update({ status: "Approved" }).eq("id", quoteId);
+    await (supabase as any).from("purchase_quotes").update({ status: "Accepted", description: null }).eq("id", quoteId);
     fetchQuotes();
   };
 
@@ -88,15 +88,15 @@ const DirectorQuotationManager = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={q.status === "Approved" ? "default" : q.status === "Rejected" ? "destructive" : "secondary"}>
-                        {q.status}
+                      <Badge variant={q.status === "Accepted" || q.status === "Approved" ? "default" : q.status === "Rejected" ? "destructive" : "secondary"}>
+                        {q.status || "Pending"}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {q.status !== "Approved" && q.status !== "Rejected" ? (
+                      {q.status !== "Accepted" && q.status !== "Approved" && q.status !== "Rejected" ? (
                         <div className="flex gap-1">
                           <Button size="sm" variant="outline" className="text-green-600" onClick={() => handleApprove(q.id)}>
-                            <Check className="h-3 w-3 mr-1" /> Approve
+                            <Check className="h-3 w-3 mr-1" /> Accept
                           </Button>
                           <Button size="sm" variant="outline" className="text-destructive" onClick={() => { setRejectQuote(q); setRejectDesc(""); setRejectOpen(true); }}>
                             <X className="h-3 w-3 mr-1" /> Reject
