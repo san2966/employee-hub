@@ -93,7 +93,7 @@ const DirectorQuotationManager = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {q.status === "Pending" && (
+                      {q.status !== "Approved" && q.status !== "Rejected" ? (
                         <div className="flex gap-1">
                           <Button size="sm" variant="outline" className="text-green-600" onClick={() => handleApprove(q.id)}>
                             <Check className="h-3 w-3 mr-1" /> Approve
@@ -102,6 +102,8 @@ const DirectorQuotationManager = () => {
                             <X className="h-3 w-3 mr-1" /> Reject
                           </Button>
                         </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </TableCell>
                   </TableRow>
