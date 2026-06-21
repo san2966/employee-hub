@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useTenderTasks } from "@/hooks/useTenderData";
+import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import DirectorTasksTab from "@/components/DirectorTasksTab";
 
@@ -21,14 +23,26 @@ const TenderTaskManager = () => {
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [form, setForm] = useState({ assigned_to: "", task_title: "", description: "" });
   const [report, setReport] = useState("");
+  const [tenderUsers, setTenderUsers] = useState<{ username: string; role: string }[]>([]);
 
   useEffect(() => {
     const session = sessionStorage.getItem("tenderSession");
     if (session) setRole(JSON.parse(session).role);
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("portal_users")
+        .select("username, role")
+        .in("role", ["tender_head", "tender_executive"]);
+      setTenderUsers(data || []);
+    })();
+  }, []);
+
   const isHead = role === "tender_head";
   const username = (() => { const s = sessionStorage.getItem("authUser"); return s ? JSON.parse(s).username : ""; })();
+  const assignableUsers = tenderUsers.filter(u => u.username !== username);
 
   // Head: assigned by head; Exec: assigned to exec
   const assignedTasks = tasks.filter((t: any) => isHead ? t.assigned_by === username : t.assigned_to === username);
@@ -171,7 +185,17 @@ const TenderTaskManager = () => {
         <DialogContent>
           <DialogHeader><DialogTitle>{isHead ? "Assign Task" : "Add Task"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div><Label>Employee Name *</Label><Input value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} /></div>
+            <div>
+              <Label>Employee Name *</Label>
+              <Select value={form.assigned_to} onValueChange={v => setForm({ ...form, assigned_to: v })}>
+                <SelectTrigger><SelectValue placeholder="Select user" /></SelectTrigger>
+                <SelectContent>
+                  {assignableUsers.map(u => (
+                    <SelectItem key={u.username} value={u.username}>{u.username} ({u.role})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label>Task *</Label><Input value={form.task_title} onChange={e => setForm({ ...form, task_title: e.target.value })} /></div>
             <div><Label>Description *</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
             <Button onClick={handleAssign} className="w-full">{isHead ? "Assign" : "Save"}</Button>
