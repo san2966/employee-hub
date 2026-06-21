@@ -69,6 +69,16 @@ function useCrud<T extends { id: string }>(table: string, orderBy = "created_at"
 
   useEffect(() => { fetch(); }, [fetch]);
 
+  useEffect(() => {
+    const channel = supabase.channel(`${table}_realtime`).on(
+      "postgres_changes",
+      { event: "*", schema: "public", table },
+      () => { fetch(); }
+    ).subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [table, fetch]);
+
   const add = async (item: Partial<T>) => {
     const { error } = await (supabase as any).from(table).insert(item);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return false; }

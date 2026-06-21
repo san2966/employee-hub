@@ -32,19 +32,30 @@ const TenderTaskManager = () => {
 
   useEffect(() => {
     (async () => {
-      const { data } = await (supabase as any).rpc("get_tender_users");
-      setTenderUsers((data as any[]) || []);
+      const { data, error } = await (supabase as any).rpc("get_tender_users");
+      if (error) console.error("get_tender_users failed:", error);
+      setTenderUsers(((data as any[]) || []).filter(u => u?.username));
     })();
   }, []);
 
   const isHead = role === "tender_head";
-  const username = (() => { const s = sessionStorage.getItem("authUser"); return s ? JSON.parse(s).username : ""; })();
-  const assignableUsers = tenderUsers.filter(u => u.username !== username);
+  const username = (() => {
+    const auth = sessionStorage.getItem("authUser");
+    if (auth) return JSON.parse(auth).username || "";
+    const tender = sessionStorage.getItem("tenderSession");
+    return tender ? JSON.parse(tender).username || "" : "";
+  })();
+  const normalize = (value: string | null | undefined) => (value || "").trim().toLowerCase();
+  const headUsernames = tenderUsers.filter(u => u.role === "tender_head").map(u => normalize(u.username));
+  const assignableUsers = tenderUsers.filter(u => u.username !== username && (isHead ? u.role === "tender_executive" : u.role === "tender_head"));
 
   // Head: assigned by head; Exec: assigned to exec
-  const assignedTasks = tasks.filter((t: any) => isHead ? t.assigned_by === username : t.assigned_to === username);
+  const assignedTasks = tasks.filter((t: any) => isHead
+    ? normalize(t.assigned_by) === normalize(username)
+    : normalize(t.assigned_to) === normalize(username) || headUsernames.includes(normalize(t.assigned_by))
+  );
   // Head: current tasks from exec; Exec: own created tasks
-  const currentTasks = tasks.filter((t: any) => isHead ? t.assigned_by !== username : t.assigned_by === username);
+  const currentTasks = tasks.filter((t: any) => isHead ? normalize(t.assigned_by) !== normalize(username) : normalize(t.assigned_by) === normalize(username));
 
   const handleAssign = async () => {
     if (!form.assigned_to.trim() || !form.task_title.trim() || !form.description.trim()) return;
