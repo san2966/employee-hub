@@ -47,9 +47,10 @@ const PurchaseQuotationManager = () => {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Approved": return "default";
-      case "Rejected": return "destructive";
+    switch (String(status || "pending").toLowerCase()) {
+      case "accepted":
+      case "approved": return "default";
+      case "rejected": return "destructive";
       default: return "secondary";
     }
   };
