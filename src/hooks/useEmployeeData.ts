@@ -276,22 +276,38 @@ export const useEmployeeData = (employeeId: string) => {
     if (!employeeId) return;
     const { data } = await supabase
       .from("requirements")
-      .select("*, employees:requested_by(name)")
+      .select("*")
       .eq("requested_by", employeeId)
       .order("created_at", { ascending: false });
     if (data) {
-      setRequirements(data.map((r: any) => ({
-        id: r.id,
-        employeeId: r.requested_by || employeeId,
-        employeeName: r.employee_name || r.employees?.name || "",
-        title: r.title,
-        description: r.description || "",
-        whyNeeded: r.why_needed || "",
-        link: r.link_url || undefined,
-        expectedCost: r.expected_cost ? Number(r.expected_cost) : undefined,
-        status: (r.status || "pending") as Requirement["status"],
-        createdAt: r.created_at || new Date().toISOString(),
-      })));
+      setRequirements(data.map((r: any) => {
+        // Legacy fallback: description may hold a JSON blob from older inserts
+        let desc = r.description || "";
+        let why = r.why_needed || "";
+        let link = r.link_url || "";
+        let cost = r.expected_cost;
+        if (typeof desc === "string" && desc.trim().startsWith("{")) {
+          try {
+            const j = JSON.parse(desc);
+            desc = j.description ?? desc;
+            why = why || j.whyNeeded || "";
+            link = link || j.link || "";
+            if (cost == null && j.expectedCost != null) cost = Number(j.expectedCost);
+          } catch { /* keep as-is */ }
+        }
+        return {
+          id: r.id,
+          employeeId: r.requested_by || employeeId,
+          employeeName: r.employee_name || "",
+          title: r.title,
+          description: desc,
+          whyNeeded: why,
+          link: link || undefined,
+          expectedCost: cost != null ? Number(cost) : undefined,
+          status: (r.status || "pending") as Requirement["status"],
+          createdAt: r.created_at || new Date().toISOString(),
+        };
+      }));
     }
   }, [employeeId]);
 
@@ -669,8 +685,15 @@ export const useEmployeeData = (employeeId: string) => {
   const getUpdatedLeaveRequests = useCallback((): LeaveRequest[] => leaveRequests, [leaveRequests]);
 
   const calculateExchangeBalance = useCallback(() => {
-    return leaveBalance.exchange;
-  }, [leaveBalance]);
+    // Earned (approved add-leave) minus taken (approved or pending take-leave)
+    const earned = leaveRequests.filter(
+      l => l.type === "exchange" && l.isAddLeave && l.status === "approved"
+    ).length;
+    const taken = leaveRequests.filter(
+      l => l.type === "exchange" && !l.isAddLeave && l.status !== "rejected"
+    ).length;
+    return Math.max(earned - taken, leaveBalance.exchange);
+  }, [leaveBalance, leaveRequests]);
 
   const updateLeaveBalanceFromApproved = useCallback(() => {
     return leaveBalance;
