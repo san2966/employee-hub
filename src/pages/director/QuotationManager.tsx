@@ -96,11 +96,19 @@ const DirectorQuotationManager = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="outline" className="text-green-600" disabled={isFinal} onClick={() => handleApprove(q.id)}>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                          onClick={() => handleApprove(q.id)}
+                        >
                           <Check className="h-3 w-3 mr-1" /> Accept
                         </Button>
-                        <Button size="sm" variant="outline" className="text-destructive" disabled={isFinal} onClick={() => { setRejectQuote(q); setRejectDesc(""); setRejectOpen(true); }}>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => { setRejectQuote(q); setRejectDesc(""); setRejectOpen(true); }}
+                        >
                           <X className="h-3 w-3 mr-1" /> Reject
                         </Button>
                       </div>
