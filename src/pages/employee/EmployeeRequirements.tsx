@@ -27,21 +27,32 @@ const EmployeeRequirements = () => {
     expectedCost: "",
   });
   
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title || !form.description || !form.whyNeeded) {
       toast({ variant: "destructive", title: "Error", description: "Please fill required fields" });
       return;
     }
-    
-    addRequirement({
-      ...form,
-      expectedCost: form.expectedCost ? parseFloat(form.expectedCost) : undefined,
-      employeeName,
-    });
-    
-    toast({ title: "Requirement submitted", description: "Your requirement has been sent to Director for review" });
-    setDialog(false);
-    setForm({ title: "", description: "", whyNeeded: "", link: "", expectedCost: "" });
+
+    try {
+      await addRequirement({
+        title: form.title.trim(),
+        description: form.description.trim(),
+        whyNeeded: form.whyNeeded.trim(),
+        link: form.link.trim(),
+        expectedCost: form.expectedCost ? parseFloat(form.expectedCost) : undefined,
+        employeeName,
+      });
+
+      toast({ title: "Requirement submitted", description: "Your requirement has been sent to Director for review" });
+      setDialog(false);
+      setForm({ title: "", description: "", whyNeeded: "", link: "", expectedCost: "" });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Requirement not submitted",
+        description: error instanceof Error ? error.message : "Please try again",
+      });
+    }
   };
 
   return (

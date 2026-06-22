@@ -46,7 +46,7 @@ const EmployeeLeaveManager = () => {
   useEffect(() => {
     const updatedBalance = updateLeaveBalanceFromApproved();
     setBalance(updatedBalance);
-  }, [leaveRequests.length]);
+  }, [leaveRequests.length, leaveBalance, updateLeaveBalanceFromApproved]);
   
   const paidLeaves = leaveRequests.filter(l => l.type === "paid");
   const medicalLeaves = leaveRequests.filter(l => l.type === "medical");
@@ -91,24 +91,28 @@ const EmployeeLeaveManager = () => {
     setMedicalForm({ date: "", reason: "", certificate: "" });
   };
   
-  const handleAddExchangeLeave = () => {
+  const handleAddExchangeLeave = async () => {
     if (!addExchangeForm.workingDate || !addExchangeForm.workingReason) {
       toast({ variant: "destructive", title: "Error", description: "Please fill all fields" });
       return;
     }
-    
-    addExchangeLeave({ 
-      workingDate: addExchangeForm.workingDate,
-      workingReason: addExchangeForm.workingReason,
-      employeeName,
-    });
-    
-    toast({ title: "Exchange leave added", description: "Waiting for Director approval to earn the leave" });
-    setAddExchangeDialog(false);
-    setAddExchangeForm({ workingDate: "", workingReason: "" });
+
+    try {
+      await addExchangeLeave({ 
+        workingDate: addExchangeForm.workingDate,
+        workingReason: addExchangeForm.workingReason,
+        employeeName,
+      });
+
+      toast({ title: "Exchange leave added", description: "Waiting for Director approval to earn the leave" });
+      setAddExchangeDialog(false);
+      setAddExchangeForm({ workingDate: "", workingReason: "" });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error", description: error instanceof Error ? error.message : "Request failed" });
+    }
   };
 
-  const handleTakeExchangeLeave = () => {
+  const handleTakeExchangeLeave = async () => {
     if (!takeExchangeForm.leaveDate || !takeExchangeForm.leaveReason) {
       toast({ variant: "destructive", title: "Error", description: "Please fill all fields" });
       return;
@@ -119,15 +123,19 @@ const EmployeeLeaveManager = () => {
       return;
     }
     
-    takeExchangeLeave({ 
-      leaveDate: takeExchangeForm.leaveDate,
-      leaveReason: takeExchangeForm.leaveReason,
-      employeeName,
-    });
-    
-    toast({ title: "Exchange leave request submitted", description: "Waiting for Director approval" });
-    setTakeExchangeDialog(false);
-    setTakeExchangeForm({ leaveDate: "", leaveReason: "" });
+    try {
+      await takeExchangeLeave({ 
+        leaveDate: takeExchangeForm.leaveDate,
+        leaveReason: takeExchangeForm.leaveReason,
+        employeeName,
+      });
+
+      toast({ title: "Exchange leave request submitted", description: "Waiting for Director approval" });
+      setTakeExchangeDialog(false);
+      setTakeExchangeForm({ leaveDate: "", leaveReason: "" });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error", description: error instanceof Error ? error.message : "Request failed" });
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

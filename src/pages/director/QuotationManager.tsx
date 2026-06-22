@@ -20,7 +20,8 @@ const DirectorQuotationManager = () => {
 
   const fetchQuotes = useCallback(async () => {
     setLoading(true);
-    const { data } = await (supabase as any).from("purchase_quotes").select("*").order("created_at", { ascending: false });
+    const { data, error } = await (supabase as any).from("purchase_quotes").select("*").order("created_at", { ascending: false });
+    if (error) console.error("fetch purchase_quotes failed:", error);
     setQuotes(data || []);
     setLoading(false);
   }, []);
@@ -37,13 +38,15 @@ const DirectorQuotationManager = () => {
   }, [fetchQuotes]);
 
   const handleApprove = async (quoteId: string) => {
-    await (supabase as any).from("purchase_quotes").update({ status: "accepted", description: null }).eq("id", quoteId);
+    const { error } = await (supabase as any).from("purchase_quotes").update({ status: "accepted", description: null }).eq("id", quoteId);
+    if (error) console.error("approve quote failed:", error);
     fetchQuotes();
   };
 
   const handleReject = async () => {
     if (!rejectQuote) return;
-    await (supabase as any).from("purchase_quotes").update({ status: "rejected", description: rejectDesc }).eq("id", rejectQuote.id);
+    const { error } = await (supabase as any).from("purchase_quotes").update({ status: "rejected", description: rejectDesc }).eq("id", rejectQuote.id);
+    if (error) console.error("reject quote failed:", error);
     setRejectOpen(false);
     setRejectQuote(null);
     setRejectDesc("");
@@ -61,11 +64,11 @@ const DirectorQuotationManager = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Quote ID</TableHead>
+                  <TableHead className="min-w-[190px]">Actions</TableHead>
                   <TableHead>Subject</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>File</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -76,10 +79,27 @@ const DirectorQuotationManager = () => {
                   </TableCell></TableRow>
                 ) : quotes.map((q: any) => {
                   const status = String(q.status || "pending").toLowerCase();
-                  const isFinal = status === "accepted" || status === "approved" || status === "rejected";
                   return (
                   <TableRow key={q.id}>
                     <TableCell className="font-medium">{q.quote_id}</TableCell>
+                    <TableCell className="min-w-[190px]">
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="bg-success hover:bg-success/90 text-success-foreground"
+                          onClick={() => handleApprove(q.id)}
+                        >
+                          <Check className="h-3 w-3 mr-1" /> Accept
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => { setRejectQuote(q); setRejectDesc(""); setRejectOpen(true); }}
+                        >
+                          <X className="h-3 w-3 mr-1" /> Reject
+                        </Button>
+                      </div>
+                    </TableCell>
                     <TableCell>{q.subject}</TableCell>
                     <TableCell>{q.type}</TableCell>
                     <TableCell>
@@ -94,24 +114,6 @@ const DirectorQuotationManager = () => {
                       <Badge variant={status === "accepted" || status === "approved" ? "default" : status === "rejected" ? "destructive" : "secondary"}>
                         {q.status || "Pending"}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                          onClick={() => handleApprove(q.id)}
-                        >
-                          <Check className="h-3 w-3 mr-1" /> Accept
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => { setRejectQuote(q); setRejectDesc(""); setRejectOpen(true); }}
-                        >
-                          <X className="h-3 w-3 mr-1" /> Reject
-                        </Button>
-                      </div>
                     </TableCell>
                   </TableRow>
                 );})}

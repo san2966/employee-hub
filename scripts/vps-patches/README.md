@@ -143,3 +143,67 @@ already uses these tables (all created in earlier migrations):
 
 Director and Tender Head both read the same tables — Realtime subscriptions in
 `useTenderData` / `TenderMonitor.tsx` push updates in both directions instantly.
+
+---
+
+## Permanent repair — `2026-06-22_permanent_requirements_quotes_leave_repair.sql`
+
+Use this when the VPS still shows these symptoms after older patches:
+
+1. Employee → Requirements saves data as one JSON string and rows do not show for Employee/Director.
+2. Director → Quotation Manager still does not show **Accept** / **Reject** actions.
+3. Director approves an exchange leave, but Employee → Leave Manager → **Take Leave** still does not work.
+
+### Run on VPS
+
+```bash
+# 1. SSH into the VPS
+ssh user@notify.emp-cms.in
+
+# 2. Go to the deployed project folder and pull latest code
+cd /path/to/your/project
+git pull origin main
+
+# 3. Apply the permanent DB repair
+psql -h localhost -U postgres -d postgres \
+  -f scripts/vps-patches/2026-06-22_permanent_requirements_quotes_leave_repair.sql
+
+# 4. Rebuild/restart the frontend container or rerun your deploy workflow
+# 5. In browser: logout, login again, then hard refresh with Ctrl+F5
+```
+
+### What this patch does
+
+- Adds/keeps real requirement columns: `why_needed`, `link_url`, `expected_cost`, `employee_name`.
+- Adds a database trigger so even an old cached frontend sending JSON in `description` is automatically split into proper columns.
+- Backfills old JSON requirement rows and links rows to employees where possible.
+- Removes broken foreign-table joins from Director/Employee requirement reads in code.
+- Forces `purchase_quotes` read/update access for logged-in portal users and moves Director action buttons to the second table column so they cannot be hidden off-screen.
+- Adds a leave-balance database trigger and recalculates existing exchange leave balances from approved records.
+
+### Verify immediately
+
+```bash
+psql -h localhost -U postgres -d postgres -c "
+SELECT id, title, description, why_needed, link_url, expected_cost, requested_by, employee_name, status
+FROM requirements ORDER BY created_at DESC LIMIT 10;
+
+SELECT id, quote_id, status, description
+FROM purchase_quotes ORDER BY created_at DESC LIMIT 10;
+
+SELECT e.name, e.exchange_leave_balance,
+       COUNT(l.*) FILTER (WHERE l.leave_type::text = 'exchange' AND l.status = 'approved' AND COALESCE(l.is_add_leave, false)) AS earned
+FROM employees e
+LEFT JOIN leave_requests l ON l.employee_id = e.id
+GROUP BY e.id, e.name, e.exchange_leave_balance
+ORDER BY e.name;"
+```
+
+### Troubleshooting
+
+| Symptom | Check | Fix |
+|--------|-------|-----|
+| Requirement still stores JSON | Run `\d+ requirements` and confirm trigger `normalize_requirement_row_before_write` exists. | Re-run the permanent SQL patch, then hard-refresh browser. |
+| Requirement saves but employee page empty | `requested_by` must equal employee id or `employee_name` must equal login username/name. | Logout/login again so `authUser.employee_id` is refreshed; confirm HR employee is linked in `portal_users.employee_id`. |
+| Quotation buttons still missing | Confirm the deployed JS contains `Accept` by running `grep -R "Accept" dist/assets`. | Rebuild frontend image/container; browser Ctrl+F5. The DB patch cannot change stale frontend files. |
+| Exchange Take Leave disabled after approval | Check `employees.exchange_leave_balance` for that employee is > 0. | Re-run the permanent SQL patch; it recalculates balances from approved exchange rows. |

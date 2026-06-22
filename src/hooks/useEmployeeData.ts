@@ -423,7 +423,7 @@ export const useEmployeeData = (employeeId: string) => {
     };
     fetchBalance();
     const channel = supabase
-      .channel(`employee-balance-${employeeId}`)
+      .channel(`employee-balance-${effectiveEmployeeId}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "employees", filter: `id=eq.${effectiveEmployeeId}` },
@@ -675,12 +675,12 @@ export const useEmployeeData = (employeeId: string) => {
       additionalInfo: report.additionalInfo,
     });
     const { error } = await supabase.from("daily_reports").insert({
-      employee_id: employeeId,
+      employee_id: effectiveEmployeeId,
       date: report.date,
       content,
     });
     if (!error) await fetchReports();
-  }, [employeeId, fetchReports]);
+  }, [effectiveEmployeeId, fetchReports]);
 
   // ════════════════════════════════════════════
   // Assigned Tasks (Supabase - tasks table, read-only for employees)
@@ -708,13 +708,13 @@ export const useEmployeeData = (employeeId: string) => {
   useEffect(() => {
     fetchNotices().then(setNoticesList);
     const channel = supabase
-      .channel(`employee-notices-${employeeId}`)
+      .channel(`employee-notices-${effectiveEmployeeId || employeeId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, () => {
         fetchNotices().then(setNoticesList);
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [fetchNotices, employeeId]);
+  }, [fetchNotices, effectiveEmployeeId, employeeId]);
 
   // Override getNotices to return loaded notices
   const getNoticesSync = useCallback((): Notice[] => noticesList, [noticesList]);
@@ -725,14 +725,18 @@ export const useEmployeeData = (employeeId: string) => {
   const getUpdatedLeaveRequests = useCallback((): LeaveRequest[] => leaveRequests, [leaveRequests]);
 
   const calculateExchangeBalance = useCallback(() => {
-    // Earned (approved add-leave) minus taken (approved or pending take-leave)
+    // Earned approved exchange work minus exchange leave requests already used/requested.
+    // Also respects the stored balance, but subtracts pending take requests so the button cannot be reused repeatedly.
     const earned = leaveRequests.filter(
       l => l.type === "exchange" && l.isAddLeave && l.status === "approved"
     ).length;
-    const taken = leaveRequests.filter(
+    const nonRejectedTakes = leaveRequests.filter(
       l => l.type === "exchange" && !l.isAddLeave && l.status !== "rejected"
     ).length;
-    return Math.max(earned - taken, leaveBalance.exchange);
+    const pendingTakes = leaveRequests.filter(
+      l => l.type === "exchange" && !l.isAddLeave && l.status === "pending"
+    ).length;
+    return Math.max(0, earned - nonRejectedTakes, (leaveBalance.exchange || 0) - pendingTakes);
   }, [leaveBalance, leaveRequests]);
 
   const updateLeaveBalanceFromApproved = useCallback(() => {
