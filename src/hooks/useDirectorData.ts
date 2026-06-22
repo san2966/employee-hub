@@ -241,21 +241,37 @@ export const useDirectorData = () => {
   const fetchRequirements = useCallback(async () => {
     const { data, error } = await supabase
       .from("requirements")
-      .select(`*, employees(name)`)
+      .select("*")
       .order("created_at", { ascending: false });
     if (error) { console.error("Error:", error); return; }
-    setRequirements((data || []).map((r: any) => ({
-      id: r.id,
-      employeeId: r.requested_by || "",
-      employeeName: r.employee_name || r.employees?.name || "Unknown",
-      title: r.title,
-      description: r.description || "",
-      whyNeeded: r.why_needed || "",
-      link: r.link_url || "",
-      expectedCost: r.expected_cost ? Number(r.expected_cost) : undefined,
-      status: r.status as "pending" | "approved" | "rejected",
-      createdAt: r.created_at,
-    })));
+    setRequirements((data || []).map((r: any) => {
+      let description = r.description || "";
+      let whyNeeded = r.why_needed || "";
+      let link = r.link_url || "";
+      let expectedCost = r.expected_cost;
+      if (typeof description === "string" && description.trim().startsWith("{")) {
+        try {
+          const parsed = JSON.parse(description);
+          description = parsed.description ?? description;
+          whyNeeded = whyNeeded || parsed.whyNeeded || "";
+          link = link || parsed.link || "";
+          if (expectedCost == null && parsed.expectedCost != null) expectedCost = Number(parsed.expectedCost);
+        } catch { /* keep original text */ }
+      }
+
+      return {
+        id: r.id,
+        employeeId: r.requested_by || "",
+        employeeName: r.employee_name || "Employee",
+        title: r.title,
+        description,
+        whyNeeded,
+        link,
+        expectedCost: expectedCost != null ? Number(expectedCost) : undefined,
+        status: (r.status || "pending") as "pending" | "approved" | "rejected",
+        createdAt: r.created_at,
+      };
+    }));
   }, []);
 
   // Initial load
@@ -456,41 +472,12 @@ export const useDirectorData = () => {
 
   // ---- Leave methods (Supabase) ----
   const updateLeave = async (id: string, status: "approved" | "rejected", rejectionReason?: string) => {
-    const leave = leaves.find(l => l.id === id);
-    
     const { error } = await supabase
       .from("leave_requests")
       .update({ status, rejection_reason: rejectionReason || null })
       .eq("id", id);
 
     if (error) throw error;
-
-    // Update leave balance if approved
-    if (status === "approved" && leave) {
-      const { data: empData } = await supabase
-        .from("employees")
-        .select("paid_leave_balance, medical_leave_balance, exchange_leave_balance")
-        .eq("id", leave.employeeId)
-        .single();
-
-      if (empData) {
-        const balanceField = `${leave.type}_leave_balance`;
-        const currentBalance = (empData as any)[balanceField] as number;
-        
-        let newBalance: number;
-        if (leave.type === "exchange") {
-          newBalance = leave.isAddLeave ? currentBalance + 1 : Math.max(0, currentBalance - 1);
-        } else {
-          newBalance = Math.max(0, currentBalance - 1);
-        }
-
-        await supabase
-          .from("employees")
-          .update({ [balanceField]: newBalance })
-          .eq("id", leave.employeeId);
-      }
-    }
-
     await fetchLeaves();
   };
 

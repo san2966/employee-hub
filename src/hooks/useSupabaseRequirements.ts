@@ -5,6 +5,10 @@ export interface Requirement {
   id: string;
   title: string;
   description: string;
+  why_needed?: string;
+  link_url?: string;
+  expected_cost?: number;
+  employee_name?: string;
   requested_by?: string;
   priority: "low" | "medium" | "high";
   status: "pending" | "in_progress" | "completed";
@@ -22,10 +26,7 @@ export const useSupabaseRequirements = () => {
   const fetchRequirements = useCallback(async () => {
     const { data, error } = await supabase
       .from("requirements")
-      .select(`
-        *,
-        employees(name)
-      `)
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -33,10 +34,29 @@ export const useSupabaseRequirements = () => {
       return;
     }
 
-    const requirementsWithNames = (data || []).map((req: any) => ({
-      ...req,
-      requested_by_name: req.employees?.name || "Unknown",
-    }));
+    const requirementsWithNames = (data || []).map((req: any) => {
+      let description = req.description || "";
+      let whyNeeded = req.why_needed || "";
+      let linkUrl = req.link_url || "";
+      let expectedCost = req.expected_cost;
+      if (typeof description === "string" && description.trim().startsWith("{")) {
+        try {
+          const parsed = JSON.parse(description);
+          description = parsed.description ?? description;
+          whyNeeded = whyNeeded || parsed.whyNeeded || "";
+          linkUrl = linkUrl || parsed.link || "";
+          if (expectedCost == null && parsed.expectedCost != null) expectedCost = Number(parsed.expectedCost);
+        } catch { /* keep original */ }
+      }
+      return {
+        ...req,
+        description,
+        why_needed: whyNeeded,
+        link_url: linkUrl,
+        expected_cost: expectedCost,
+        requested_by_name: req.employee_name || "Unknown",
+      };
+    });
 
     setRequirements(requirementsWithNames);
     setLoading(false);
@@ -49,6 +69,10 @@ export const useSupabaseRequirements = () => {
   const addRequirement = async (requirementData: {
     title: string;
     description: string;
+    why_needed?: string;
+    link_url?: string;
+    expected_cost?: number;
+    employee_name?: string;
     requested_by?: string;
     priority?: "low" | "medium" | "high";
   }) => {

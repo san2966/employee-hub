@@ -117,7 +117,27 @@ export interface Notice {
 const getEmployeeStorageKey = (employeeId: string, key: string) =>
   `employee_${employeeId}_${key}`;
 
+const readSessionJson = (key: string): any => {
+  try {
+    return JSON.parse(sessionStorage.getItem(key) || "{}");
+  } catch {
+    return {};
+  }
+};
+
+const getEffectiveEmployeeInfo = (fallbackId: string) => {
+  const authUser = readSessionJson("authUser");
+  const employeeSession = readSessionJson("employee_session");
+  const employeeSessionCompat = readSessionJson("employeeSession");
+  const id = fallbackId || employeeSession.employeeId || employeeSessionCompat.employeeId || authUser.employee_id || "";
+  const username = authUser.username || employeeSession.username || employeeSessionCompat.username || "";
+  const name = employeeSession.employeeName || employeeSessionCompat.employeeName || authUser.employee_name || username || "";
+  return { id, name, username };
+};
+
 export const useEmployeeData = (employeeId: string) => {
+  const employeeInfo = getEffectiveEmployeeInfo(employeeId);
+  const effectiveEmployeeId = employeeInfo.id;
   // localStorage items (personal, no DB table)
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -167,11 +187,11 @@ export const useEmployeeData = (employeeId: string) => {
 
   // ─── Supabase: Leave Requests ───
   const fetchLeaveRequests = useCallback(async () => {
-    if (!employeeId) return;
+    if (!effectiveEmployeeId) return;
     const { data } = await supabase
       .from("leave_requests")
       .select("*, employees!leave_requests_employee_id_fkey(name)")
-      .eq("employee_id", employeeId)
+      .eq("employee_id", effectiveEmployeeId)
       .order("created_at", { ascending: false });
     if (data) {
       setLeaveRequests(data.map(l => ({
@@ -190,15 +210,15 @@ export const useEmployeeData = (employeeId: string) => {
         isAddLeave: l.is_add_leave || false,
       })));
     }
-  }, [employeeId]);
+  }, [effectiveEmployeeId]);
 
   // ─── Supabase: Employee Payments (travel + misc) ───
   const fetchPayments = useCallback(async () => {
-    if (!employeeId) return;
+    if (!effectiveEmployeeId) return;
     const { data } = await supabase
       .from("employee_payments")
       .select("*, employees!employee_payments_employee_id_fkey(name)")
-      .eq("employee_id", employeeId)
+      .eq("employee_id", effectiveEmployeeId)
       .order("created_at", { ascending: false });
     if (data) {
       const travel: TravelExpense[] = [];
@@ -240,15 +260,15 @@ export const useEmployeeData = (employeeId: string) => {
       setTravelExpenses(travel);
       setMiscPayments(misc);
     }
-  }, [employeeId]);
+  }, [effectiveEmployeeId]);
 
   // ─── Supabase: Reports (daily_reports) ───
   const fetchReports = useCallback(async () => {
-    if (!employeeId) return;
+    if (!effectiveEmployeeId) return;
     const { data } = await supabase
       .from("daily_reports")
       .select("*, employees!daily_reports_employee_id_fkey(name)")
-      .eq("employee_id", employeeId)
+      .eq("employee_id", effectiveEmployeeId)
       .order("created_at", { ascending: false });
     if (data) {
       setReports(data.map(r => {
@@ -269,18 +289,28 @@ export const useEmployeeData = (employeeId: string) => {
         };
       }));
     }
-  }, [employeeId]);
+  }, [effectiveEmployeeId]);
 
   // ─── Supabase: Requirements ───
   const fetchRequirements = useCallback(async () => {
-    if (!employeeId) return;
-    const { data } = await supabase
+    if (!effectiveEmployeeId) return;
+    const { data, error } = await supabase
       .from("requirements")
       .select("*")
-      .eq("requested_by", employeeId)
       .order("created_at", { ascending: false });
+    if (error) {
+      console.error("fetchRequirements failed:", error);
+      return;
+    }
     if (data) {
-      setRequirements(data.map((r: any) => {
+      const normalizedName = employeeInfo.name.trim().toLowerCase();
+      const normalizedUsername = employeeInfo.username.trim().toLowerCase();
+      const ownRows = (data as any[]).filter((r: any) => {
+        const rowEmployeeName = String(r.employee_name || "").trim().toLowerCase();
+        return r.requested_by === effectiveEmployeeId ||
+          (!!rowEmployeeName && (rowEmployeeName === normalizedName || rowEmployeeName === normalizedUsername));
+      });
+      setRequirements(ownRows.map((r: any) => {
         // Legacy fallback: description may hold a JSON blob from older inserts
         let desc = r.description || "";
         let why = r.why_needed || "";
@@ -297,8 +327,8 @@ export const useEmployeeData = (employeeId: string) => {
         }
         return {
           id: r.id,
-          employeeId: r.requested_by || employeeId,
-          employeeName: r.employee_name || "",
+          employeeId: r.requested_by || effectiveEmployeeId,
+          employeeName: r.employee_name || employeeInfo.name,
           title: r.title,
           description: desc,
           whyNeeded: why,
@@ -309,20 +339,20 @@ export const useEmployeeData = (employeeId: string) => {
         };
       }));
     }
-  }, [employeeId]);
+  }, [effectiveEmployeeId, employeeInfo.name, employeeInfo.username]);
 
   // ─── Supabase: Tasks assigned to this employee (from Director / Manager) ───
   const fetchAssignedTasks = useCallback(async () => {
-    if (!employeeId) return;
+    if (!effectiveEmployeeId) return;
     const { data } = await supabase
       .from("tasks")
       .select("*")
-      .eq("assigned_to", employeeId)
+      .eq("assigned_to", effectiveEmployeeId)
       .order("created_at", { ascending: false });
     if (data) {
       setAssignedTasks(data.map((t: any) => ({
         id: t.id,
-        employeeId: t.assigned_to || employeeId,
+        employeeId: t.assigned_to || effectiveEmployeeId,
         subject: t.title,
         description: t.description || "",
         status: t.status === "completed" ? "completed" : "in-progress",
@@ -331,7 +361,7 @@ export const useEmployeeData = (employeeId: string) => {
         isPersonal: false,
       })));
     }
-  }, [employeeId]);
+  }, [effectiveEmployeeId]);
 
   // ─── Supabase: Notices ───
   const fetchNotices = useCallback(async () => {
@@ -352,7 +382,7 @@ export const useEmployeeData = (employeeId: string) => {
 
   // ─── Load all Supabase data + realtime ───
   useEffect(() => {
-    if (!employeeId) return;
+    if (!effectiveEmployeeId) return;
     fetchContacts();
     fetchLeaveRequests();
     fetchPayments();
@@ -361,7 +391,7 @@ export const useEmployeeData = (employeeId: string) => {
     fetchAssignedTasks();
 
     const channel = supabase
-      .channel(`employee-${employeeId}`)
+      .channel(`employee-${effectiveEmployeeId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "leave_requests" }, fetchLeaveRequests)
       .on("postgres_changes", { event: "*", schema: "public", table: "employee_payments" }, fetchPayments)
       .on("postgres_changes", { event: "*", schema: "public", table: "daily_reports" }, fetchReports)
@@ -372,16 +402,16 @@ export const useEmployeeData = (employeeId: string) => {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [employeeId, fetchContacts, fetchLeaveRequests, fetchPayments, fetchReports, fetchRequirements, fetchAssignedTasks]);
+  }, [effectiveEmployeeId, fetchContacts, fetchLeaveRequests, fetchPayments, fetchReports, fetchRequirements, fetchAssignedTasks]);
 
   // ─── Leave balance from DB employee record ───
   useEffect(() => {
-    if (!employeeId) return;
+    if (!effectiveEmployeeId) return;
     const fetchBalance = async () => {
       const { data } = await supabase
         .from("employees")
         .select("paid_leave_balance, medical_leave_balance, exchange_leave_balance")
-        .eq("id", employeeId)
+        .eq("id", effectiveEmployeeId)
         .single();
       if (data) {
         setLeaveBalance({
@@ -393,15 +423,15 @@ export const useEmployeeData = (employeeId: string) => {
     };
     fetchBalance();
     const channel = supabase
-      .channel(`employee-balance-${employeeId}`)
+      .channel(`employee-balance-${effectiveEmployeeId}`)
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "employees", filter: `id=eq.${employeeId}` },
+        { event: "UPDATE", schema: "public", table: "employees", filter: `id=eq.${effectiveEmployeeId}` },
         () => fetchBalance()
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [employeeId]);
+  }, [effectiveEmployeeId]);
 
   // ════════════════════════════════════════════
   // Calendar Events (localStorage)
@@ -516,14 +546,17 @@ export const useEmployeeData = (employeeId: string) => {
     title: string; description: string; whyNeeded: string;
     link?: string; expectedCost?: number; employeeName: string;
   }) => {
+    if (!effectiveEmployeeId) {
+      throw new Error("Employee account is not linked. Please login again or contact HR.");
+    }
     const payload: any = {
       title: req.title,
       description: req.description,
       why_needed: req.whyNeeded,
       link_url: req.link || null,
       expected_cost: req.expectedCost ?? null,
-      employee_name: req.employeeName,
-      requested_by: employeeId || null,
+      employee_name: req.employeeName || employeeInfo.name,
+      requested_by: effectiveEmployeeId,
       status: "pending" as const,
       priority: "medium" as const,
     };
@@ -534,14 +567,14 @@ export const useEmployeeData = (employeeId: string) => {
     }
     await fetchRequirements();
     return data;
-  }, [employeeId, fetchRequirements]);
+  }, [effectiveEmployeeId, employeeInfo.name, fetchRequirements]);
 
   // ════════════════════════════════════════════
   // Travel Expenses (Supabase - employee_payments with category=travel)
   // ════════════════════════════════════════════
   const addTravelExpense = useCallback(async (expense: Omit<TravelExpense, "id" | "employeeId" | "timestamp">) => {
     const { error } = await supabase.from("employee_payments").insert({
-      employee_id: employeeId,
+      employee_id: effectiveEmployeeId,
       employee_name: expense.employeeName,
       date: expense.date,
       description: JSON.stringify({ from: expense.from, to: expense.to, purpose: expense.purpose }),
@@ -557,14 +590,14 @@ export const useEmployeeData = (employeeId: string) => {
       throw error;
     }
     await fetchPayments();
-  }, [employeeId, fetchPayments]);
+  }, [effectiveEmployeeId, fetchPayments]);
 
   // ════════════════════════════════════════════
   // Misc Payments (Supabase - employee_payments with category=misc)
   // ════════════════════════════════════════════
   const addMiscPayment = useCallback(async (payment: Omit<MiscPayment, "id" | "employeeId" | "timestamp">) => {
     const { error } = await supabase.from("employee_payments").insert({
-      employee_id: employeeId,
+      employee_id: effectiveEmployeeId,
       employee_name: payment.employeeName,
       date: payment.date,
       description: payment.purpose,
@@ -578,7 +611,7 @@ export const useEmployeeData = (employeeId: string) => {
       throw error;
     }
     await fetchPayments();
-  }, [employeeId, fetchPayments]);
+  }, [effectiveEmployeeId, fetchPayments]);
 
   // ════════════════════════════════════════════
   // Leave Requests (Supabase)
@@ -588,8 +621,11 @@ export const useEmployeeData = (employeeId: string) => {
     employeeName: string; medicalCertificate?: string;
     workingDate?: string; workingReason?: string; isAddLeave?: boolean;
   }) => {
+    if (!effectiveEmployeeId) {
+      throw new Error("Employee account is not linked. Please login again or contact HR.");
+    }
     const { error } = await supabase.from("leave_requests").insert({
-      employee_id: employeeId,
+      employee_id: effectiveEmployeeId,
       date: leave.date,
       reason: leave.reason,
       leave_type: leave.type,
@@ -598,8 +634,12 @@ export const useEmployeeData = (employeeId: string) => {
       working_reason: leave.workingReason || null,
       is_add_leave: leave.isAddLeave || false,
     });
-    if (!error) await fetchLeaveRequests();
-  }, [employeeId, fetchLeaveRequests]);
+    if (error) {
+      console.error("requestLeave failed:", error);
+      throw error;
+    }
+    await fetchLeaveRequests();
+  }, [effectiveEmployeeId, fetchLeaveRequests]);
 
   const addExchangeLeave = useCallback((data: {
     workingDate: string; workingReason: string; employeeName: string;
@@ -635,12 +675,12 @@ export const useEmployeeData = (employeeId: string) => {
       additionalInfo: report.additionalInfo,
     });
     const { error } = await supabase.from("daily_reports").insert({
-      employee_id: employeeId,
+      employee_id: effectiveEmployeeId,
       date: report.date,
       content,
     });
     if (!error) await fetchReports();
-  }, [employeeId, fetchReports]);
+  }, [effectiveEmployeeId, fetchReports]);
 
   // ════════════════════════════════════════════
   // Assigned Tasks (Supabase - tasks table, read-only for employees)
@@ -668,13 +708,13 @@ export const useEmployeeData = (employeeId: string) => {
   useEffect(() => {
     fetchNotices().then(setNoticesList);
     const channel = supabase
-      .channel(`employee-notices-${employeeId}`)
+      .channel(`employee-notices-${effectiveEmployeeId || employeeId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, () => {
         fetchNotices().then(setNoticesList);
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [fetchNotices, employeeId]);
+  }, [fetchNotices, effectiveEmployeeId, employeeId]);
 
   // Override getNotices to return loaded notices
   const getNoticesSync = useCallback((): Notice[] => noticesList, [noticesList]);
@@ -685,14 +725,18 @@ export const useEmployeeData = (employeeId: string) => {
   const getUpdatedLeaveRequests = useCallback((): LeaveRequest[] => leaveRequests, [leaveRequests]);
 
   const calculateExchangeBalance = useCallback(() => {
-    // Earned (approved add-leave) minus taken (approved or pending take-leave)
+    // Earned approved exchange work minus exchange leave requests already used/requested.
+    // Also respects the stored balance, but subtracts pending take requests so the button cannot be reused repeatedly.
     const earned = leaveRequests.filter(
       l => l.type === "exchange" && l.isAddLeave && l.status === "approved"
     ).length;
-    const taken = leaveRequests.filter(
+    const nonRejectedTakes = leaveRequests.filter(
       l => l.type === "exchange" && !l.isAddLeave && l.status !== "rejected"
     ).length;
-    return Math.max(earned - taken, leaveBalance.exchange);
+    const pendingTakes = leaveRequests.filter(
+      l => l.type === "exchange" && !l.isAddLeave && l.status === "pending"
+    ).length;
+    return Math.max(0, earned - nonRejectedTakes, (leaveBalance.exchange || 0) - pendingTakes);
   }, [leaveBalance, leaveRequests]);
 
   const updateLeaveBalanceFromApproved = useCallback(() => {
