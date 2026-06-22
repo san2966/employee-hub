@@ -2805,6 +2805,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_portal_employee_id: { Args: never; Returns: string }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -2865,7 +2866,12 @@ export type Database = {
         | "purchase"
         | "operations"
       task_priority: "low" | "medium" | "high"
-      task_status: "pending" | "in_progress" | "completed"
+      task_status:
+        | "pending"
+        | "in_progress"
+        | "completed"
+        | "approved"
+        | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3009,7 +3015,13 @@ export const Constants = {
         "operations",
       ],
       task_priority: ["low", "medium", "high"],
-      task_status: ["pending", "in_progress", "completed"],
+      task_status: [
+        "pending",
+        "in_progress",
+        "completed",
+        "approved",
+        "rejected",
+      ],
     },
   },
 } as const
