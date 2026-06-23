@@ -784,11 +784,11 @@ export const useEmployeeData = (employeeId: string) => {
   }, [leaveBalance, leaveRequests]);
 
   const updateLeaveBalanceFromApproved = useCallback(() => {
-    const approvedPaid = leaveRequests.filter(l => l.type === "paid" && l.status === "approved").length;
-    const approvedMedical = leaveRequests.filter(l => l.type === "medical" && l.status === "approved").length;
+    const usedPaid = leaveRequests.filter(l => l.type === "paid" && l.status !== "rejected").length;
+    const usedMedical = leaveRequests.filter(l => l.type === "medical" && l.status !== "rejected").length;
     return {
-      paid: Math.max(0, 12 - approvedPaid),
-      medical: Math.max(0, 6 - approvedMedical),
+      paid: Math.max(0, 12 - usedPaid),
+      medical: Math.max(0, 6 - usedMedical),
       exchange: calculateExchangeBalance(),
     };
   }, [calculateExchangeBalance, leaveRequests]);
