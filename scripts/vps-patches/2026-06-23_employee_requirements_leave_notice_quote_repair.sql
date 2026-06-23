@@ -66,11 +66,7 @@ BEGIN
     UPDATE public.user_roles ur
     SET employee_id = matched_employee
     WHERE ur.employee_id = pu.employee_id
-       OR ur.user_id IN (
-        SELECT au.id
-        FROM auth.users au
-        WHERE au.email = pu.id::text || '@portal.internal'
-       );
+       OR (ur.role = 'employee' AND ur.employee_id IS NULL);
   END LOOP;
 END $$;
 
