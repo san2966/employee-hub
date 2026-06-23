@@ -64,11 +64,11 @@ const DirectorQuotationManager = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Quote ID</TableHead>
-                  <TableHead className="min-w-[190px]">Actions</TableHead>
                   <TableHead>Subject</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>File</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="min-w-[190px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -82,6 +82,21 @@ const DirectorQuotationManager = () => {
                   return (
                   <TableRow key={q.id}>
                     <TableCell className="font-medium">{q.quote_id}</TableCell>
+                    <TableCell>{q.subject}</TableCell>
+                    <TableCell>{q.type}</TableCell>
+                    <TableCell>
+                      {q.file_url && (
+                        <div className="flex gap-1">
+                          <Button size="icon" variant="ghost" onClick={() => setPreviewUrl(q.file_url)}><Eye className="h-4 w-4" /></Button>
+                          <Button size="icon" variant="ghost" asChild><a href={q.file_url} download><Download className="h-4 w-4" /></a></Button>
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={status === "accepted" || status === "approved" ? "default" : status === "rejected" ? "destructive" : "secondary"}>
+                        {q.status || "Pending"}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="min-w-[190px]">
                       <div className="flex gap-2">
                         <Button
@@ -99,21 +114,6 @@ const DirectorQuotationManager = () => {
                           <X className="h-3 w-3 mr-1" /> Reject
                         </Button>
                       </div>
-                    </TableCell>
-                    <TableCell>{q.subject}</TableCell>
-                    <TableCell>{q.type}</TableCell>
-                    <TableCell>
-                      {q.file_url && (
-                        <div className="flex gap-1">
-                          <Button size="icon" variant="ghost" onClick={() => setPreviewUrl(q.file_url)}><Eye className="h-4 w-4" /></Button>
-                          <Button size="icon" variant="ghost" asChild><a href={q.file_url} download><Download className="h-4 w-4" /></a></Button>
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={status === "accepted" || status === "approved" ? "default" : status === "rejected" ? "destructive" : "secondary"}>
-                        {q.status || "Pending"}
-                      </Badge>
                     </TableCell>
                   </TableRow>
                 );})}

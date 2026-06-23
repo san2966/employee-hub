@@ -34,7 +34,7 @@ const Notices = () => {
     }
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!title || !content) {
       toast({ title: "Error", description: "Please fill title and content", variant: "destructive" });
       return;
@@ -47,22 +47,30 @@ const Notices = () => {
 
     const recipients = noticeType === "announcement" ? employees.map(e => e.id) : selectedEmployees;
     
-    addNotice({
-      type: noticeType,
-      title,
-      content,
-      recipients,
-    });
+    try {
+      await addNotice({
+        type: noticeType,
+        title,
+        content,
+        recipients,
+      });
 
-    toast({ 
-      title: "Success", 
-      description: `${noticeType === "notice" ? "Notice" : "Announcement"} sent successfully` 
-    });
+      toast({ 
+        title: "Success", 
+        description: `${noticeType === "notice" ? "Notice" : "Announcement"} sent successfully` 
+      });
 
-    setTitle("");
-    setContent("");
-    setSelectedEmployees([]);
-    setSelectAll(false);
+      setTitle("");
+      setContent("");
+      setSelectedEmployees([]);
+      setSelectAll(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Message not sent",
+        variant: "destructive",
+      });
+    }
   };
 
   const previousNotices = notices.filter(n => n.type === "notice");

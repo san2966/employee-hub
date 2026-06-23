@@ -12,8 +12,9 @@ import { Calendar, Briefcase, HeartPulse, RefreshCcw, Plus, Minus } from "lucide
 
 const EmployeeLeaveManager = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
-  const employeeId = session.employeeId || "";
-  const employeeName = session.employeeName || "";
+  const authUser = JSON.parse(sessionStorage.getItem("authUser") || "{}");
+  const employeeId = session.employeeId || authUser.employee_id || "";
+  const employeeName = authUser.employee_name || session.employeeName || authUser.username || "";
   
   const { 
     getUpdatedLeaveRequests, 
@@ -54,41 +55,47 @@ const EmployeeLeaveManager = () => {
   const exchangeAdds = exchangeLeaves.filter(l => l.isAddLeave);
   const exchangeTakes = exchangeLeaves.filter(l => !l.isAddLeave);
   
-  const handlePaidLeave = () => {
+  const handlePaidLeave = async () => {
     if (!paidForm.date || !paidForm.reason) {
       toast({ variant: "destructive", title: "Error", description: "Please fill all fields" });
       return;
     }
     
-    requestLeave({ 
-      date: paidForm.date, 
-      reason: paidForm.reason, 
-      type: "paid", 
-      employeeName 
-    });
-    
-    toast({ title: "Leave request submitted", description: "Waiting for Director approval" });
-    setPaidDialog(false);
-    setPaidForm({ date: "", reason: "" });
+    try {
+      await requestLeave({ 
+        date: paidForm.date, 
+        reason: paidForm.reason, 
+        type: "paid", 
+        employeeName 
+      });
+      toast({ title: "Leave request submitted", description: "Waiting for Director approval" });
+      setPaidDialog(false);
+      setPaidForm({ date: "", reason: "" });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error", description: error instanceof Error ? error.message : "Request failed" });
+    }
   };
   
-  const handleMedicalLeave = () => {
+  const handleMedicalLeave = async () => {
     if (!medicalForm.date || !medicalForm.reason) {
       toast({ variant: "destructive", title: "Error", description: "Please fill required fields" });
       return;
     }
     
-    requestLeave({ 
-      date: medicalForm.date, 
-      reason: medicalForm.reason, 
-      type: "medical", 
-      employeeName,
-      medicalCertificate: medicalForm.certificate,
-    });
-    
-    toast({ title: "Medical leave request submitted", description: "Waiting for Director approval" });
-    setMedicalDialog(false);
-    setMedicalForm({ date: "", reason: "", certificate: "" });
+    try {
+      await requestLeave({ 
+        date: medicalForm.date, 
+        reason: medicalForm.reason, 
+        type: "medical", 
+        employeeName,
+        medicalCertificate: medicalForm.certificate,
+      });
+      toast({ title: "Medical leave request submitted", description: "Waiting for Director approval" });
+      setMedicalDialog(false);
+      setMedicalForm({ date: "", reason: "", certificate: "" });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error", description: error instanceof Error ? error.message : "Request failed" });
+    }
   };
   
   const handleAddExchangeLeave = async () => {

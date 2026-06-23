@@ -12,8 +12,9 @@ import { Package, Plus, Link as LinkIcon, DollarSign } from "lucide-react";
 
 const EmployeeRequirements = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
-  const employeeId = session.employeeId || "";
-  const employeeName = session.employeeName || "";
+  const authUser = JSON.parse(sessionStorage.getItem("authUser") || "{}");
+  const employeeId = session.employeeId || authUser.employee_id || "";
+  const employeeName = authUser.employee_name || session.employeeName || authUser.username || "";
   
   const { requirements, addRequirement } = useEmployeeData(employeeId);
   const { toast } = useToast();

@@ -959,6 +959,9 @@ export type Database = {
           expires_at: string | null
           id: string
           is_active: boolean | null
+          is_global: boolean
+          notice_type: string
+          recipient_employee_ids: string[]
           title: string
         }
         Insert: {
@@ -968,6 +971,9 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
+          is_global?: boolean
+          notice_type?: string
+          recipient_employee_ids?: string[]
           title: string
         }
         Update: {
@@ -977,6 +983,9 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
+          is_global?: boolean
+          notice_type?: string
+          recipient_employee_ids?: string[]
           title?: string
         }
         Relationships: []
@@ -2843,6 +2852,13 @@ export type Database = {
           message: Json
           msg_id: number
           read_ct: number
+        }[]
+      }
+      resolve_portal_employee: {
+        Args: { _username?: string }
+        Returns: {
+          employee_id: string
+          employee_name: string
         }[]
       }
       verify_password: {

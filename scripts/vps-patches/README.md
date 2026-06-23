@@ -207,3 +207,66 @@ ORDER BY e.name;"
 | Requirement saves but employee page empty | `requested_by` must equal employee id or `employee_name` must equal login username/name. | Logout/login again so `authUser.employee_id` is refreshed; confirm HR employee is linked in `portal_users.employee_id`. |
 | Quotation buttons still missing | Confirm the deployed JS contains `Accept` by running `grep -R "Accept" dist/assets`. | Rebuild frontend image/container; browser Ctrl+F5. The DB patch cannot change stale frontend files. |
 | Exchange Take Leave disabled after approval | Check `employees.exchange_leave_balance` for that employee is > 0. | Re-run the permanent SQL patch; it recalculates balances from approved exchange rows. |
+
+---
+
+## Employee requirements/leave + notice targeting repair — `2026-06-23_employee_requirements_leave_notice_quote_repair.sql`
+
+Use this patch for the latest VPS symptoms:
+
+1. Employee → Requirements shows **“Request Not Submitted: Please Try again”**.
+2. Employee → Leave Manager shows **“Error: request failed”** for exchange leave, and leave rows/counts do not update.
+3. Director notices are visible to all employees instead of only selected employees.
+4. Director → Quotation Manager must keep **Actions** after **Status**.
+
+### Run on VPS
+
+```bash
+# 1. SSH into the VPS
+ssh user@notify.emp-cms.in
+
+# 2. Go to the deployed project folder and pull latest code
+cd /path/to/your/project
+git pull origin main
+
+# 3. Apply the DB repair
+psql -h localhost -U postgres -d postgres \
+  -f scripts/vps-patches/2026-06-23_employee_requirements_leave_notice_quote_repair.sql
+
+# 4. Redeploy/restart the frontend container, then hard-refresh browser (Ctrl+F5)
+```
+
+### Root cause fixed
+
+- Some `portal_users.employee_id` values pointed to deleted/missing employee rows. That caused `leave_requests_employee_id_fkey` failures and also made employee-specific requirements/notices invisible.
+- Requirements now always store `description`, `why_needed`, `link_url`, and `expected_cost` separately; old JSON rows are cleaned.
+- Notices now store `notice_type`, `recipient_employee_ids`, and `is_global`, so selected notices stay private and announcements remain global.
+
+### Verify immediately
+
+```bash
+psql -h localhost -U postgres -d postgres -c "
+SELECT pu.username, pu.employee_id, e.id AS employee_exists
+FROM portal_users pu
+LEFT JOIN employees e ON e.id = pu.employee_id
+WHERE pu.role::text = 'employee';
+
+SELECT title, description, why_needed, link_url, expected_cost, requested_by, employee_name, status
+FROM requirements ORDER BY created_at DESC LIMIT 10;
+
+SELECT e.name, e.paid_leave_balance, e.medical_leave_balance, e.exchange_leave_balance
+FROM employees e ORDER BY e.name;
+
+SELECT title, notice_type, is_global, recipient_employee_ids
+FROM notices ORDER BY created_at DESC LIMIT 10;
+"
+```
+
+### Troubleshooting
+
+| Symptom | Check | Fix |
+|--------|-------|-----|
+| Requirement still fails | Browser Network tab must show `requirements` insert details; check `portal_users.employee_id` query above. | Re-run this patch, logout/login again, then Ctrl+F5. |
+| Leave request still fails | Error must not mention `leave_requests_employee_id_fkey`. | If it does, the employee login is still linked to a missing employee; run the verification query and repair that username in HR. |
+| Notice visible to wrong employee | `notice_type='notice'`, `is_global=false`, and employee id must be in `recipient_employee_ids`. | Recreate the notice after frontend redeploy; old notices default to announcement/global. |
+| Quotation actions order unchanged | Deployed JS is stale. | Rebuild/restart frontend container and clear browser cache. |

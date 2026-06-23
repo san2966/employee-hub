@@ -131,13 +131,17 @@ const getEffectiveEmployeeInfo = (fallbackId: string) => {
   const employeeSessionCompat = readSessionJson("employeeSession");
   const id = fallbackId || employeeSession.employeeId || employeeSessionCompat.employeeId || authUser.employee_id || "";
   const username = authUser.username || employeeSession.username || employeeSessionCompat.username || "";
-  const name = employeeSession.employeeName || employeeSessionCompat.employeeName || authUser.employee_name || username || "";
+  const name = authUser.employee_name || employeeSession.employeeName || employeeSessionCompat.employeeName || username || "";
   return { id, name, username };
 };
 
 export const useEmployeeData = (employeeId: string) => {
   const employeeInfo = getEffectiveEmployeeInfo(employeeId);
-  const effectiveEmployeeId = employeeInfo.id;
+  const initialEmployeeId = employeeInfo.id;
+  const [resolvedEmployeeId, setResolvedEmployeeId] = useState(initialEmployeeId);
+  const [resolvedEmployeeName, setResolvedEmployeeName] = useState(employeeInfo.name);
+  const effectiveEmployeeId = resolvedEmployeeId || initialEmployeeId;
+  const effectiveEmployeeName = resolvedEmployeeName || employeeInfo.name || employeeInfo.username;
   // localStorage items (personal, no DB table)
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -152,6 +156,25 @@ export const useEmployeeData = (employeeId: string) => {
   const [reports, setReports] = useState<Report[]>([]);
   const [leaveBalance, setLeaveBalance] = useState({ paid: 12, medical: 6, exchange: 0 });
   const [assignedTasks, setAssignedTasks] = useState<Task[]>([]);
+
+  const resolveEmployeeIdentity = useCallback(async () => {
+    const username = employeeInfo.username || employeeInfo.name;
+    if (!username && !initialEmployeeId) return { id: initialEmployeeId, name: employeeInfo.name };
+
+    const { data, error } = await (supabase as any).rpc("resolve_portal_employee", { _username: username || null });
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!error && row?.employee_id) {
+      setResolvedEmployeeId(row.employee_id);
+      setResolvedEmployeeName(row.employee_name || employeeInfo.name || username || "");
+      return { id: row.employee_id as string, name: (row.employee_name || employeeInfo.name || username || "") as string };
+    }
+
+    return { id: initialEmployeeId, name: employeeInfo.name };
+  }, [employeeInfo.name, employeeInfo.username, initialEmployeeId]);
+
+  useEffect(() => {
+    resolveEmployeeIdentity();
+  }, [resolveEmployeeIdentity]);
 
   // Load localStorage items
   useEffect(() => {
@@ -188,16 +211,20 @@ export const useEmployeeData = (employeeId: string) => {
   // ─── Supabase: Leave Requests ───
   const fetchLeaveRequests = useCallback(async () => {
     if (!effectiveEmployeeId) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("leave_requests")
-      .select("*, employees!leave_requests_employee_id_fkey(name)")
+      .select("*")
       .eq("employee_id", effectiveEmployeeId)
       .order("created_at", { ascending: false });
+    if (error) {
+      console.error("fetchLeaveRequests failed:", error);
+      return;
+    }
     if (data) {
       setLeaveRequests(data.map(l => ({
         id: l.id,
         employeeId: l.employee_id,
-        employeeName: (l.employees as any)?.name || "",
+        employeeName: effectiveEmployeeName,
         date: l.date,
         reason: l.reason,
         type: l.leave_type as LeaveRequest["type"],
@@ -210,7 +237,7 @@ export const useEmployeeData = (employeeId: string) => {
         isAddLeave: l.is_add_leave || false,
       })));
     }
-  }, [effectiveEmployeeId]);
+  }, [effectiveEmployeeId, effectiveEmployeeName]);
 
   // ─── Supabase: Employee Payments (travel + misc) ───
   const fetchPayments = useCallback(async () => {
@@ -303,7 +330,7 @@ export const useEmployeeData = (employeeId: string) => {
       return;
     }
     if (data) {
-      const normalizedName = employeeInfo.name.trim().toLowerCase();
+      const normalizedName = effectiveEmployeeName.trim().toLowerCase();
       const normalizedUsername = employeeInfo.username.trim().toLowerCase();
       const ownRows = (data as any[]).filter((r: any) => {
         const rowEmployeeName = String(r.employee_name || "").trim().toLowerCase();
@@ -328,7 +355,7 @@ export const useEmployeeData = (employeeId: string) => {
         return {
           id: r.id,
           employeeId: r.requested_by || effectiveEmployeeId,
-          employeeName: r.employee_name || employeeInfo.name,
+          employeeName: r.employee_name || effectiveEmployeeName,
           title: r.title,
           description: desc,
           whyNeeded: why,
@@ -339,7 +366,7 @@ export const useEmployeeData = (employeeId: string) => {
         };
       }));
     }
-  }, [effectiveEmployeeId, employeeInfo.name, employeeInfo.username]);
+  }, [effectiveEmployeeId, effectiveEmployeeName, employeeInfo.username]);
 
   // ─── Supabase: Tasks assigned to this employee (from Director / Manager) ───
   const fetchAssignedTasks = useCallback(async () => {
@@ -365,20 +392,34 @@ export const useEmployeeData = (employeeId: string) => {
 
   // ─── Supabase: Notices ───
   const fetchNotices = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await (supabase as any)
       .from("notices")
       .select("*")
       .eq("is_active", true)
       .order("created_at", { ascending: false });
-    return (data || []).map(n => ({
-      id: n.id,
-      type: "announcement" as const,
-      title: n.title,
-      content: n.content,
-      recipients: ["all"],
-      createdAt: n.created_at || new Date().toISOString(),
-    }));
-  }, []);
+    if (error) {
+      console.error("fetch employee notices failed:", error);
+      return [];
+    }
+    return (data || [])
+      .filter((n: any) => {
+        const type = (n.notice_type || (n.is_global === false ? "notice" : "announcement")) as "notice" | "announcement";
+        if (type === "announcement" || n.is_global === true) return true;
+        const recipients = Array.isArray(n.recipient_employee_ids) ? n.recipient_employee_ids : [];
+        return !!effectiveEmployeeId && recipients.includes(effectiveEmployeeId);
+      })
+      .map((n: any) => {
+        const type = (n.notice_type || (n.is_global === false ? "notice" : "announcement")) as "notice" | "announcement";
+        return {
+          id: n.id,
+          type,
+          title: n.title,
+          content: n.content,
+          recipients: Array.isArray(n.recipient_employee_ids) ? n.recipient_employee_ids : type === "announcement" ? ["all"] : [],
+          createdAt: n.created_at || new Date().toISOString(),
+        };
+      });
+  }, [effectiveEmployeeId]);
 
   // ─── Load all Supabase data + realtime ───
   useEffect(() => {
@@ -546,7 +587,10 @@ export const useEmployeeData = (employeeId: string) => {
     title: string; description: string; whyNeeded: string;
     link?: string; expectedCost?: number; employeeName: string;
   }) => {
-    if (!effectiveEmployeeId) {
+    const identity = await resolveEmployeeIdentity();
+    const employeeIdForWrite = identity.id || effectiveEmployeeId;
+    const employeeNameForWrite = identity.name || req.employeeName || effectiveEmployeeName;
+    if (!employeeIdForWrite) {
       throw new Error("Employee account is not linked. Please login again or contact HR.");
     }
     const payload: any = {
@@ -555,8 +599,8 @@ export const useEmployeeData = (employeeId: string) => {
       why_needed: req.whyNeeded,
       link_url: req.link || null,
       expected_cost: req.expectedCost ?? null,
-      employee_name: req.employeeName || employeeInfo.name,
-      requested_by: effectiveEmployeeId,
+      employee_name: employeeNameForWrite,
+      requested_by: employeeIdForWrite,
       status: "pending" as const,
       priority: "medium" as const,
     };
@@ -567,7 +611,7 @@ export const useEmployeeData = (employeeId: string) => {
     }
     await fetchRequirements();
     return data;
-  }, [effectiveEmployeeId, employeeInfo.name, fetchRequirements]);
+  }, [effectiveEmployeeId, effectiveEmployeeName, fetchRequirements, resolveEmployeeIdentity]);
 
   // ════════════════════════════════════════════
   // Travel Expenses (Supabase - employee_payments with category=travel)
@@ -621,11 +665,13 @@ export const useEmployeeData = (employeeId: string) => {
     employeeName: string; medicalCertificate?: string;
     workingDate?: string; workingReason?: string; isAddLeave?: boolean;
   }) => {
-    if (!effectiveEmployeeId) {
+    const identity = await resolveEmployeeIdentity();
+    const employeeIdForWrite = identity.id || effectiveEmployeeId;
+    if (!employeeIdForWrite) {
       throw new Error("Employee account is not linked. Please login again or contact HR.");
     }
     const { error } = await supabase.from("leave_requests").insert({
-      employee_id: effectiveEmployeeId,
+      employee_id: employeeIdForWrite,
       date: leave.date,
       reason: leave.reason,
       leave_type: leave.type,
@@ -639,7 +685,7 @@ export const useEmployeeData = (employeeId: string) => {
       throw error;
     }
     await fetchLeaveRequests();
-  }, [effectiveEmployeeId, fetchLeaveRequests]);
+  }, [effectiveEmployeeId, fetchLeaveRequests, resolveEmployeeIdentity]);
 
   const addExchangeLeave = useCallback((data: {
     workingDate: string; workingReason: string; employeeName: string;
@@ -726,13 +772,11 @@ export const useEmployeeData = (employeeId: string) => {
 
   const calculateExchangeBalance = useCallback(() => {
     // Earned approved exchange work minus exchange leave requests already used/requested.
-    // Also respects the stored balance, but subtracts pending take requests so the button cannot be reused repeatedly.
+    // Pending take requests reserve a leave so the same earned day cannot be submitted repeatedly.
     const earned = leaveRequests.filter(
       l => l.type === "exchange" && l.isAddLeave && l.status === "approved"
     ).length;
-    const nonRejectedTakes = leaveRequests.filter(
-      l => l.type === "exchange" && !l.isAddLeave && l.status !== "rejected"
-    ).length;
+    const nonRejectedTakes = leaveRequests.filter(l => l.type === "exchange" && !l.isAddLeave && l.status !== "rejected").length;
     const pendingTakes = leaveRequests.filter(
       l => l.type === "exchange" && !l.isAddLeave && l.status === "pending"
     ).length;
@@ -740,8 +784,14 @@ export const useEmployeeData = (employeeId: string) => {
   }, [leaveBalance, leaveRequests]);
 
   const updateLeaveBalanceFromApproved = useCallback(() => {
-    return leaveBalance;
-  }, [leaveBalance]);
+    const usedPaid = leaveRequests.filter(l => l.type === "paid" && l.status !== "rejected").length;
+    const usedMedical = leaveRequests.filter(l => l.type === "medical" && l.status !== "rejected").length;
+    return {
+      paid: Math.max(0, 12 - usedPaid),
+      medical: Math.max(0, 6 - usedMedical),
+      exchange: calculateExchangeBalance(),
+    };
+  }, [calculateExchangeBalance, leaveRequests]);
 
   const getPendingExchangeAdds = useCallback(() => {
     return leaveRequests.filter(l => l.type === "exchange" && l.isAddLeave && l.status === "pending").length;
