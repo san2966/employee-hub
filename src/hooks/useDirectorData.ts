@@ -225,16 +225,17 @@ export const useDirectorData = () => {
   }, []);
 
   const fetchNotices = useCallback(async () => {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("notices")
       .select("*")
       .eq("is_active", true)
       .order("created_at", { ascending: false });
     if (error) { console.error("Error:", error); return; }
-    setNotices((data || []).map(n => ({
-      id: n.id, type: "notice" as const,
+    setNotices((data || []).map((n: any) => ({
+      id: n.id, type: (n.notice_type || (n.is_global === false ? "notice" : "announcement")) as "notice" | "announcement",
       title: n.title, content: n.content,
-      recipients: [], createdAt: n.created_at || "",
+      recipients: Array.isArray(n.recipient_employee_ids) ? n.recipient_employee_ids : [],
+      createdAt: n.created_at || "",
     })));
   }, []);
 
@@ -490,11 +491,15 @@ export const useDirectorData = () => {
 
   // ---- Notice methods (Supabase) ----
   const addNotice = async (notice: Omit<Notice, "id" | "createdAt">) => {
-    const { data, error } = await supabase
+    const isAnnouncement = notice.type === "announcement";
+    const { data, error } = await (supabase as any)
       .from("notices")
       .insert({
         title: notice.title,
         content: notice.content,
+        notice_type: notice.type,
+        recipient_employee_ids: isAnnouncement ? [] : notice.recipients,
+        is_global: isAnnouncement,
         is_active: true,
       })
       .select()
