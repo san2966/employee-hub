@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
     }
 
     // Fetch user from portal_users using admin client (bypasses RLS)
-    const { data: portalUser, error: fetchError } = await adminClient
+    let { data: portalUser, error: fetchError } = await adminClient
       .from("portal_users")
       .select("id, username, password_hash, role, employee_id, is_active")
       .eq("username", username)
@@ -145,6 +145,65 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (portalUser.role === "employee") {
+      const { data: linkedEmployee } = portalUser.employee_id
+        ? await adminClient.from("employees").select("id").eq("id", portalUser.employee_id).maybeSingle()
+        : { data: null };
+
+      if (!linkedEmployee) {
+        let { data: employeeRow } = await adminClient
+          .from("employees")
+          .select("id")
+          .or(`username.ilike.${portalUser.username},email.ilike.${portalUser.username}`)
+          .maybeSingle();
+
+        if (!employeeRow) {
+          const fallbackName = portalUser.username.includes("@") ? portalUser.username.split("@")[0] : portalUser.username;
+          const fallbackEmail = portalUser.username.includes("@") ? portalUser.username : `${portalUser.username}@portal.local`;
+          const { data: createdEmployee, error: createEmployeeError } = await adminClient
+            .from("employees")
+            .insert({
+              name: fallbackName,
+              address: "Pending HR update",
+              phone: "Pending",
+              email: fallbackEmail,
+              aadhaar_number: "Pending",
+              pan_number: "Pending",
+              blood_group: "Pending",
+              father_name: "Pending",
+              mother_name: "Pending",
+              highest_education: "Pending",
+              degree_name: "Pending",
+              school_college: "Pending",
+              board_university: "Pending",
+              year_of_passing: "Pending",
+              passed_or_appearing: "passed",
+              date_of_joining: new Date().toISOString().slice(0, 10),
+              designation: "Employee",
+              responsibilities: "Pending HR update",
+              username: portalUser.username,
+              is_active: true,
+              paid_leave_balance: 12,
+              medical_leave_balance: 6,
+              exchange_leave_balance: 0,
+            })
+            .select("id")
+            .single();
+
+          if (createEmployeeError) {
+            console.error("Employee link repair failed:", createEmployeeError);
+          } else {
+            employeeRow = createdEmployee;
+          }
+        }
+
+        if (employeeRow?.id) {
+          await adminClient.from("portal_users").update({ employee_id: employeeRow.id }).eq("id", portalUser.id);
+          portalUser = { ...portalUser, employee_id: employeeRow.id };
+        }
+      }
+    }
+
     // Create or get Supabase Auth user
     const authEmail = `${portalUser.id}@portal.internal`;
     const internalPassword = `portal_${portalUser.id}_${portalUser.role}`;
@@ -160,6 +219,11 @@ Deno.serve(async (req) => {
       await adminClient.auth.admin.updateUserById(existingUser.id, {
         password: internalPassword,
         email_confirm: true,
+        user_metadata: {
+          portal_user_id: portalUser.id,
+          role: portalUser.role,
+          employee_id: portalUser.employee_id,
+        },
       });
       const signInClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
         auth: { autoRefreshToken: false, persistSession: false },
