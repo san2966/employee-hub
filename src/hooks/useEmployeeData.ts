@@ -772,13 +772,11 @@ export const useEmployeeData = (employeeId: string) => {
 
   const calculateExchangeBalance = useCallback(() => {
     // Earned approved exchange work minus exchange leave requests already used/requested.
-    // Also respects the stored balance, but subtracts pending take requests so the button cannot be reused repeatedly.
+    // Pending take requests reserve a leave so the same earned day cannot be submitted repeatedly.
     const earned = leaveRequests.filter(
       l => l.type === "exchange" && l.isAddLeave && l.status === "approved"
     ).length;
-    const nonRejectedTakes = leaveRequests.filter(
-      l => l.type === "exchange" && !l.isAddLeave && l.status !== "rejected"
-    ).length;
+    const nonRejectedTakes = leaveRequests.filter(l => l.type === "exchange" && !l.isAddLeave && l.status !== "rejected").length;
     const pendingTakes = leaveRequests.filter(
       l => l.type === "exchange" && !l.isAddLeave && l.status === "pending"
     ).length;
@@ -786,8 +784,14 @@ export const useEmployeeData = (employeeId: string) => {
   }, [leaveBalance, leaveRequests]);
 
   const updateLeaveBalanceFromApproved = useCallback(() => {
-    return leaveBalance;
-  }, [leaveBalance]);
+    const approvedPaid = leaveRequests.filter(l => l.type === "paid" && l.status === "approved").length;
+    const approvedMedical = leaveRequests.filter(l => l.type === "medical" && l.status === "approved").length;
+    return {
+      paid: Math.max(0, 12 - approvedPaid),
+      medical: Math.max(0, 6 - approvedMedical),
+      exchange: calculateExchangeBalance(),
+    };
+  }, [calculateExchangeBalance, leaveRequests]);
 
   const getPendingExchangeAdds = useCallback(() => {
     return leaveRequests.filter(l => l.type === "exchange" && l.isAddLeave && l.status === "pending").length;
