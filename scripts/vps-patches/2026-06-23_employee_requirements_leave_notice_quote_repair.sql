@@ -70,6 +70,14 @@ BEGIN
   END LOOP;
 END $$;
 
+UPDATE public.user_roles ur
+SET employee_id = pu.employee_id
+FROM public.portal_users pu
+JOIN auth.users au ON au.email = pu.id::text || '@portal.internal'
+WHERE ur.user_id = au.id
+  AND pu.role::text = 'employee'
+  AND pu.employee_id IS NOT NULL;
+
 -- B) Requirements: permanent real columns and old JSON cleanup.
 ALTER TABLE public.requirements
   ADD COLUMN IF NOT EXISTS why_needed text,
