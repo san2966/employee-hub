@@ -587,7 +587,10 @@ export const useEmployeeData = (employeeId: string) => {
     title: string; description: string; whyNeeded: string;
     link?: string; expectedCost?: number; employeeName: string;
   }) => {
-    if (!effectiveEmployeeId) {
+    const identity = await resolveEmployeeIdentity();
+    const employeeIdForWrite = identity.id || effectiveEmployeeId;
+    const employeeNameForWrite = identity.name || req.employeeName || effectiveEmployeeName;
+    if (!employeeIdForWrite) {
       throw new Error("Employee account is not linked. Please login again or contact HR.");
     }
     const payload: any = {
@@ -596,8 +599,8 @@ export const useEmployeeData = (employeeId: string) => {
       why_needed: req.whyNeeded,
       link_url: req.link || null,
       expected_cost: req.expectedCost ?? null,
-      employee_name: req.employeeName || employeeInfo.name,
-      requested_by: effectiveEmployeeId,
+      employee_name: employeeNameForWrite,
+      requested_by: employeeIdForWrite,
       status: "pending" as const,
       priority: "medium" as const,
     };
@@ -608,7 +611,7 @@ export const useEmployeeData = (employeeId: string) => {
     }
     await fetchRequirements();
     return data;
-  }, [effectiveEmployeeId, employeeInfo.name, fetchRequirements]);
+  }, [effectiveEmployeeId, effectiveEmployeeName, fetchRequirements, resolveEmployeeIdentity]);
 
   // ════════════════════════════════════════════
   // Travel Expenses (Supabase - employee_payments with category=travel)
@@ -662,11 +665,13 @@ export const useEmployeeData = (employeeId: string) => {
     employeeName: string; medicalCertificate?: string;
     workingDate?: string; workingReason?: string; isAddLeave?: boolean;
   }) => {
-    if (!effectiveEmployeeId) {
+    const identity = await resolveEmployeeIdentity();
+    const employeeIdForWrite = identity.id || effectiveEmployeeId;
+    if (!employeeIdForWrite) {
       throw new Error("Employee account is not linked. Please login again or contact HR.");
     }
     const { error } = await supabase.from("leave_requests").insert({
-      employee_id: effectiveEmployeeId,
+      employee_id: employeeIdForWrite,
       date: leave.date,
       reason: leave.reason,
       leave_type: leave.type,
@@ -680,7 +685,7 @@ export const useEmployeeData = (employeeId: string) => {
       throw error;
     }
     await fetchLeaveRequests();
-  }, [effectiveEmployeeId, fetchLeaveRequests]);
+  }, [effectiveEmployeeId, fetchLeaveRequests, resolveEmployeeIdentity]);
 
   const addExchangeLeave = useCallback((data: {
     workingDate: string; workingReason: string; employeeName: string;
