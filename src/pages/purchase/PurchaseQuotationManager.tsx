@@ -101,13 +101,16 @@ const PurchaseQuotationManager = () => {
               <TableBody>
                 {quotes.length === 0 ? (
                   <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No quotations yet</TableCell></TableRow>
-                ) : quotes.map((q: any) => (
+                ) : quotes.map((q: any) => {
+                  const s = String(q.status || "pending").toLowerCase();
+                  const label = s === "accepted" || s === "approved" ? "Approved" : s === "rejected" ? "Rejected" : "Pending";
+                  return (
                   <TableRow key={q.id}>
                     <TableCell className="font-medium">{q.quote_id}</TableCell>
                     <TableCell>{q.subject}</TableCell>
                     <TableCell>{q.type}</TableCell>
                     <TableCell className="max-w-48 truncate">{q.description || "-"}</TableCell>
-                    <TableCell><Badge variant={getStatusColor(q.status) as any}>{q.status}</Badge></TableCell>
+                    <TableCell><Badge variant={getStatusColor(q.status) as any}>{label}</Badge></TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         {q.file_url && (
@@ -119,7 +122,7 @@ const PurchaseQuotationManager = () => {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                );})}
               </TableBody>
             </Table>
           </div>
