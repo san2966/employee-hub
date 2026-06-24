@@ -18,6 +18,7 @@ const DirectorRecordManagement = () => {
   const [denyDialogOpen, setDenyDialogOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState<any>(null);
   const [denyReason, setDenyReason] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -83,17 +84,34 @@ const DirectorRecordManagement = () => {
     }
   };
 
-  const handleDownload = async (fileUrl: string) => {
-    if (!fileUrl) return;
+  const resolveSignedUrl = async (fileUrl: string) => {
+    if (!fileUrl) return null;
     if (fileUrl.includes("operations-files")) {
       const match = fileUrl.match(/operations-files\/(.+?)(\?|$)/);
       if (match) {
         const { data } = await supabase.storage.from("operations-files").createSignedUrl(match[1], 315360000);
-        if (data?.signedUrl) window.open(data.signedUrl, "_blank");
-        return;
+        return data?.signedUrl || fileUrl;
       }
     }
-    window.open(fileUrl, "_blank");
+    return fileUrl;
+  };
+
+  const handlePreview = async (fileUrl: string) => {
+    const url = await resolveSignedUrl(fileUrl);
+    if (url) setPreviewUrl(url);
+  };
+
+  const handleDownload = async (fileUrl: string) => {
+    if (!fileUrl) return;
+    const url = await resolveSignedUrl(fileUrl);
+    if (!url) return;
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = url.split("/").pop()?.split("?")[0] || "file";
+    a.target = "_blank";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   const statusColor = (s: string) => s === "Approved" ? "bg-green-100 text-green-700" : s === "Not Approved" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700";
@@ -133,8 +151,8 @@ const DirectorRecordManagement = () => {
                         <td className="px-4 py-3">{p.subject}</td>
                         <td className="px-4 py-3">
                           {p.file_url && (
-                            <Button size="sm" variant="ghost" onClick={() => handleDownload(p.file_url)}>
-                              <Eye className="h-3 w-3 mr-1" />View
+                            <Button size="sm" variant="ghost" onClick={() => handlePreview(p.file_url)}>
+                              <Eye className="h-3 w-3 mr-1" />Preview
                             </Button>
                           )}
                         </td>
@@ -217,6 +235,18 @@ const DirectorRecordManagement = () => {
             </div>
             <Button onClick={handleDeny} variant="destructive" className="w-full">Submit Denial</Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Dialog */}
+      <Dialog open={!!previewUrl} onOpenChange={() => setPreviewUrl(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader><DialogTitle>File Preview</DialogTitle></DialogHeader>
+          {previewUrl && (
+            /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(previewUrl)
+              ? <img src={previewUrl} alt="Preview" className="w-full rounded-lg" />
+              : <iframe src={previewUrl} title="Preview" className="w-full h-[70vh] rounded-lg border" />
+          )}
         </DialogContent>
       </Dialog>
     </DirectorLayout>

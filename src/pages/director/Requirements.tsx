@@ -59,7 +59,7 @@ const Requirements = () => {
                           <div className="flex gap-2">
                             <Button size="sm" variant="default"
                               onClick={() => updateRequirementStatus(req.id, "approved")}>
-                              <Check className="h-3 w-3 mr-1" /> Approve
+                              <Check className="h-3 w-3 mr-1" /> Accept
                             </Button>
                             <Button size="sm" variant="destructive"
                               onClick={() => updateRequirementStatus(req.id, "rejected")}>
@@ -67,11 +67,11 @@ const Requirements = () => {
                             </Button>
                           </div>
                         ) : (
-                          <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
                             req.status === "approved" ? "bg-success/10 text-success" :
                             "bg-destructive/10 text-destructive"
                           }`}>
-                            {req.status}
+                            {req.status === "approved" ? "Accepted" : "Rejected"}
                           </span>
                         )}
                       </td>

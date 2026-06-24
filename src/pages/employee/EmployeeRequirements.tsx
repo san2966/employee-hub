@@ -7,8 +7,22 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Package, Plus, Link as LinkIcon, DollarSign } from "lucide-react";
+import { Package, Plus, Link as LinkIcon } from "lucide-react";
+
+const statusLabel = (s: string) => {
+  const v = String(s || "pending").toLowerCase();
+  if (v === "approved" || v === "accepted" || v === "completed" || v === "in_progress") return "Accepted";
+  if (v === "rejected") return "Rejected";
+  return "Pending";
+};
+const statusClass = (s: string) => {
+  const l = statusLabel(s);
+  if (l === "Accepted") return "bg-success/10 text-success";
+  if (l === "Rejected") return "bg-destructive/10 text-destructive";
+  return "bg-warning/10 text-warning";
+};
 
 const EmployeeRequirements = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
@@ -128,7 +142,7 @@ const EmployeeRequirements = () => {
           </Dialog>
         </div>
 
-        {/* Requirements List */}
+        {/* Requirements Table */}
         {requirements.length === 0 ? (
           <Card className="card-corporate">
             <CardContent className="py-12 text-center text-muted-foreground">
@@ -138,60 +152,45 @@ const EmployeeRequirements = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
-            {requirements.map(req => (
-              <Card key={req.id} className="card-corporate">
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="font-semibold text-lg">{req.title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Submitted on {new Date(req.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <span className={`px-3 py-1 rounded text-sm font-medium capitalize ${
-                      req.status === "approved" ? "bg-success/10 text-success" :
-                      req.status === "rejected" ? "bg-destructive/10 text-destructive" :
-                      "bg-warning/10 text-warning"
-                    }`}>
-                      {req.status}
-                    </span>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Description</p>
-                      <p className="text-sm">{req.description}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Why Needed</p>
-                      <p className="text-sm">{req.whyNeeded}</p>
-                    </div>
-                    
-                    <div className="flex gap-4 pt-2">
-                      {req.link && (
-                        <a 
-                          href={req.link} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-sm text-primary hover:underline"
-                        >
-                          <LinkIcon className="h-4 w-4" />
-                          Reference Link
-                        </a>
-                      )}
-                      {req.expectedCost && (
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <DollarSign className="h-4 w-4" />
-                          Expected Cost: ₹{req.expectedCost.toLocaleString()}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <Card className="card-corporate">
+            <CardContent className="p-0 overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Why Needed</TableHead>
+                    <TableHead>Link</TableHead>
+                    <TableHead>Cost</TableHead>
+                    <TableHead>Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {requirements.map(req => (
+                    <TableRow key={req.id}>
+                      <TableCell className="font-medium">{req.title}</TableCell>
+                      <TableCell className="max-w-xs truncate text-muted-foreground">{req.description}</TableCell>
+                      <TableCell className="max-w-xs truncate text-muted-foreground">{req.whyNeeded || "—"}</TableCell>
+                      <TableCell>
+                        {req.link ? (
+                          <a href={req.link} target="_blank" rel="noopener noreferrer"
+                             className="text-primary hover:underline inline-flex items-center gap-1">
+                            <LinkIcon className="h-3 w-3" /> Open
+                          </a>
+                        ) : "—"}
+                      </TableCell>
+                      <TableCell>{req.expectedCost ? `₹${req.expectedCost.toLocaleString()}` : "—"}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${statusClass(req.status)}`}>
+                          {statusLabel(req.status)}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         )}
       </div>
     </EmployeeLayout>

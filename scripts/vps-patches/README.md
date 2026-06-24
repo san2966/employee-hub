@@ -1,4 +1,36 @@
-# VPS Patch — 2026-06-20: Sync fixes
+# VPS Patch — 2026-06-24: Full repair (Requirements, Quotes, Notices, Settings, Ops files)
+
+Run on the VPS:
+
+```bash
+psql -h localhost -U postgres -d postgres \
+  -f scripts/vps-patches/2026-06-24_full_repair_requirements_quotes_notices_settings.sql
+```
+
+Then rebuild the frontend and **hard-refresh** the browser (Ctrl+F5).
+
+What it does:
+1. **Requirements** — adds `why_needed / link_url / expected_cost / employee_name` columns, backfills legacy JSON blobs, ensures `approved`/`rejected` enum values exist, recreates the normalise trigger, opens RLS, adds realtime.
+2. **Purchase Quotes** — adds `description`, opens RLS, adds realtime for Director ↔ Purchase sync.
+3. **Notices vs Announcements** — adds `notice_type / recipient_employee_ids / is_global`; rewrites SELECT policy so each employee only sees their own targeted notices but everyone sees announcements.
+4. **Employee Settings** — ensures `employee_settings` exists with `photo` column + permissive RLS so profile photo persists.
+5. **Ops Proposals / Inwards** — grants Director read/update so Record Management preview & download work.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| `column ... does not exist` | rerun the patch; all ALTERs are `IF NOT EXISTS` |
+| `permission denied for table ...` | rerun the `GRANT` block for the named table |
+| `relation ... already member of publication supabase_realtime` | safe to ignore |
+| Employee sees others' notices | run `SELECT public.current_portal_employee_id();` — if NULL, redeploy the `authenticate` edge function and ask the user to re-login |
+| Director Quotation buttons missing | hard-refresh; the Action column moved to the end |
+
+---
+
+# Historic patches
+
+## 2026-06-20: Sync fixes
 
 This patch fixes four sync / visibility issues reported on the production VPS.
 It contains **(A)** a code change (auto-deployed by the GitHub Actions pipeline
