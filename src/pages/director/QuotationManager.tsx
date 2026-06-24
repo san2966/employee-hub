@@ -66,24 +66,32 @@ const DirectorQuotationManager = () => {
                   <TableHead>Quote ID</TableHead>
                   <TableHead>Subject</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>File</TableHead>
+                  <TableHead>Description</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="min-w-[190px]">Actions</TableHead>
+                  <TableHead>Preview</TableHead>
+                  <TableHead className="min-w-[190px]">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {quotes.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     No quotations submitted
                   </TableCell></TableRow>
                 ) : quotes.map((q: any) => {
                   const status = String(q.status || "pending").toLowerCase();
+                  const statusText = status === "accepted" || status === "approved" ? "Approved" : status === "rejected" ? "Rejected" : "Pending";
                   return (
                   <TableRow key={q.id}>
                     <TableCell className="font-medium">{q.quote_id}</TableCell>
                     <TableCell>{q.subject}</TableCell>
                     <TableCell>{q.type}</TableCell>
+                    <TableCell className="max-w-xs truncate text-muted-foreground">{q.description || "—"}</TableCell>
+                    <TableCell>
+                      <Badge variant={status === "accepted" || status === "approved" ? "default" : status === "rejected" ? "destructive" : "secondary"}>
+                        {statusText}
+                      </Badge>
+                    </TableCell>
                     <TableCell>
                       {q.file_url && (
                         <div className="flex gap-1">
@@ -91,11 +99,6 @@ const DirectorQuotationManager = () => {
                           <Button size="icon" variant="ghost" asChild><a href={q.file_url} download><Download className="h-4 w-4" /></a></Button>
                         </div>
                       )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={status === "accepted" || status === "approved" ? "default" : status === "rejected" ? "destructive" : "secondary"}>
-                        {q.status || "Pending"}
-                      </Badge>
                     </TableCell>
                     <TableCell className="min-w-[190px]">
                       <div className="flex gap-2">
