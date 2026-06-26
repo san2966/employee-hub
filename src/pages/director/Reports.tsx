@@ -16,6 +16,7 @@ interface ReportRow {
   task: string;
   status: string;
   description: string;
+  additionalInfo: string;
   createdAt: string;
 }
 
@@ -54,6 +55,7 @@ const Reports = () => {
         task: parsed.task || "",
         status: parsed.status || "pending",
         description: parsed.description || r.content || "",
+        additionalInfo: parsed.additionalInfo || "",
         createdAt: r.created_at,
       };
     });
@@ -113,6 +115,7 @@ const Reports = () => {
                 { key: "task", header: "Task" },
                 { key: "status", header: "Status" },
                 { key: "description", header: "Description" },
+                { key: "additionalInfo", header: "Additional Info" },
               ]}
               data={filtered.map(r => ({
                 employeeName: r.employeeName,
@@ -121,6 +124,7 @@ const Reports = () => {
                 task: r.task,
                 status: r.status,
                 description: r.description,
+                additionalInfo: r.additionalInfo,
               }))}
               dateRange={{ from: filterDate || undefined }}
             />
@@ -135,12 +139,13 @@ const Reports = () => {
                   <th className="text-left p-4 text-sm font-medium">Task</th>
                   <th className="text-left p-4 text-sm font-medium">Status</th>
                   <th className="text-left p-4 text-sm font-medium">Description</th>
+                  <th className="text-left p-4 text-sm font-medium">Additional Info</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
                       <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
                       <p>No reports found</p>
                     </td>
@@ -162,6 +167,7 @@ const Reports = () => {
                         </span>
                       </td>
                       <td className="p-4 text-sm text-muted-foreground max-w-xs truncate">{r.description}</td>
+                      <td className="p-4 text-sm text-muted-foreground max-w-xs truncate">{r.additionalInfo || "-"}</td>
                     </tr>
                   ))
                 )}
