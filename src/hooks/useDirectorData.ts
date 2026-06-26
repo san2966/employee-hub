@@ -178,13 +178,13 @@ export const useDirectorData = () => {
   const fetchProducts = useCallback(async () => {
     const { data, error } = await supabase
       .from("products")
-      .select("*")
+      .select("id, name, category, description, price, stock_quantity, unit, image, is_active, created_at")
       .eq("is_active", true)
       .order("name", { ascending: true });
     if (error) { console.error("Error:", error); return; }
     setProducts((data || []).map(p => ({
       id: p.id, name: p.name, model: p.unit || "",
-      description: p.description || "", image: "",
+      description: p.description || "", image: p.image || "",
       sales: [], // Sales data would need a separate table
     })));
   }, []);
@@ -416,6 +416,8 @@ export const useDirectorData = () => {
         name: product.name,
         category: product.model || "General",
         description: product.description,
+        image: product.image || null,
+        unit: product.model || "",
         is_active: true,
       })
       .select()
