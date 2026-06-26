@@ -208,9 +208,14 @@ const DirectorRecordManagement = () => {
                         <td className="px-4 py-3">{i.date || "-"}</td>
                         <td className="px-4 py-3">
                           {i.file_url && (
-                            <Button size="sm" variant="ghost" onClick={() => handleDownload(i.file_url)}>
-                              <Download className="h-3 w-3 mr-1" />Download
-                            </Button>
+                            <div className="flex gap-1">
+                              <Button size="sm" variant="ghost" onClick={() => handlePreview(i.file_url)}>
+                                <Eye className="h-3 w-3 mr-1" />Preview
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => handleDownload(i.file_url)}>
+                                <Download className="h-3 w-3 mr-1" />Download
+                              </Button>
+                            </div>
                           )}
                         </td>
                       </tr>

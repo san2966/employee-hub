@@ -153,12 +153,19 @@ const ProductManager = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map(product => (
               <div key={product.id} className="card-corporate overflow-hidden">
-                {/* Product Image */}
-                <div className="h-40 bg-muted/30 flex items-center justify-center">
+                {/* Product Image Preview */}
+                <div className="h-56 bg-muted/30 flex items-center justify-center overflow-hidden border-b">
                   {product.image ? (
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-contain bg-white"
+                    />
                   ) : (
-                    <ImageIcon className="h-12 w-12 text-muted-foreground" />
+                    <div className="flex flex-col items-center text-muted-foreground">
+                      <ImageIcon className="h-12 w-12" />
+                      <span className="text-xs mt-1">No preview</span>
+                    </div>
                   )}
                 </div>
 

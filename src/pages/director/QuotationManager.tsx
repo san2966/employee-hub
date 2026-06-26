@@ -100,23 +100,30 @@ const DirectorQuotationManager = () => {
                         </div>
                       )}
                     </TableCell>
-                    <TableCell className="min-w-[190px]">
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          className="bg-success hover:bg-success/90 text-success-foreground"
-                          onClick={() => handleApprove(q.id)}
-                        >
-                          <Check className="h-3 w-3 mr-1" /> Accept
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => { setRejectQuote(q); setRejectDesc(""); setRejectOpen(true); }}
-                        >
-                          <X className="h-3 w-3 mr-1" /> Reject
-                        </Button>
-                      </div>
+                    <TableCell className="min-w-[120px]">
+                      {status === "pending" ? (
+                        <div className="flex gap-2">
+                          <Button
+                            size="icon"
+                            className="bg-success hover:bg-success/90 text-success-foreground h-8 w-8"
+                            onClick={() => handleApprove(q.id)}
+                            title="Accept"
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="destructive"
+                            className="h-8 w-8"
+                            onClick={() => { setRejectQuote(q); setRejectDesc(""); setRejectOpen(true); }}
+                            title="Reject"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 );})}
