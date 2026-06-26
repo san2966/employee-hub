@@ -1,46 +1,90 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import DirectorLayout from "@/components/director/DirectorLayout";
-import { useDirectorData } from "@/hooks/useDirectorData";
+import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText } from "lucide-react";
 import { ExportButtons } from "@/components/ExportButtons";
-import { EXPORT_COLUMNS } from "@/lib/exportUtils";
+
+interface ReportRow {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  department: string;
+  date: string;
+  task: string;
+  status: string;
+  description: string;
+  createdAt: string;
+}
 
 const Reports = () => {
-  const { employees, tasks } = useDirectorData();
+  const [reports, setReports] = useState<ReportRow[]>([]);
+  const [employees, setEmployees] = useState<{ id: string; name: string; department: string }[]>([]);
   const [filterEmployee, setFilterEmployee] = useState<string>("all");
   const [filterDate, setFilterDate] = useState<string>("");
 
-  const getEmployeeName = (id: string) => {
-    const emp = employees.find(e => e.id === id);
-    return emp?.name || "Unknown";
-  };
+  const fetchEmployees = useCallback(async () => {
+    const { data } = await supabase.from("employees").select("id, name, department, username, email").order("name");
+    setEmployees((data || []).map((e: any) => ({
+      id: e.id,
+      name: e.name || e.username || e.email || "Unknown",
+      department: e.department || "",
+    })));
+  }, []);
 
-  const getEmployeeDepartment = (id: string) => {
-    const emp = employees.find(e => e.id === id);
-    return emp?.department || "N/A";
-  };
+  const fetchReports = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("daily_reports")
+      .select("*, employees!daily_reports_employee_id_fkey(name, username, email, department)")
+      .order("date", { ascending: false });
+    if (error) { console.error(error); return; }
+    const rows: ReportRow[] = (data || []).map((r: any) => {
+      let parsed: any = {};
+      try { parsed = JSON.parse(r.content); } catch { parsed = { description: r.content }; }
+      const emp = r.employees || {};
+      const name = emp.name || emp.username || emp.email || "Unknown";
+      return {
+        id: r.id,
+        employeeId: r.employee_id,
+        employeeName: name,
+        department: parsed.department || emp.department || "N/A",
+        date: r.date,
+        task: parsed.task || "",
+        status: parsed.status || "pending",
+        description: parsed.description || r.content || "",
+        createdAt: r.created_at,
+      };
+    });
+    setReports(rows);
+  }, []);
 
-  const filteredTasks = tasks.filter(task => {
-    if (filterEmployee !== "all" && task.employeeId !== filterEmployee) return false;
-    if (filterDate && !task.createdAt.startsWith(filterDate)) return false;
+  useEffect(() => {
+    fetchEmployees();
+    fetchReports();
+    const ch = supabase
+      .channel("dir-daily-reports")
+      .on("postgres_changes", { event: "*", schema: "public", table: "daily_reports" }, () => fetchReports())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [fetchEmployees, fetchReports]);
+
+  const filtered = reports.filter(r => {
+    if (filterEmployee !== "all" && r.employeeId !== filterEmployee) return false;
+    if (filterDate && r.date !== filterDate) return false;
     return true;
   });
 
   return (
     <DirectorLayout title="Reports">
       <div className="space-y-6">
-        {/* Filters */}
         <div className="card-corporate p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Employee Name</Label>
               <Select value={filterEmployee} onValueChange={setFilterEmployee}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select employee" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Employees</SelectItem>
                   {employees.map(emp => (
@@ -51,19 +95,14 @@ const Reports = () => {
             </div>
             <div>
               <Label>Date</Label>
-              <Input 
-                type="date" 
-                value={filterDate} 
-                onChange={(e) => setFilterDate(e.target.value)}
-              />
+              <Input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
             </div>
           </div>
         </div>
 
-        {/* Reports Table */}
         <div className="card-corporate overflow-hidden">
           <div className="flex justify-between items-center p-4 border-b">
-            <h3 className="font-semibold">Reports ({filteredTasks.length})</h3>
+            <h3 className="font-semibold">Reports ({filtered.length})</h3>
             <ExportButtons
               portal="Director"
               type="Reports"
@@ -75,13 +114,13 @@ const Reports = () => {
                 { key: "status", header: "Status" },
                 { key: "description", header: "Description" },
               ]}
-              data={filteredTasks.map(task => ({
-                employeeName: getEmployeeName(task.employeeId),
-                date: new Date(task.createdAt).toLocaleDateString(),
-                department: getEmployeeDepartment(task.employeeId),
-                task: task.subject,
-                status: task.status.replace("-", " "),
-                description: task.description,
+              data={filtered.map(r => ({
+                employeeName: r.employeeName,
+                date: new Date(r.date).toLocaleDateString(),
+                department: r.department,
+                task: r.task,
+                status: r.status,
+                description: r.description,
               }))}
               dateRange={{ from: filterDate || undefined }}
             />
@@ -90,16 +129,16 @@ const Reports = () => {
             <table className="w-full">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left p-4 text-sm font-medium text-foreground">Employee Name</th>
-                  <th className="text-left p-4 text-sm font-medium text-foreground">Date</th>
-                  <th className="text-left p-4 text-sm font-medium text-foreground">Department</th>
-                  <th className="text-left p-4 text-sm font-medium text-foreground">Task</th>
-                  <th className="text-left p-4 text-sm font-medium text-foreground">Status</th>
-                  <th className="text-left p-4 text-sm font-medium text-foreground">Description</th>
+                  <th className="text-left p-4 text-sm font-medium">Employee Name</th>
+                  <th className="text-left p-4 text-sm font-medium">Date</th>
+                  <th className="text-left p-4 text-sm font-medium">Department</th>
+                  <th className="text-left p-4 text-sm font-medium">Task</th>
+                  <th className="text-left p-4 text-sm font-medium">Status</th>
+                  <th className="text-left p-4 text-sm font-medium">Description</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {filteredTasks.length === 0 ? (
+                {filtered.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="p-8 text-center text-muted-foreground">
                       <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -107,28 +146,22 @@ const Reports = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredTasks.map(task => (
-                    <tr key={task.id} className="hover:bg-muted/30">
-                      <td className="p-4 text-sm">{getEmployeeName(task.employeeId)}</td>
-                      <td className="p-4 text-sm text-muted-foreground">
-                        {new Date(task.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="p-4 text-sm text-muted-foreground">
-                        {getEmployeeDepartment(task.employeeId)}
-                      </td>
-                      <td className="p-4 text-sm font-medium">{task.subject}</td>
+                  filtered.map(r => (
+                    <tr key={r.id} className="hover:bg-muted/30">
+                      <td className="p-4 text-sm font-medium">{r.employeeName}</td>
+                      <td className="p-4 text-sm text-muted-foreground">{new Date(r.date).toLocaleDateString()}</td>
+                      <td className="p-4 text-sm text-muted-foreground">{r.department}</td>
+                      <td className="p-4 text-sm">{r.task}</td>
                       <td className="p-4">
                         <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${
-                          task.status === "completed" ? "bg-success/10 text-success" :
-                          task.status === "in-progress" ? "bg-warning/10 text-warning" :
+                          r.status === "completed" ? "bg-success/10 text-success" :
+                          r.status === "in-progress" ? "bg-warning/10 text-warning" :
                           "bg-destructive/10 text-destructive"
                         }`}>
-                          {task.status.replace("-", " ")}
+                          {r.status.replace("-", " ")}
                         </span>
                       </td>
-                      <td className="p-4 text-sm text-muted-foreground max-w-xs truncate">
-                        {task.description}
-                      </td>
+                      <td className="p-4 text-sm text-muted-foreground max-w-xs truncate">{r.description}</td>
                     </tr>
                   ))
                 )}
