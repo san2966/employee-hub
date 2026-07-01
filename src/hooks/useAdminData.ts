@@ -195,15 +195,20 @@ export const useAdminData = () => {
   }, []);
 
   const fetchEmployees = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("employees")
-      .select("id, name, designation, phone, address, photo, created_at")
-      .eq("is_active", true)
+    const { data, error } = await (supabase as any)
+      .from("admin_employees")
+      .select("*")
       .order("name", { ascending: true });
-    if (error) { console.error("Error fetching employees:", error); return; }
-    setEmployees((data || []).map(e => ({
-      id: e.id, name: e.name, designation: e.designation, phone: e.phone,
-      address: e.address, photo: e.photo || "", createdAt: e.created_at || "",
+    if (error) { console.error("Error fetching admin employees:", error); return; }
+    setEmployees((data || []).map((e: any) => ({
+      id: e.id,
+      name: e.name,
+      designation: e.designation,
+      phone: e.phone,
+      alternatePhone: e.alternate_phone || "",
+      address: e.address,
+      photo: e.photo || "",
+      createdAt: e.created_at || "",
     })));
   }, []);
 
@@ -312,7 +317,7 @@ export const useAdminData = () => {
     const channels = [
       supabase.channel("admin-payments-sync").on("postgres_changes", { event: "*", schema: "public", table: "admin_payments" }, () => fetchPayments()).subscribe(),
       supabase.channel("admin-visitors-sync").on("postgres_changes", { event: "*", schema: "public", table: "visitors" }, () => fetchVisitors()).subscribe(),
-      supabase.channel("admin-employees-sync").on("postgres_changes", { event: "*", schema: "public", table: "employees" }, () => fetchEmployees()).subscribe(),
+      supabase.channel("admin-employees-sync").on("postgres_changes", { event: "*", schema: "public", table: "admin_employees" }, () => fetchEmployees()).subscribe(),
       supabase.channel("admin-io-sync").on("postgres_changes", { event: "*", schema: "public", table: "inward_outward" }, () => fetchInwardOutward()).subscribe(),
       supabase.channel("admin-assets-sync").on("postgres_changes", { event: "*", schema: "public", table: "admin_assets" }, () => fetchAssets()).subscribe(),
       supabase.channel("admin-vehicles-sync").on("postgres_changes", { event: "*", schema: "public", table: "vehicles" }, () => fetchVehicles()).subscribe(),
@@ -486,25 +491,40 @@ export const useAdminData = () => {
 
   // Admin employee add/update/delete: these map to the employees table managed by HR
   const addEmployee = async (employee: Omit<AdminEmployee, "id" | "createdAt">) => {
-    // Admin user management uses the same employees table
-    const newEmployee: AdminEmployee = {
-      ...employee,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-    };
-    // Keep in localStorage for admin-specific user management (separate from HR employees)
-    const current = loadFromStorage<AdminEmployee[]>("employees", []);
-    saveToStorage("employees", [...current, newEmployee]);
-    setEmployees(prev => [...prev, newEmployee]);
-    return newEmployee;
+    const { data, error } = await (supabase as any)
+      .from("admin_employees")
+      .insert({
+        name: employee.name,
+        designation: employee.designation,
+        phone: employee.phone,
+        alternate_phone: employee.alternatePhone || null,
+        address: employee.address,
+        photo: employee.photo || null,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    await fetchEmployees();
+    return { ...employee, id: data.id, createdAt: data.created_at || "" };
   };
 
-  const updateEmployee = (id: string, data: Partial<AdminEmployee>) => {
-    setEmployees(prev => prev.map(e => e.id === id ? { ...e, ...data } : e));
+  const updateEmployee = async (id: string, data: Partial<AdminEmployee>) => {
+    const dbUpdates: any = {};
+    if (data.name !== undefined) dbUpdates.name = data.name;
+    if (data.designation !== undefined) dbUpdates.designation = data.designation;
+    if (data.phone !== undefined) dbUpdates.phone = data.phone;
+    if (data.alternatePhone !== undefined) dbUpdates.alternate_phone = data.alternatePhone || null;
+    if (data.address !== undefined) dbUpdates.address = data.address;
+    if (data.photo !== undefined) dbUpdates.photo = data.photo || null;
+    const { error } = await (supabase as any).from("admin_employees").update(dbUpdates).eq("id", id);
+    if (error) throw error;
+    await fetchEmployees();
   };
 
-  const deleteEmployee = (id: string) => {
-    setEmployees(prev => prev.filter(e => e.id !== id));
+  const deleteEmployee = async (id: string) => {
+    const { error } = await (supabase as any).from("admin_employees").delete().eq("id", id);
+    if (error) throw error;
+    await fetchEmployees();
   };
 
   // ---- localStorage-backed operations (no DB tables) ----

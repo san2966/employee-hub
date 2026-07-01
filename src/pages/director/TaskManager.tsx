@@ -22,7 +22,7 @@ const TaskManager = () => {
   const [taskForm, setTaskForm] = useState({ subject: "", description: "" });
 
   const getEmployeeTasks = (employeeId: string) => {
-    return tasks.filter(t => t.employeeId === employeeId);
+    return tasks.filter(t => t.employeeId === employeeId && !t.hiddenInManager);
   };
 
   const getStatusColor = (status: Task["status"]) => {

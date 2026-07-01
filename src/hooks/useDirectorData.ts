@@ -55,6 +55,7 @@ export interface Task {
   status: "in-progress" | "completed" | "failed";
   createdAt: string;
   updatedAt: string;
+  hiddenInManager?: boolean;
 }
 
 export interface Product {
@@ -172,6 +173,7 @@ export const useDirectorData = () => {
       subject: t.title, description: t.description || "",
       status: t.status === "completed" ? "completed" : t.status === "in_progress" ? "in-progress" : "in-progress" as any,
       createdAt: t.created_at, updatedAt: t.updated_at,
+      hiddenInManager: !!t.hidden_in_manager,
     })));
   }, []);
 
@@ -403,7 +405,8 @@ export const useDirectorData = () => {
   };
 
   const deleteTask = async (id: string) => {
-    const { error } = await supabase.from("tasks").delete().eq("id", id);
+    // Soft-hide from Task Manager but keep the record for Reports.
+    const { error } = await (supabase as any).from("tasks").update({ hidden_in_manager: true }).eq("id", id);
     if (error) throw error;
     await fetchTasks();
   };

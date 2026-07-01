@@ -101,29 +101,27 @@ const DirectorQuotationManager = () => {
                       )}
                     </TableCell>
                     <TableCell className="min-w-[120px]">
-                      {status === "pending" ? (
-                        <div className="flex gap-2">
-                          <Button
-                            size="icon"
-                            className="bg-success hover:bg-success/90 text-success-foreground h-8 w-8"
-                            onClick={() => handleApprove(q.id)}
-                            title="Accept"
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="destructive"
-                            className="h-8 w-8"
-                            onClick={() => { setRejectQuote(q); setRejectDesc(""); setRejectOpen(true); }}
-                            title="Reject"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
+                      <div className="flex gap-2">
+                        <Button
+                          size="icon"
+                          className="bg-success hover:bg-success/90 text-success-foreground h-8 w-8"
+                          onClick={() => handleApprove(q.id)}
+                          title="Accept"
+                          disabled={status === "accepted" || status === "approved"}
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="destructive"
+                          className="h-8 w-8"
+                          onClick={() => { setRejectQuote(q); setRejectDesc(""); setRejectOpen(true); }}
+                          title="Reject"
+                          disabled={status === "rejected"}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );})}

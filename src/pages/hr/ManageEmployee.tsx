@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Edit2, Trash2, Users, X, Mail, Phone, GraduationCap, Briefcase } from "lucide-react";
+import { Edit2, Trash2, Users, X, Mail, Phone, GraduationCap, Briefcase, Award } from "lucide-react";
 
 const ManageEmployee = () => {
   const navigate = useNavigate();
@@ -168,6 +168,17 @@ const ManageEmployee = () => {
                     <div className="flex items-center gap-2 text-sm">
                       <Briefcase className="h-4 w-4 text-muted-foreground" />
                       <span className="text-foreground">{employee.specialization}</span>
+                    </div>
+                  )}
+                  {employee.certifications && (
+                    <div className="pt-2 border-t">
+                      <div className="flex items-start gap-2 text-sm">
+                        <Award className="h-4 w-4 text-muted-foreground mt-0.5" />
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground">Certifications</p>
+                          <p className="text-foreground whitespace-pre-line">{employee.certifications}</p>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

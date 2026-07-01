@@ -85,8 +85,7 @@ const EmployeeSettings = () => {
     setSaving(true);
     try {
       if (session.employeeId) {
-        const fullName = `${form.firstName} ${form.lastName}`.trim();
-        // Upsert the dedicated settings row.
+        // Store profile ONLY in the dedicated employee_settings table.
         const { error: setErr } = await supabase
           .from("employee_settings")
           .upsert({
@@ -98,21 +97,6 @@ const EmployeeSettings = () => {
             photo: photo || null,
           }, { onConflict: "employee_id" });
         if (setErr) throw setErr;
-
-        // Keep the employees row in sync so other modules display the latest info.
-        const { error } = await supabase
-          .from("employees")
-          .update({
-            first_name: form.firstName || null,
-            last_name: form.lastName || null,
-            mobile: form.mobile || null,
-            phone: form.mobile || null,
-            designation: form.designation || null,
-            photo: photo || null,
-            ...(fullName ? { name: fullName } : {}),
-          })
-          .eq("id", session.employeeId);
-        if (error) throw error;
       }
 
       const updatedSession = { ...session, ...form, photo };
