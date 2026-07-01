@@ -70,6 +70,42 @@ export type Database = {
           },
         ]
       }
+      admin_employees: {
+        Row: {
+          address: string
+          alternate_phone: string | null
+          created_at: string
+          designation: string
+          id: string
+          name: string
+          phone: string
+          photo: string | null
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          alternate_phone?: string | null
+          created_at?: string
+          designation: string
+          id?: string
+          name: string
+          phone: string
+          photo?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          alternate_phone?: string | null
+          created_at?: string
+          designation?: string
+          id?: string
+          name?: string
+          phone?: string
+          photo?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       admin_payments: {
         Row: {
           amount: number
@@ -2008,6 +2044,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           due_date: string | null
+          hidden_in_manager: boolean
           id: string
           priority: Database["public"]["Enums"]["task_priority"] | null
           status: Database["public"]["Enums"]["task_status"] | null
@@ -2021,6 +2058,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           due_date?: string | null
+          hidden_in_manager?: boolean
           id?: string
           priority?: Database["public"]["Enums"]["task_priority"] | null
           status?: Database["public"]["Enums"]["task_status"] | null
@@ -2034,6 +2072,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           due_date?: string | null
+          hidden_in_manager?: boolean
           id?: string
           priority?: Database["public"]["Enums"]["task_priority"] | null
           status?: Database["public"]["Enums"]["task_status"] | null
