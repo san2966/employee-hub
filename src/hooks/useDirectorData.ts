@@ -406,7 +406,7 @@ export const useDirectorData = () => {
 
   const deleteTask = async (id: string) => {
     // Soft-hide from Task Manager but keep the record for Reports.
-    const { error } = await supabase.from("tasks").update({ hidden_in_manager: true }).eq("id", id);
+    const { error } = await (supabase as any).from("tasks").update({ hidden_in_manager: true }).eq("id", id);
     if (error) throw error;
     await fetchTasks();
   };
