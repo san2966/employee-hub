@@ -55,6 +55,7 @@ export interface Task {
   status: "in-progress" | "completed" | "failed";
   createdAt: string;
   updatedAt: string;
+  hiddenInManager?: boolean;
 }
 
 export interface Product {
