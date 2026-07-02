@@ -205,8 +205,10 @@ export const useITHeadData = () => {
     return `VMCC/${brand.toUpperCase()}/${year}/${month}/${number}`;
   }, [assets]);
 
-  const addAsset = useCallback(async (asset: Omit<ITAsset, 'id' | 'registrationNumber' | 'createdAt'>) => {
-    const registration_number = generateRegistrationNumber(asset.brand);
+  const addAsset = useCallback(async (asset: Omit<ITAsset, 'id' | 'createdAt'> & { registrationNumber?: string }) => {
+    const registration_number = asset.registrationNumber && asset.registrationNumber.trim()
+      ? asset.registrationNumber.trim()
+      : generateRegistrationNumber(asset.brand);
     const { data, error } = await supabase
       .from("it_assets")
       .insert({
