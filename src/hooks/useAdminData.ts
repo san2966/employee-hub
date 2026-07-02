@@ -342,6 +342,7 @@ export const useAdminData = () => {
       supabase.channel("admin-payments-sync").on("postgres_changes", { event: "*", schema: "public", table: "admin_payments" }, () => fetchPayments()).subscribe(),
       supabase.channel("admin-visitors-sync").on("postgres_changes", { event: "*", schema: "public", table: "visitors" }, () => fetchVisitors()).subscribe(),
       supabase.channel("admin-employees-sync").on("postgres_changes", { event: "*", schema: "public", table: "admin_employees" }, () => fetchEmployees()).subscribe(),
+      supabase.channel("admin-hr-employees-sync").on("postgres_changes", { event: "*", schema: "public", table: "employees" }, () => fetchEmployees()).subscribe(),
       supabase.channel("admin-io-sync").on("postgres_changes", { event: "*", schema: "public", table: "inward_outward" }, () => fetchInwardOutward()).subscribe(),
       supabase.channel("admin-assets-sync").on("postgres_changes", { event: "*", schema: "public", table: "admin_assets" }, () => fetchAssets()).subscribe(),
       supabase.channel("admin-vehicles-sync").on("postgres_changes", { event: "*", schema: "public", table: "vehicles" }, () => fetchVehicles()).subscribe(),
