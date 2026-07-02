@@ -17,58 +17,68 @@ export type Database = {
       admin_assets: {
         Row: {
           assigned_to: string | null
+          assigned_to_name: string | null
+          brand: string | null
           category: string
+          condition: string | null
           created_at: string | null
           id: string
+          image: string | null
+          invoice_number: string | null
           location: string | null
           name: string
           purchase_date: string | null
           purchase_price: number | null
           quantity: number | null
           remarks: string | null
+          serial_number: string | null
           updated_at: string | null
           vendor: string | null
           warranty_till: string | null
         }
         Insert: {
           assigned_to?: string | null
+          assigned_to_name?: string | null
+          brand?: string | null
           category: string
+          condition?: string | null
           created_at?: string | null
           id?: string
+          image?: string | null
+          invoice_number?: string | null
           location?: string | null
           name: string
           purchase_date?: string | null
           purchase_price?: number | null
           quantity?: number | null
           remarks?: string | null
+          serial_number?: string | null
           updated_at?: string | null
           vendor?: string | null
           warranty_till?: string | null
         }
         Update: {
           assigned_to?: string | null
+          assigned_to_name?: string | null
+          brand?: string | null
           category?: string
+          condition?: string | null
           created_at?: string | null
           id?: string
+          image?: string | null
+          invoice_number?: string | null
           location?: string | null
           name?: string
           purchase_date?: string | null
           purchase_price?: number | null
           quantity?: number | null
           remarks?: string | null
+          serial_number?: string | null
           updated_at?: string | null
           vendor?: string | null
           warranty_till?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "admin_assets_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       admin_employees: {
         Row: {
@@ -2865,6 +2875,20 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_directory_employees: {
+        Args: never
+        Returns: {
+          address: string
+          alternate_phone: string
+          created_at: string
+          designation: string
+          id: string
+          name: string
+          phone: string
+          photo: string
+          source: string
+        }[]
       }
       get_employee_id: { Args: { user_uuid: string }; Returns: string }
       get_tender_users: {
