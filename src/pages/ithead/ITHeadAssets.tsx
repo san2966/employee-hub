@@ -105,6 +105,8 @@ const ITHeadAssets = () => {
     macAddress: "",
     warrantyTill: ""
   });
+  const [assetCondition, setAssetCondition] = useState<"new" | "old">("new");
+  const [manualRegNumber, setManualRegNumber] = useState("");
 
   const [assigneeName, setAssigneeName] = useState("");
 
@@ -129,6 +131,8 @@ const ITHeadAssets = () => {
       macAddress: "",
       warrantyTill: ""
     });
+    setAssetCondition("new");
+    setManualRegNumber("");
   };
 
   const isComputeDevice = computeTypes.includes(formData.type);
@@ -139,6 +143,14 @@ const ITHeadAssets = () => {
         title: "Validation Error",
         description: "Please fill in all required fields",
         variant: "destructive"
+      });
+      return;
+    }
+    if (assetCondition === "old" && !manualRegNumber.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Registration number is required for old assets",
+        variant: "destructive",
       });
       return;
     }
@@ -161,8 +173,9 @@ const ITHeadAssets = () => {
       displayModel: formData.displayModel || undefined,
       displaySerial: formData.displaySerial || undefined,
       macAddress: formData.macAddress || undefined,
-      warrantyTill: formData.warrantyTill
-    });
+      warrantyTill: formData.warrantyTill,
+      registrationNumber: assetCondition === "old" ? manualRegNumber.trim() : undefined,
+    } as any);
 
     toast({
       title: "Asset Added",
@@ -326,6 +339,44 @@ const ITHeadAssets = () => {
           </DialogHeader>
           <ScrollArea className="max-h-[60vh] pr-4">
             <div className="space-y-4">
+              {/* Condition: New vs Old */}
+              <div className="space-y-2">
+                <Label>Asset Condition *</Label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="assetCondition"
+                      value="new"
+                      checked={assetCondition === "new"}
+                      onChange={() => setAssetCondition("new")}
+                    />
+                    <span className="text-sm">New (auto-generate Registration Number)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="assetCondition"
+                      value="old"
+                      checked={assetCondition === "old"}
+                      onChange={() => setAssetCondition("old")}
+                    />
+                    <span className="text-sm">Old (enter existing Registration Number)</span>
+                  </label>
+                </div>
+              </div>
+
+              {assetCondition === "old" && (
+                <div className="space-y-2">
+                  <Label>Registration Number *</Label>
+                  <Input
+                    value={manualRegNumber}
+                    onChange={(e) => setManualRegNumber(e.target.value)}
+                    placeholder="Enter existing registration number"
+                  />
+                </div>
+              )}
+
               {/* Basic Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -516,7 +567,7 @@ const ITHeadAssets = () => {
               )}
 
               {/* Preview Registration Number */}
-              {formData.brand && (
+              {assetCondition === "new" && formData.brand && (
                 <div className="bg-muted p-3 rounded-lg">
                   <p className="text-xs text-muted-foreground">Registration Number (auto-generated)</p>
                   <p className="font-mono text-sm">{generateRegistrationNumber(formData.brand)}</p>

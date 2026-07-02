@@ -196,44 +196,32 @@ export const useAdminData = () => {
   }, []);
 
   const fetchEmployees = useCallback(async () => {
-    // HR-created employees (from onboarding wizard)
-    const hrRes = await supabase
-      .from("employees")
-      .select("id,name,designation,phone,mobile,address,photo,created_at,is_active")
-      .eq("is_active", true)
-      .order("name", { ascending: true });
-    if (hrRes.error) console.error("Error fetching employees:", hrRes.error);
-
-    // Admin-created directory entries
-    const adminRes = await (supabase as any)
-      .from("admin_employees")
-      .select("*")
-      .order("name", { ascending: true });
-    if (adminRes.error) console.error("Error fetching admin employees:", adminRes.error);
-
-    const hrList: AdminEmployee[] = (hrRes.data || []).map((e: any) => ({
+    // Use SECURITY DEFINER RPC to merge HR + Admin employees regardless of RLS
+    const { data, error } = await (supabase as any).rpc("get_directory_employees");
+    if (error) {
+      console.error("Error fetching directory employees:", error);
+      // Fallback: try admin_employees only so Admin-added still show
+      const adminRes = await (supabase as any).from("admin_employees").select("*").order("name");
+      const adminList: AdminEmployee[] = (adminRes.data || []).map((e: any) => ({
+        id: e.id, name: e.name, designation: e.designation, phone: e.phone,
+        alternatePhone: e.alternate_phone || "", address: e.address,
+        photo: e.photo || "", createdAt: e.created_at || "", source: "admin" as const,
+      }));
+      setEmployees(adminList);
+      return;
+    }
+    const list: AdminEmployee[] = (data || []).map((e: any) => ({
       id: e.id,
       name: e.name,
-      designation: e.designation,
-      phone: e.phone || e.mobile || "",
-      alternatePhone: e.mobile && e.mobile !== e.phone ? e.mobile : "",
+      designation: e.designation || "",
+      phone: e.phone || "",
+      alternatePhone: e.alternate_phone || "",
       address: e.address || "",
       photo: e.photo || "",
       createdAt: e.created_at || "",
-      source: "hr" as const,
+      source: (e.source === "hr" ? "hr" : "admin") as "hr" | "admin",
     }));
-    const adminList: AdminEmployee[] = (adminRes.data || []).map((e: any) => ({
-      id: e.id,
-      name: e.name,
-      designation: e.designation,
-      phone: e.phone,
-      alternatePhone: e.alternate_phone || "",
-      address: e.address,
-      photo: e.photo || "",
-      createdAt: e.created_at || "",
-      source: "admin" as const,
-    }));
-    setEmployees([...hrList, ...adminList].sort((a, b) => a.name.localeCompare(b.name)));
+    setEmployees(list.sort((a, b) => a.name.localeCompare(b.name)));
   }, []);
 
   const fetchInwardOutward = useCallback(async () => {
@@ -270,15 +258,21 @@ export const useAdminData = () => {
   const fetchAssets = useCallback(async () => {
     const { data, error } = await supabase
       .from("admin_assets")
-      .select(`*, employees(name)`)
+      .select(`*`)
       .order("created_at", { ascending: false });
     if (error) { console.error("Error fetching assets:", error); return; }
     setAssets((data || []).map((a: any) => ({
-      id: a.id, name: a.name, category: a.category, brand: "",
-      serialNumber: "", purchaseDate: a.purchase_date || "",
-      cost: a.purchase_price || 0, invoiceNumber: "",
-      vendorName: a.vendor || "", warrantyExpiry: a.warranty_till || "",
-      condition: "Good", image: "", assignedTo: a.employees?.name || a.assigned_to || "",
+      id: a.id, name: a.name, category: a.category,
+      brand: a.brand || "",
+      serialNumber: a.serial_number || "",
+      purchaseDate: a.purchase_date || "",
+      cost: a.purchase_price || 0,
+      invoiceNumber: a.invoice_number || "",
+      vendorName: a.vendor || "",
+      warrantyExpiry: a.warranty_till || "",
+      condition: a.condition || "Good",
+      image: a.image || "",
+      assignedTo: a.assigned_to_name || a.assigned_to || "",
       createdAt: a.created_at || "",
     })));
   }, []);
@@ -456,11 +450,16 @@ export const useAdminData = () => {
       .insert({
         name: asset.name,
         category: asset.category,
+        brand: asset.brand || null,
+        serial_number: asset.serialNumber || null,
         purchase_date: asset.purchaseDate || null,
         purchase_price: asset.cost || null,
+        invoice_number: asset.invoiceNumber || null,
         vendor: asset.vendorName || null,
         warranty_till: asset.warrantyExpiry || null,
-        location: asset.condition || null,
+        condition: asset.condition || null,
+        image: asset.image || null,
+        assigned_to_name: asset.assignedTo || null,
       })
       .select()
       .single();
@@ -474,9 +473,15 @@ export const useAdminData = () => {
     const dbUpdates: any = {};
     if (data.name) dbUpdates.name = data.name;
     if (data.category) dbUpdates.category = data.category;
+    if (data.brand !== undefined) dbUpdates.brand = data.brand || null;
+    if (data.serialNumber !== undefined) dbUpdates.serial_number = data.serialNumber || null;
+    if (data.invoiceNumber !== undefined) dbUpdates.invoice_number = data.invoiceNumber || null;
     if (data.vendorName) dbUpdates.vendor = data.vendorName;
     if (data.warrantyExpiry) dbUpdates.warranty_till = data.warrantyExpiry;
     if (data.cost !== undefined) dbUpdates.purchase_price = data.cost;
+    if (data.condition !== undefined) dbUpdates.condition = data.condition || null;
+    if (data.image !== undefined) dbUpdates.image = data.image || null;
+    if (data.assignedTo !== undefined) dbUpdates.assigned_to_name = data.assignedTo || null;
 
     const { error } = await supabase.from("admin_assets").update(dbUpdates).eq("id", id);
     if (error) throw error;
