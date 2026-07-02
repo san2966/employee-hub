@@ -41,6 +41,7 @@ export interface AdminEmployee {
   address: string;
   photo: string;
   createdAt: string;
+  source?: "hr" | "admin";
 }
 
 export interface InwardRecord {
