@@ -197,26 +197,33 @@ const AdminUserManagement = () => {
                       <span className="line-clamp-2">{employee.address}</span>
                     </div>
                   </div>
-                  <div className="flex gap-2 mt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleEdit(employee)}
-                    >
-                      <Pencil className="h-4 w-4 mr-1" />
-                      Modify
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleDelete(employee.id)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Delete
-                    </Button>
+                  <div className="mt-3 text-center">
+                    <span className={`inline-block text-xs px-2 py-0.5 rounded-full ${employee.source === "hr" ? "bg-blue-100 text-blue-700" : "bg-muted text-muted-foreground"}`}>
+                      {employee.source === "hr" ? "Added by HR" : "Added by Admin"}
+                    </span>
                   </div>
+                  {employee.source !== "hr" && (
+                    <div className="flex gap-2 mt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleEdit(employee)}
+                      >
+                        <Pencil className="h-4 w-4 mr-1" />
+                        Modify
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleDelete(employee.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
