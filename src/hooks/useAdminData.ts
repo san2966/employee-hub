@@ -196,12 +196,33 @@ export const useAdminData = () => {
   }, []);
 
   const fetchEmployees = useCallback(async () => {
-    const { data, error } = await (supabase as any)
+    // HR-created employees (from onboarding wizard)
+    const hrRes = await supabase
+      .from("employees")
+      .select("id,name,designation,phone,mobile,address,photo,created_at,is_active")
+      .eq("is_active", true)
+      .order("name", { ascending: true });
+    if (hrRes.error) console.error("Error fetching employees:", hrRes.error);
+
+    // Admin-created directory entries
+    const adminRes = await (supabase as any)
       .from("admin_employees")
       .select("*")
       .order("name", { ascending: true });
-    if (error) { console.error("Error fetching admin employees:", error); return; }
-    setEmployees((data || []).map((e: any) => ({
+    if (adminRes.error) console.error("Error fetching admin employees:", adminRes.error);
+
+    const hrList: AdminEmployee[] = (hrRes.data || []).map((e: any) => ({
+      id: e.id,
+      name: e.name,
+      designation: e.designation,
+      phone: e.phone || e.mobile || "",
+      alternatePhone: e.mobile && e.mobile !== e.phone ? e.mobile : "",
+      address: e.address || "",
+      photo: e.photo || "",
+      createdAt: e.created_at || "",
+      source: "hr" as const,
+    }));
+    const adminList: AdminEmployee[] = (adminRes.data || []).map((e: any) => ({
       id: e.id,
       name: e.name,
       designation: e.designation,
@@ -210,7 +231,9 @@ export const useAdminData = () => {
       address: e.address,
       photo: e.photo || "",
       createdAt: e.created_at || "",
-    })));
+      source: "admin" as const,
+    }));
+    setEmployees([...hrList, ...adminList].sort((a, b) => a.name.localeCompare(b.name)));
   }, []);
 
   const fetchInwardOutward = useCallback(async () => {
