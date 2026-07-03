@@ -15,6 +15,7 @@ import {
   X,
   ChevronRight,
   Building2,
+  FolderArchive,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -38,6 +39,7 @@ const menuItems = [
   { icon: FileText, label: "Tender Monitor", path: "/director/tender-monitor" },
   { icon: FileText, label: "Quotation Manager", path: "/director/quotations" },
   { icon: FileText, label: "Record Management", path: "/director/records" },
+  { icon: FolderArchive, label: "GR Manager", path: "/director/gr" },
   { icon: Settings, label: "Settings", path: "/director/settings" },
 ];
 

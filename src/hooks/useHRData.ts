@@ -102,7 +102,7 @@ const mapDbToEmployee = (emp: any): Employee => ({
   password: "",
   createdAt: emp.created_at,
   leaveBalance: {
-    paid: emp.paid_leave_balance ?? 12,
+    paid: emp.paid_leave_balance ?? 6,
     medical: emp.medical_leave_balance ?? 6,
     exchange: emp.exchange_leave_balance ?? 0,
   },
@@ -206,7 +206,7 @@ export const useHRData = () => {
       id: data?.employee?.id || crypto.randomUUID(),
       createdAt: data?.employee?.created_at || new Date().toISOString(),
       leaveBalance: {
-        paid: data?.employee?.paid_leave_balance ?? 12,
+        paid: data?.employee?.paid_leave_balance ?? 6,
         medical: data?.employee?.medical_leave_balance ?? 6,
         exchange: data?.employee?.exchange_leave_balance ?? 0,
       },

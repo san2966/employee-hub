@@ -76,12 +76,13 @@ const getAssetIcon = (type: string) => {
 };
 
 const ITHeadAssets = () => {
-  const { assets, addAsset, updateAsset, deleteAsset, assignAsset, generateRegistrationNumber } = useITHeadData();
+  const { assets, addAsset, updateAsset, deleteAsset, generateRegistrationNumber, uploadITFile } = useITHeadData();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [isAssignOpen, setIsAssignOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<ITAsset | null>(null);
 
   // Form state
@@ -92,6 +93,7 @@ const ITHeadAssets = () => {
     serialNumber: "",
     purchaseDate: "",
     invoiceUrl: "",
+    photo: "",
     processor: "",
     ramSize: "",
     ramSerial: "",
@@ -107,8 +109,8 @@ const ITHeadAssets = () => {
   });
   const [assetCondition, setAssetCondition] = useState<"new" | "old">("new");
   const [manualRegNumber, setManualRegNumber] = useState("");
-
-  const [assigneeName, setAssigneeName] = useState("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
 
   const resetForm = () => {
     setFormData({
@@ -118,6 +120,7 @@ const ITHeadAssets = () => {
       serialNumber: "",
       purchaseDate: "",
       invoiceUrl: "",
+      photo: "",
       processor: "",
       ramSize: "",
       ramSerial: "",
@@ -133,11 +136,13 @@ const ITHeadAssets = () => {
     });
     setAssetCondition("new");
     setManualRegNumber("");
+    setPhotoFile(null);
+    setEditingId(null);
   };
 
   const isComputeDevice = computeTypes.includes(formData.type);
 
-  const handleAddAsset = () => {
+  const handleAddAsset = async () => {
     if (!formData.type || !formData.brand || !formData.model || !formData.serialNumber) {
       toast({
         title: "Validation Error",
@@ -155,13 +160,27 @@ const ITHeadAssets = () => {
       return;
     }
 
-    addAsset({
+    let photoUrl = formData.photo;
+    if (photoFile) {
+      try {
+        setPhotoUploading(true);
+        photoUrl = await uploadITFile(photoFile, "asset-photos");
+      } catch (e: any) {
+        toast({ title: "Photo upload failed", description: e.message, variant: "destructive" });
+        setPhotoUploading(false);
+        return;
+      }
+      setPhotoUploading(false);
+    }
+
+    await addAsset({
       type: formData.type,
       brand: formData.brand,
       model: formData.model,
       serialNumber: formData.serialNumber,
       purchaseDate: formData.purchaseDate,
       invoiceUrl: formData.invoiceUrl || undefined,
+      photo: photoUrl || undefined,
       processor: formData.processor || undefined,
       ramSize: formData.ramSize || undefined,
       ramSerial: formData.ramSerial || undefined,
@@ -186,17 +205,62 @@ const ITHeadAssets = () => {
     setIsAddOpen(false);
   };
 
-  const handleAssign = () => {
-    if (selectedAsset && assigneeName.trim()) {
-      assignAsset(selectedAsset.id, crypto.randomUUID(), assigneeName.trim());
-      toast({
-        title: "Asset Assigned",
-        description: `Asset assigned to ${assigneeName}`
-      });
-      setAssigneeName("");
-      setIsAssignOpen(false);
-      setSelectedAsset(null);
+  const openModify = (asset: ITAsset) => {
+    setSelectedAsset(asset);
+    setEditingId(asset.id);
+    setFormData({
+      type: asset.type || "",
+      brand: asset.brand || "",
+      model: asset.model || "",
+      serialNumber: asset.serialNumber || "",
+      purchaseDate: asset.purchaseDate || "",
+      invoiceUrl: asset.invoiceUrl || "",
+      photo: asset.photo || "",
+      processor: asset.processor || "",
+      ramSize: asset.ramSize || "",
+      ramSerial: asset.ramSerial || "",
+      storageType: asset.storageType || "SSD",
+      storageSize: asset.storageSize || "",
+      storageSerial: asset.storageSerial || "",
+      motherboardModel: asset.motherboardModel || "",
+      motherboardSerial: asset.motherboardSerial || "",
+      displayModel: asset.displayModel || "",
+      displaySerial: asset.displaySerial || "",
+      macAddress: asset.macAddress || "",
+      warrantyTill: asset.warrantyTill || "",
+    });
+    setPhotoFile(null);
+    setIsEditOpen(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!editingId) return;
+    let photoUrl = formData.photo;
+    if (photoFile) {
+      try {
+        setPhotoUploading(true);
+        photoUrl = await uploadITFile(photoFile, "asset-photos");
+      } catch (e: any) {
+        toast({ title: "Photo upload failed", description: e.message, variant: "destructive" });
+        setPhotoUploading(false);
+        return;
+      }
+      setPhotoUploading(false);
     }
+    await updateAsset(editingId, {
+      type: formData.type, brand: formData.brand, model: formData.model,
+      serialNumber: formData.serialNumber, purchaseDate: formData.purchaseDate,
+      invoiceUrl: formData.invoiceUrl, photo: photoUrl, processor: formData.processor,
+      ramSize: formData.ramSize, ramSerial: formData.ramSerial,
+      storageType: formData.storageType, storageSize: formData.storageSize,
+      storageSerial: formData.storageSerial, motherboardModel: formData.motherboardModel,
+      motherboardSerial: formData.motherboardSerial, displayModel: formData.displayModel,
+      displaySerial: formData.displaySerial, macAddress: formData.macAddress,
+      warrantyTill: formData.warrantyTill,
+    });
+    toast({ title: "Asset Updated", description: "Asset information saved" });
+    resetForm();
+    setIsEditOpen(false);
   };
 
   const handleDelete = (id: string) => {
@@ -259,9 +323,13 @@ const ITHeadAssets = () => {
                 <Card key={asset.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Icon className="h-6 w-6 text-primary" />
-                      </div>
+                      {asset.photo ? (
+                        <img src={asset.photo} alt={asset.model} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Icon className="h-6 w-6 text-primary" />
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-foreground truncate">
                           {asset.brand} {asset.model}
@@ -295,13 +363,10 @@ const ITHeadAssets = () => {
                         variant="outline"
                         size="sm"
                         className="flex-1"
-                        onClick={() => {
-                          setSelectedAsset(asset);
-                          setIsAssignOpen(true);
-                        }}
+                        onClick={() => openModify(asset)}
                       >
-                        <UserPlus className="h-4 w-4 mr-1" />
-                        Assign
+                        <Edit2 className="h-4 w-4 mr-1" />
+                        Modify
                       </Button>
                       <Button
                         variant="ghost"
@@ -339,6 +404,13 @@ const ITHeadAssets = () => {
           </DialogHeader>
           <ScrollArea className="max-h-[60vh] pr-4">
             <div className="space-y-4">
+              {/* Photo Upload */}
+              <div className="space-y-2">
+                <Label>Upload Photo</Label>
+                <Input type="file" accept="image/*" onChange={(e) => setPhotoFile(e.target.files?.[0] || null)} />
+                {photoFile && <p className="text-xs text-muted-foreground">Selected: {photoFile.name}</p>}
+              </div>
+
               {/* Condition: New vs Old */}
               <div className="space-y-2">
                 <Label>Asset Condition *</Label>
@@ -584,33 +656,74 @@ const ITHeadAssets = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Assign Asset Dialog */}
-      <Dialog open={isAssignOpen} onOpenChange={setIsAssignOpen}>
-        <DialogContent>
+      {/* Modify Asset Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={(o) => { setIsEditOpen(o); if (!o) resetForm(); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>Assign Asset</DialogTitle>
+            <DialogTitle>Modify Asset</DialogTitle>
           </DialogHeader>
-          {selectedAsset && (
+          <ScrollArea className="max-h-[60vh] pr-4">
             <div className="space-y-4">
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="font-medium">{selectedAsset.brand} {selectedAsset.model}</p>
-                <p className="text-sm text-muted-foreground">Reg: {selectedAsset.registrationNumber}</p>
+              {selectedAsset && (
+                <div className="p-3 bg-muted rounded-lg text-sm">
+                  <p className="font-mono">{selectedAsset.registrationNumber}</p>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>Upload Photo</Label>
+                <Input type="file" accept="image/*" onChange={(e) => setPhotoFile(e.target.files?.[0] || null)} />
+                {formData.photo && !photoFile && (
+                  <img src={formData.photo} alt="current" className="h-16 w-16 rounded object-cover" />
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Asset Type *</Label>
+                  <Select value={formData.type} onValueChange={(val) => setFormData(prev => ({ ...prev, type: val }))}>
+                    <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                    <SelectContent>
+                      {assetTypes.map(type => (<SelectItem key={type} value={type}>{type}</SelectItem>))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Brand *</Label>
+                  <Input value={formData.brand} onChange={(e) => setFormData(p => ({ ...p, brand: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Model *</Label>
+                  <Input value={formData.model} onChange={(e) => setFormData(p => ({ ...p, model: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Serial Number *</Label>
+                  <Input value={formData.serialNumber} onChange={(e) => setFormData(p => ({ ...p, serialNumber: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Purchase Date</Label>
+                  <Input type="date" value={formData.purchaseDate} onChange={(e) => setFormData(p => ({ ...p, purchaseDate: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Warranty Till</Label>
+                  <Input type="date" value={formData.warrantyTill} onChange={(e) => setFormData(p => ({ ...p, warrantyTill: e.target.value }))} />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label>Assign To (Employee Name)</Label>
-                <Input
-                  value={assigneeName}
-                  onChange={(e) => setAssigneeName(e.target.value)}
-                  placeholder="Enter employee name"
-                />
+                <Label>Invoice URL</Label>
+                <Input value={formData.invoiceUrl} onChange={(e) => setFormData(p => ({ ...p, invoiceUrl: e.target.value }))} />
               </div>
+              {isComputeDevice && (
+                <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                  <div className="space-y-2"><Label>Processor</Label><Input value={formData.processor} onChange={(e) => setFormData(p => ({ ...p, processor: e.target.value }))} /></div>
+                  <div className="space-y-2"><Label>RAM Size</Label><Input value={formData.ramSize} onChange={(e) => setFormData(p => ({ ...p, ramSize: e.target.value }))} /></div>
+                  <div className="space-y-2"><Label>Storage Size</Label><Input value={formData.storageSize} onChange={(e) => setFormData(p => ({ ...p, storageSize: e.target.value }))} /></div>
+                  <div className="space-y-2"><Label>MAC Address</Label><Input value={formData.macAddress} onChange={(e) => setFormData(p => ({ ...p, macAddress: e.target.value }))} /></div>
+                </div>
+              )}
             </div>
-          )}
+          </ScrollArea>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setIsAssignOpen(false); setAssigneeName(""); }}>
-              Cancel
-            </Button>
-            <Button onClick={handleAssign}>Assign</Button>
+            <Button variant="outline" onClick={() => { resetForm(); setIsEditOpen(false); }}>Cancel</Button>
+            <Button onClick={handleUpdate} disabled={photoUploading}>{photoUploading ? "Uploading..." : "Save Changes"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

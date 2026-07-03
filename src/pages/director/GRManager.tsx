@@ -1,18 +1,18 @@
-import { useState, useRef } from "react";
-import OperationsLayout from "@/components/operations/OperationsLayout";
-import { useOperationsData } from "@/hooks/useOperationsData";
+import { useState, useEffect, useCallback, useRef } from "react";
+import DirectorLayout from "@/components/director/DirectorLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Download } from "lucide-react";
-import { Eye } from "lucide-react";
+import { Plus, Search, Download, Eye } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-const OperationsGR = () => {
+const DirectorGRManager = () => {
   const { toast } = useToast();
-  const { gr, uploadFile, getSignedUrl } = useOperationsData();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [records, setRecords] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ department_name: "", title: "", unique_code: "", gr_date: "" });
   const [file, setFile] = useState<File | null>(null);
@@ -21,6 +21,44 @@ const OperationsGR = () => {
   const [deptFilter, setDeptFilter] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+
+  const fetchRecords = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await (supabase as any)
+      .from("operations_gr")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (!error) setRecords(data || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchRecords();
+    const ch = supabase
+      .channel("director-gr-sync")
+      .on("postgres_changes", { event: "*", schema: "public", table: "operations_gr" }, () => fetchRecords())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [fetchRecords]);
+
+  const uploadFile = async (f: File) => {
+    const ext = f.name.split(".").pop();
+    const path = `gr/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from("operations-files").upload(path, f);
+    if (error) throw error;
+    const { data } = await supabase.storage.from("operations-files").createSignedUrl(path, 315360000);
+    return data?.signedUrl || "";
+  };
+
+  const getSignedUrl = async (url: string) => {
+    if (!url) return "";
+    const m = url.match(/operations-files\/(.+?)(\?|$)/);
+    if (m) {
+      const { data } = await supabase.storage.from("operations-files").createSignedUrl(m[1], 315360000);
+      return data?.signedUrl || url;
+    }
+    return url;
+  };
 
   const handleSubmit = async () => {
     if (!form.department_name || !form.title || !form.unique_code || !form.gr_date) {
@@ -36,12 +74,17 @@ const OperationsGR = () => {
           setUploading(false);
           return;
         }
-        fileUrl = await uploadFile(file, "gr");
+        fileUrl = await uploadFile(file);
       }
-      await gr.add({ ...form, file_url: fileUrl || null });
+      const { error } = await (supabase as any)
+        .from("operations_gr")
+        .insert({ ...form, file_url: fileUrl || null });
+      if (error) throw error;
+      toast({ title: "Success", description: "GR record added" });
       setDialogOpen(false);
       setForm({ department_name: "", title: "", unique_code: "", gr_date: "" });
       setFile(null);
+      await fetchRecords();
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
@@ -56,19 +99,15 @@ const OperationsGR = () => {
 
   const handlePreview = async (item: any) => {
     if (!item.file_url) {
-      toast({ title: "No File", description: "No file attached to this record" });
+      toast({ title: "No File", description: "No file attached" });
       return;
     }
     const url = await getSignedUrl(item.file_url);
-    if (url) {
-      setPreviewUrl(url);
-      setPreviewOpen(true);
-    }
+    if (url) { setPreviewUrl(url); setPreviewOpen(true); }
   };
 
-  const depts = [...new Set(gr.data.map((g: any) => g.department_name))];
-
-  const filtered = gr.data.filter((g: any) => {
+  const depts = [...new Set(records.map((g: any) => g.department_name))];
+  const filtered = records.filter((g: any) => {
     const q = search.toLowerCase();
     const matchesSearch = !q || g.title.toLowerCase().includes(q) || g.unique_code.toLowerCase().includes(q) || g.department_name.toLowerCase().includes(q);
     const matchesDept = !deptFilter || g.department_name === deptFilter;
@@ -76,7 +115,7 @@ const OperationsGR = () => {
   });
 
   return (
-    <OperationsLayout title="GR Manager">
+    <DirectorLayout title="GR Manager">
       <div className="space-y-4">
         <div className="flex flex-wrap gap-3 items-center">
           <div className="relative flex-1 min-w-[200px]">
@@ -128,9 +167,7 @@ const OperationsGR = () => {
                         <Button size="sm" variant="secondary" onClick={() => handlePreview(g)}>
                           <Eye className="h-3 w-3 mr-1" />Preview
                         </Button>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">No file</span>
-                      )}
+                      ) : <span className="text-xs text-muted-foreground">No file</span>}
                     </td>
                     <td className="px-4 py-3">
                       {g.file_url && (
@@ -145,21 +182,17 @@ const OperationsGR = () => {
             </table>
           </div>
         </div>
-        {filtered.length === 0 && !gr.loading && <p className="text-center text-muted-foreground py-8">No GR records found</p>}
+        {filtered.length === 0 && !loading && <p className="text-center text-muted-foreground py-8">No GR records found</p>}
       </div>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-4xl h-[80vh] p-2">
-          <DialogHeader className="p-2">
-            <DialogTitle>GR Preview</DialogTitle>
-          </DialogHeader>
-          {previewUrl && (
-            <iframe src={previewUrl} className="w-full h-full rounded border" title="GR Preview" />
-          )}
+          <DialogHeader className="p-2"><DialogTitle>GR Preview</DialogTitle></DialogHeader>
+          {previewUrl && <iframe src={previewUrl} className="w-full h-full rounded border" title="GR Preview" />}
         </DialogContent>
       </Dialog>
-    </OperationsLayout>
+    </DirectorLayout>
   );
 };
 
-export default OperationsGR;
+export default DirectorGRManager;

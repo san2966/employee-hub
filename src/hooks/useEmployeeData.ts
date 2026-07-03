@@ -154,7 +154,7 @@ export const useEmployeeData = (employeeId: string) => {
   const [miscPayments, setMiscPayments] = useState<MiscPayment[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
-  const [leaveBalance, setLeaveBalance] = useState({ paid: 12, medical: 6, exchange: 0 });
+  const [leaveBalance, setLeaveBalance] = useState({ paid: 6, medical: 6, exchange: 0 });
   const [assignedTasks, setAssignedTasks] = useState<Task[]>([]);
 
   const resolveEmployeeIdentity = useCallback(async () => {
@@ -456,7 +456,7 @@ export const useEmployeeData = (employeeId: string) => {
         .single();
       if (data) {
         setLeaveBalance({
-          paid: data.paid_leave_balance ?? 12,
+          paid: data.paid_leave_balance ?? 6,
           medical: data.medical_leave_balance ?? 6,
           exchange: data.exchange_leave_balance ?? 0,
         });

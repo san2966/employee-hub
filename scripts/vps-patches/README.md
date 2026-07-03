@@ -1,3 +1,22 @@
+# VPS Patch — 2026-07-03: GR Manager, admin_task, Paid Leave = 6, IT Asset Tracker
+
+```bash
+psql -h localhost -U postgres -d postgres \
+  -f scripts/vps-patches/2026-07-03_gr_admin_task_paid_leave_it_tracker.sql
+```
+
+What it does:
+1. **Operations GR Manager** — extends RLS so Director can view/add/edit records; enables realtime.
+2. **Admin Tasks** — creates `public.admin_task` table so tasks persist in DB (not localStorage).
+3. **Paid Leave** — reduces default from 12 to 6, caps existing balances at 6, updates leave-sync trigger.
+4. **IT Assets** — adds `photo` column so an asset photo can be uploaded on add/modify.
+5. **Asset Tracker** — creates `public.it_asset_assignments` for IT Head Assign/Tracker pages.
+6. **Storage** — creates private `it-files` bucket for asset photos and assignment records.
+
+After running: rebuild the frontend and **hard-refresh** (Ctrl+F5).
+
+---
+
 # VPS Patch — 2026-06-24: Full repair (Requirements, Quotes, Notices, Settings, Ops files)
 
 Run on the VPS:
