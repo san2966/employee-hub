@@ -97,6 +97,7 @@ import ITHeadLogin from "./pages/ithead/ITHeadLogin";
 import ITHeadDashboard from "./pages/ithead/ITHeadDashboard";
 import ITHeadTickets from "./pages/ithead/ITHeadTickets";
 import ITHeadAssets from "./pages/ithead/ITHeadAssets";
+import ITHeadAssetTracker from "./pages/ithead/ITHeadAssetTracker";
 import ITHeadPasswords from "./pages/ithead/ITHeadPasswords";
 import ITHeadNetwork from "./pages/ithead/ITHeadNetwork";
 import ITHeadTelephone from "./pages/ithead/ITHeadTelephone";
@@ -207,6 +208,7 @@ const App = () => (
           <Route path="/ithead/dashboard" element={<ITHeadDashboard />} />
           <Route path="/ithead/tickets" element={<ITHeadTickets />} />
           <Route path="/ithead/assets" element={<ITHeadAssets />} />
+          <Route path="/ithead/asset-tracker" element={<ITHeadAssetTracker />} />
           <Route path="/ithead/passwords" element={<ITHeadPasswords />} />
           <Route path="/ithead/network" element={<ITHeadNetwork />} />
           <Route path="/ithead/telephone" element={<ITHeadTelephone />} />

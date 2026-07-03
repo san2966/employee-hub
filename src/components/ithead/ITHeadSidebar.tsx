@@ -22,6 +22,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/ithead/dashboard" },
   { icon: Ticket, label: "Ticket Management", path: "/ithead/tickets" },
   { icon: HardDrive, label: "Asset Management", path: "/ithead/assets" },
+  { icon: ClipboardList, label: "Asset Tracker", path: "/ithead/asset-tracker" },
   { icon: Key, label: "Password Management", path: "/ithead/passwords" },
   { icon: Network, label: "Network Management", path: "/ithead/network" },
   { icon: Phone, label: "Telephone/Intercom", path: "/ithead/telephone" },
