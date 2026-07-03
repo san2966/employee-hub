@@ -183,7 +183,7 @@ Deno.serve(async (req) => {
               responsibilities: "Pending HR update",
               username: portalUser.username,
               is_active: true,
-              paid_leave_balance: 12,
+              paid_leave_balance: 6,
               medical_leave_balance: 6,
               exchange_leave_balance: 0,
             })

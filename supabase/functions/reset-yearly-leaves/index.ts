@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
       const { error: updateError } = await supabase
         .from("employees")
         .update({
-          paid_leave_balance: 12,      // Reset to 12 paid leaves
+          paid_leave_balance: 6,      // Reset to 6 paid leaves
           medical_leave_balance: 6,     // Reset to 6 medical leaves
           exchange_leave_balance: 0,    // Reset to 0 exchange leaves
         })
