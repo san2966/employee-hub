@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Download } from "lucide-react";
+import { Eye } from "lucide-react";
 
 const OperationsGR = () => {
   const { toast } = useToast();
@@ -18,6 +19,8 @@ const OperationsGR = () => {
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState("");
   const [deptFilter, setDeptFilter] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const handleSubmit = async () => {
     if (!form.department_name || !form.title || !form.unique_code || !form.gr_date) {
@@ -49,6 +52,18 @@ const OperationsGR = () => {
     if (!item.file_url) return;
     const url = await getSignedUrl(item.file_url);
     if (url) window.open(url, "_blank");
+  };
+
+  const handlePreview = async (item: any) => {
+    if (!item.file_url) {
+      toast({ title: "No File", description: "No file attached to this record" });
+      return;
+    }
+    const url = await getSignedUrl(item.file_url);
+    if (url) {
+      setPreviewUrl(url);
+      setPreviewOpen(true);
+    }
   };
 
   const depts = [...new Set(gr.data.map((g: any) => g.department_name))];
@@ -97,6 +112,7 @@ const OperationsGR = () => {
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Title</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Unique Code</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">GR Date</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Preview</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
@@ -107,6 +123,15 @@ const OperationsGR = () => {
                     <td className="px-4 py-3">{g.title}</td>
                     <td className="px-4 py-3 font-mono text-xs">{g.unique_code}</td>
                     <td className="px-4 py-3">{g.gr_date}</td>
+                    <td className="px-4 py-3">
+                      {g.file_url ? (
+                        <Button size="sm" variant="secondary" onClick={() => handlePreview(g)}>
+                          <Eye className="h-3 w-3 mr-1" />Preview
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No file</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       {g.file_url && (
                         <Button size="sm" variant="outline" onClick={() => handleDownload(g)}>
@@ -122,6 +147,17 @@ const OperationsGR = () => {
         </div>
         {filtered.length === 0 && !gr.loading && <p className="text-center text-muted-foreground py-8">No GR records found</p>}
       </div>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl h-[80vh] p-2">
+          <DialogHeader className="p-2">
+            <DialogTitle>GR Preview</DialogTitle>
+          </DialogHeader>
+          {previewUrl && (
+            <iframe src={previewUrl} className="w-full h-full rounded border" title="GR Preview" />
+          )}
+        </DialogContent>
+      </Dialog>
     </OperationsLayout>
   );
 };
