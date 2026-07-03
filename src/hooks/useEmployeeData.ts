@@ -456,7 +456,7 @@ export const useEmployeeData = (employeeId: string) => {
         .single();
       if (data) {
         setLeaveBalance({
-          paid: data.paid_leave_balance ?? 12,
+          paid: data.paid_leave_balance ?? 6,
           medical: data.medical_leave_balance ?? 6,
           exchange: data.exchange_leave_balance ?? 0,
         });

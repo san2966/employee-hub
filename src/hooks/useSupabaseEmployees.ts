@@ -153,7 +153,7 @@ export const useSupabaseEmployees = () => {
       .from("employees")
       .insert({
         ...employeeData,
-        paid_leave_balance: 12,
+        paid_leave_balance: 6,
         medical_leave_balance: 6,
         exchange_leave_balance: 0,
         is_active: true,
