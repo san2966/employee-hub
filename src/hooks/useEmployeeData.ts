@@ -787,7 +787,7 @@ export const useEmployeeData = (employeeId: string) => {
     const usedPaid = leaveRequests.filter(l => l.type === "paid" && l.status !== "rejected").length;
     const usedMedical = leaveRequests.filter(l => l.type === "medical" && l.status !== "rejected").length;
     return {
-      paid: Math.max(0, 12 - usedPaid),
+      paid: Math.max(0, 6 - usedPaid),
       medical: Math.max(0, 6 - usedMedical),
       exchange: calculateExchangeBalance(),
     };
