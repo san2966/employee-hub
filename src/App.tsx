@@ -90,6 +90,7 @@ import DirectorQuotationManager from "./pages/director/QuotationManager";
 import DirectorRecordManagement from "./pages/director/RecordManagement";
 import DirectorAttendance from "./pages/director/DirectorAttendance";
 import DirectorDepartmentTasks from "./pages/director/DirectorDepartmentTasks";
+import DirectorGRManager from "./pages/director/GRManager";
 
 // IT Head Module
 import ITHeadLogin from "./pages/ithead/ITHeadLogin";
@@ -156,6 +157,7 @@ const App = () => (
           <Route path="/director/settings" element={<Settings />} />
           <Route path="/director/attendance" element={<DirectorAttendance />} />
           <Route path="/director/department-tasks" element={<DirectorDepartmentTasks />} />
+          <Route path="/director/gr" element={<DirectorGRManager />} />
           
           {/* HR Routes */}
           <Route path="/login/hr" element={<HRLogin />} />
