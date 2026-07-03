@@ -157,14 +157,13 @@ export const useAdminData = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
 
   // Still localStorage (no DB tables)
-  const [tasks, setTasks] = useState<AdminTask[]>(() => loadFromStorage("tasks", []));
+  const [tasks, setTasks] = useState<AdminTask[]>([]);
   const [vehicleAssignments, setVehicleAssignments] = useState<VehicleAssignment[]>([]);
   const [fuelEntries, setFuelEntries] = useState<FuelEntry[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(() => loadFromStorage("calendarEvents", []));
   const [notes, setNotes] = useState<Note[]>(() => loadFromStorage("notes", []));
 
   // Persist localStorage items
-  useEffect(() => saveToStorage("tasks", tasks), [tasks]);
   useEffect(() => saveToStorage("calendarEvents", calendarEvents), [calendarEvents]);
   useEffect(() => saveToStorage("notes", notes), [notes]);
 
@@ -318,6 +317,23 @@ export const useAdminData = () => {
     })));
   }, []);
 
+  const fetchTasks = useCallback(async () => {
+    const { data, error } = await (supabase as any)
+      .from("admin_task")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) { console.error("Error fetching admin_task:", error); return; }
+    setTasks((data || []).map((t: any) => ({
+      id: t.id,
+      employeeId: t.employee_id || "",
+      employeeName: t.employee_name || "",
+      subject: t.subject,
+      description: t.description || "",
+      status: (t.status || "pending") as "pending" | "completed",
+      createdAt: t.created_at || "",
+    })));
+  }, []);
+
   // Initial load
   useEffect(() => {
     fetchPayments();
@@ -328,7 +344,8 @@ export const useAdminData = () => {
     fetchVehicles();
     fetchVehicleAssignments();
     fetchFuelEntries();
-  }, [fetchPayments, fetchVisitors, fetchEmployees, fetchInwardOutward, fetchAssets, fetchVehicles, fetchVehicleAssignments, fetchFuelEntries]);
+    fetchTasks();
+  }, [fetchPayments, fetchVisitors, fetchEmployees, fetchInwardOutward, fetchAssets, fetchVehicles, fetchVehicleAssignments, fetchFuelEntries, fetchTasks]);
 
   // Realtime subscriptions
   useEffect(() => {
@@ -342,12 +359,13 @@ export const useAdminData = () => {
       supabase.channel("admin-vehicles-sync").on("postgres_changes", { event: "*", schema: "public", table: "vehicles" }, () => fetchVehicles()).subscribe(),
       supabase.channel("admin-va-sync").on("postgres_changes", { event: "*", schema: "public", table: "vehicle_assignments" }, () => fetchVehicleAssignments()).subscribe(),
       supabase.channel("admin-fe-sync").on("postgres_changes", { event: "*", schema: "public", table: "fuel_entries" }, () => fetchFuelEntries()).subscribe(),
+      supabase.channel("admin-task-sync").on("postgres_changes", { event: "*", schema: "public", table: "admin_task" }, () => fetchTasks()).subscribe(),
     ];
 
     return () => {
       channels.forEach(ch => supabase.removeChannel(ch));
     };
-  }, [fetchPayments, fetchVisitors, fetchEmployees, fetchInwardOutward, fetchAssets, fetchVehicles, fetchVehicleAssignments, fetchFuelEntries]);
+  }, [fetchPayments, fetchVisitors, fetchEmployees, fetchInwardOutward, fetchAssets, fetchVehicles, fetchVehicleAssignments, fetchFuelEntries, fetchTasks]);
 
   // ---- CRUD Operations (Supabase-backed) ----
 
@@ -557,19 +575,38 @@ export const useAdminData = () => {
     await fetchEmployees();
   };
 
-  // ---- localStorage-backed operations (no DB tables) ----
-  const addTask = (task: Omit<AdminTask, "id" | "createdAt" | "status">) => {
-    const newTask: AdminTask = { ...task, id: crypto.randomUUID(), status: "pending", createdAt: new Date().toISOString() };
-    setTasks(prev => [...prev, newTask]);
-    return newTask;
+  // ---- admin_task (Supabase) ----
+  const addTask = async (task: Omit<AdminTask, "id" | "createdAt" | "status">) => {
+    const { data, error } = await (supabase as any)
+      .from("admin_task")
+      .insert({
+        employee_id: task.employeeId || null,
+        employee_name: task.employeeName || null,
+        subject: task.subject,
+        description: task.description || null,
+        status: "pending",
+      })
+      .select()
+      .single();
+    if (error) { console.error(error); throw error; }
+    await fetchTasks();
+    return {
+      id: data.id, employeeId: task.employeeId, employeeName: task.employeeName,
+      subject: task.subject, description: task.description,
+      status: "pending" as const, createdAt: data.created_at || "",
+    };
   };
 
-  const updateTaskStatus = (id: string, status: "pending" | "completed") => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, status } : t));
+  const updateTaskStatus = async (id: string, status: "pending" | "completed") => {
+    const { error } = await (supabase as any).from("admin_task").update({ status }).eq("id", id);
+    if (error) console.error(error);
+    await fetchTasks();
   };
 
-  const deleteTask = (id: string) => {
-    setTasks(prev => prev.filter(t => t.id !== id));
+  const deleteTask = async (id: string) => {
+    const { error } = await (supabase as any).from("admin_task").delete().eq("id", id);
+    if (error) console.error(error);
+    await fetchTasks();
   };
 
   const addVehicleAssignment = async (assignment: Omit<VehicleAssignment, "id" | "createdAt">) => {
