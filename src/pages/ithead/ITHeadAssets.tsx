@@ -656,33 +656,74 @@ const ITHeadAssets = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Assign Asset Dialog */}
-      <Dialog open={isAssignOpen} onOpenChange={setIsAssignOpen}>
-        <DialogContent>
+      {/* Modify Asset Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={(o) => { setIsEditOpen(o); if (!o) resetForm(); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>Assign Asset</DialogTitle>
+            <DialogTitle>Modify Asset</DialogTitle>
           </DialogHeader>
-          {selectedAsset && (
+          <ScrollArea className="max-h-[60vh] pr-4">
             <div className="space-y-4">
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="font-medium">{selectedAsset.brand} {selectedAsset.model}</p>
-                <p className="text-sm text-muted-foreground">Reg: {selectedAsset.registrationNumber}</p>
+              {selectedAsset && (
+                <div className="p-3 bg-muted rounded-lg text-sm">
+                  <p className="font-mono">{selectedAsset.registrationNumber}</p>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>Upload Photo</Label>
+                <Input type="file" accept="image/*" onChange={(e) => setPhotoFile(e.target.files?.[0] || null)} />
+                {formData.photo && !photoFile && (
+                  <img src={formData.photo} alt="current" className="h-16 w-16 rounded object-cover" />
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Asset Type *</Label>
+                  <Select value={formData.type} onValueChange={(val) => setFormData(prev => ({ ...prev, type: val }))}>
+                    <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                    <SelectContent>
+                      {assetTypes.map(type => (<SelectItem key={type} value={type}>{type}</SelectItem>))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Brand *</Label>
+                  <Input value={formData.brand} onChange={(e) => setFormData(p => ({ ...p, brand: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Model *</Label>
+                  <Input value={formData.model} onChange={(e) => setFormData(p => ({ ...p, model: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Serial Number *</Label>
+                  <Input value={formData.serialNumber} onChange={(e) => setFormData(p => ({ ...p, serialNumber: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Purchase Date</Label>
+                  <Input type="date" value={formData.purchaseDate} onChange={(e) => setFormData(p => ({ ...p, purchaseDate: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Warranty Till</Label>
+                  <Input type="date" value={formData.warrantyTill} onChange={(e) => setFormData(p => ({ ...p, warrantyTill: e.target.value }))} />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label>Assign To (Employee Name)</Label>
-                <Input
-                  value={assigneeName}
-                  onChange={(e) => setAssigneeName(e.target.value)}
-                  placeholder="Enter employee name"
-                />
+                <Label>Invoice URL</Label>
+                <Input value={formData.invoiceUrl} onChange={(e) => setFormData(p => ({ ...p, invoiceUrl: e.target.value }))} />
               </div>
+              {isComputeDevice && (
+                <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                  <div className="space-y-2"><Label>Processor</Label><Input value={formData.processor} onChange={(e) => setFormData(p => ({ ...p, processor: e.target.value }))} /></div>
+                  <div className="space-y-2"><Label>RAM Size</Label><Input value={formData.ramSize} onChange={(e) => setFormData(p => ({ ...p, ramSize: e.target.value }))} /></div>
+                  <div className="space-y-2"><Label>Storage Size</Label><Input value={formData.storageSize} onChange={(e) => setFormData(p => ({ ...p, storageSize: e.target.value }))} /></div>
+                  <div className="space-y-2"><Label>MAC Address</Label><Input value={formData.macAddress} onChange={(e) => setFormData(p => ({ ...p, macAddress: e.target.value }))} /></div>
+                </div>
+              )}
             </div>
-          )}
+          </ScrollArea>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setIsAssignOpen(false); setAssigneeName(""); }}>
-              Cancel
-            </Button>
-            <Button onClick={handleAssign}>Assign</Button>
+            <Button variant="outline" onClick={() => { resetForm(); setIsEditOpen(false); }}>Cancel</Button>
+            <Button onClick={handleUpdate} disabled={photoUploading}>{photoUploading ? "Uploading..." : "Save Changes"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
