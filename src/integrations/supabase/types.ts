@@ -152,6 +152,39 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_task: {
+        Row: {
+          created_at: string
+          description: string | null
+          employee_id: string | null
+          employee_name: string | null
+          id: string
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          employee_id?: string | null
+          employee_name?: string | null
+          id?: string
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          employee_id?: string | null
+          employee_name?: string | null
+          id?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       approval_requests: {
         Row: {
           attendance_id: string | null
@@ -763,6 +796,44 @@ export type Database = {
         }
         Relationships: []
       }
+      it_asset_assignments: {
+        Row: {
+          asset_id: string
+          assigned_at: string
+          assigned_to: string
+          created_at: string
+          id: string
+          record_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          asset_id: string
+          assigned_at?: string
+          assigned_to: string
+          created_at?: string
+          id?: string
+          record_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          asset_id?: string
+          assigned_at?: string
+          assigned_to?: string
+          created_at?: string
+          id?: string
+          record_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "it_asset_assignments_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "it_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       it_assets: {
         Row: {
           asset_type: string
@@ -777,6 +848,7 @@ export type Database = {
           model: string
           motherboard_model: string | null
           motherboard_serial: string | null
+          photo: string | null
           processor: string | null
           purchase_date: string
           ram_serial: string | null
@@ -802,6 +874,7 @@ export type Database = {
           model: string
           motherboard_model?: string | null
           motherboard_serial?: string | null
+          photo?: string | null
           processor?: string | null
           purchase_date: string
           ram_serial?: string | null
@@ -827,6 +900,7 @@ export type Database = {
           model?: string
           motherboard_model?: string | null
           motherboard_serial?: string | null
+          photo?: string | null
           processor?: string | null
           purchase_date?: string
           ram_serial?: string | null
