@@ -201,7 +201,7 @@ const EmployeeLeaveManager = () => {
               <Briefcase className="h-8 w-8 mx-auto mb-2 text-primary" />
               <p className="text-3xl font-bold text-primary">{balance.paid}</p>
               <p className="text-sm text-muted-foreground">Paid Leaves Left</p>
-              <p className="text-xs text-muted-foreground mt-1">(Resets to 12 yearly)</p>
+              <p className="text-xs text-muted-foreground mt-1">(Resets to 6 yearly)</p>
             </CardContent>
           </Card>
           
