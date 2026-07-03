@@ -10,6 +10,7 @@ export interface ITAsset {
   serialNumber: string;
   purchaseDate: string;
   invoiceUrl?: string;
+  photo?: string;
   processor?: string;
   ramSize?: string;
   ramSerial?: string;
@@ -24,6 +25,16 @@ export interface ITAsset {
   warrantyTill: string;
   assignedTo?: string;
   assignedToName?: string;
+  createdAt: string;
+}
+
+export interface ITAssetAssignment {
+  id: string;
+  assetId: string;
+  asset?: ITAsset;
+  assignedTo: string;
+  recordUrl?: string;
+  assignedAt: string;
   createdAt: string;
 }
 
@@ -73,6 +84,7 @@ const mapDbToAsset = (a: any): ITAsset => ({
   serialNumber: a.serial_number,
   purchaseDate: a.purchase_date,
   invoiceUrl: a.invoice_url || "",
+  photo: a.photo || "",
   processor: a.processor || "",
   ramSize: a.ram_size || "",
   ramSerial: a.ram_serial || "",
@@ -105,6 +117,7 @@ const loadProfile = (): ITHeadProfile => {
 
 export const useITHeadData = () => {
   const [assets, setAssets] = useState<ITAsset[]>([]);
+  const [assetAssignments, setAssetAssignments] = useState<ITAssetAssignment[]>([]);
   const [passwords, setPasswords] = useState<ITPassword[]>([]);
   const [networkImages, setNetworkImages] = useState<NetworkImage[]>([]);
   const [telephoneImages, setTelephoneImages] = useState<NetworkImage[]>([]);
@@ -124,6 +137,23 @@ export const useITHeadData = () => {
       .order("created_at", { ascending: false });
     if (error) { console.error("Error:", error); return; }
     setAssets((data || []).map(mapDbToAsset));
+  }, []);
+
+  const fetchAssetAssignments = useCallback(async () => {
+    const { data, error } = await (supabase as any)
+      .from("it_asset_assignments")
+      .select(`*, it_assets(*)`)
+      .order("assigned_at", { ascending: false });
+    if (error) { console.error("Error fetching asset assignments:", error); return; }
+    setAssetAssignments((data || []).map((r: any) => ({
+      id: r.id,
+      assetId: r.asset_id,
+      asset: r.it_assets ? mapDbToAsset(r.it_assets) : undefined,
+      assignedTo: r.assigned_to || "",
+      recordUrl: r.record_url || "",
+      assignedAt: r.assigned_at || "",
+      createdAt: r.created_at || "",
+    })));
   }, []);
 
   const fetchPasswords = useCallback(async () => {
@@ -181,17 +211,19 @@ export const useITHeadData = () => {
     fetchPasswords();
     fetchNetworkImages();
     fetchTelephoneEntries();
-  }, [fetchAssets, fetchPasswords, fetchNetworkImages, fetchTelephoneEntries]);
+    fetchAssetAssignments();
+  }, [fetchAssets, fetchPasswords, fetchNetworkImages, fetchTelephoneEntries, fetchAssetAssignments]);
 
   // Realtime
   useEffect(() => {
     const channels = [
       supabase.channel("it-assets-sync").on("postgres_changes", { event: "*", schema: "public", table: "it_assets" }, () => fetchAssets()).subscribe(),
+      supabase.channel("it-assign-sync").on("postgres_changes", { event: "*", schema: "public", table: "it_asset_assignments" }, () => { fetchAssetAssignments(); fetchAssets(); }).subscribe(),
       supabase.channel("it-images-sync").on("postgres_changes", { event: "*", schema: "public", table: "it_network_images" }, () => fetchNetworkImages()).subscribe(),
       supabase.channel("it-tel-sync").on("postgres_changes", { event: "*", schema: "public", table: "telephone_directory" }, () => fetchTelephoneEntries()).subscribe(),
     ];
     return () => { channels.forEach(ch => supabase.removeChannel(ch)); };
-  }, [fetchAssets, fetchNetworkImages, fetchTelephoneEntries]);
+  }, [fetchAssets, fetchAssetAssignments, fetchNetworkImages, fetchTelephoneEntries]);
 
   // ---- Asset operations ----
   const generateRegistrationNumber = useCallback((brand: string): string => {
@@ -219,6 +251,7 @@ export const useITHeadData = () => {
         serial_number: asset.serialNumber,
         purchase_date: asset.purchaseDate,
         invoice_url: asset.invoiceUrl || null,
+        photo: asset.photo || null,
         processor: asset.processor || null,
         ram_size: asset.ramSize || null,
         ram_serial: asset.ramSerial || null,
@@ -251,6 +284,18 @@ export const useITHeadData = () => {
     if (updates.warrantyTill) dbUpdates.warranty_till = updates.warrantyTill;
     if (updates.processor !== undefined) dbUpdates.processor = updates.processor || null;
     if (updates.ramSize !== undefined) dbUpdates.ram_size = updates.ramSize || null;
+    if (updates.ramSerial !== undefined) dbUpdates.ram_serial = updates.ramSerial || null;
+    if (updates.storageType !== undefined) dbUpdates.storage_type = updates.storageType || null;
+    if (updates.storageSize !== undefined) dbUpdates.storage_size = updates.storageSize || null;
+    if (updates.storageSerial !== undefined) dbUpdates.storage_serial = updates.storageSerial || null;
+    if (updates.motherboardModel !== undefined) dbUpdates.motherboard_model = updates.motherboardModel || null;
+    if (updates.motherboardSerial !== undefined) dbUpdates.motherboard_serial = updates.motherboardSerial || null;
+    if (updates.displayModel !== undefined) dbUpdates.display_model = updates.displayModel || null;
+    if (updates.displaySerial !== undefined) dbUpdates.display_serial = updates.displaySerial || null;
+    if (updates.macAddress !== undefined) dbUpdates.mac_address = updates.macAddress || null;
+    if (updates.invoiceUrl !== undefined) dbUpdates.invoice_url = updates.invoiceUrl || null;
+    if (updates.purchaseDate !== undefined) dbUpdates.purchase_date = updates.purchaseDate || null;
+    if (updates.photo !== undefined) dbUpdates.photo = updates.photo || null;
 
     const { error } = await supabase.from("it_assets").update(dbUpdates).eq("id", id);
     if (error) throw error;
@@ -266,6 +311,36 @@ export const useITHeadData = () => {
   const assignAsset = useCallback(async (id: string, employeeId: string, _employeeName: string) => {
     await updateAsset(id, { assignedTo: employeeId });
   }, [updateAsset]);
+
+  // ---- Asset Assignments (Tracker) ----
+  const uploadITFile = useCallback(async (file: File, folder = "assets") => {
+    const ext = file.name.split(".").pop();
+    const path = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from("it-files").upload(path, file);
+    if (error) throw error;
+    const { data } = await supabase.storage.from("it-files").createSignedUrl(path, 315360000);
+    return data?.signedUrl || "";
+  }, []);
+
+  const createAssetAssignment = useCallback(async (assetId: string, assignedTo: string, recordUrl?: string) => {
+    const { error } = await (supabase as any).from("it_asset_assignments").insert({
+      asset_id: assetId,
+      assigned_to: assignedTo,
+      record_url: recordUrl || null,
+      assigned_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+    // Update current holder on the asset row
+    await supabase.from("it_assets").update({ assigned_to: null }).eq("id", assetId);
+    await fetchAssetAssignments();
+    await fetchAssets();
+  }, [fetchAssetAssignments, fetchAssets]);
+
+  const deleteAssetAssignment = useCallback(async (id: string) => {
+    const { error } = await (supabase as any).from("it_asset_assignments").delete().eq("id", id);
+    if (error) throw error;
+    await fetchAssetAssignments();
+  }, [fetchAssetAssignments]);
 
   // ---- Password operations ----
   const addPassword = useCallback(async (portal: string, username: string, password: string) => {
@@ -376,8 +451,9 @@ export const useITHeadData = () => {
   }, []);
 
   return {
-    assets, passwords, networkImages, telephoneImages, telephoneEntries, notes, profile,
+    assets, assetAssignments, passwords, networkImages, telephoneImages, telephoneEntries, notes, profile,
     addAsset, updateAsset, deleteAsset, assignAsset, generateRegistrationNumber,
+    uploadITFile, createAssetAssignment, deleteAssetAssignment,
     addPassword, updatePassword, deletePassword,
     addNetworkImage, deleteNetworkImage,
     addTelephoneImage, deleteTelephoneImage,
