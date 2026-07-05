@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Menu, LayoutDashboard, FileText, BookOpen, Inbox, Presentation,
-  Image, Receipt, Settings, LogOut, X, ClipboardList,
+  Image, Receipt, Settings, LogOut, X, ClipboardList, Send,
 } from "lucide-react";
 
 interface OperationsSidebarProps {
@@ -18,6 +18,7 @@ const menuItems = [
   { label: "Proposal Management", icon: FileText, path: "/operations/proposals" },
   { label: "Brochure Management", icon: BookOpen, path: "/operations/brochures" },
   { label: "Inward Management", icon: Inbox, path: "/operations/inwards" },
+  { label: "Outward Management", icon: Send, path: "/operations/outwards" },
   { label: "Presentation Manager", icon: Presentation, path: "/operations/presentations" },
   { label: "Media Manager", icon: Image, path: "/operations/media" },
   { label: "GR Manager", icon: Receipt, path: "/operations/gr" },

@@ -14,6 +14,8 @@ import { EXPORT_COLUMNS } from "@/lib/exportUtils";
 const Contacts = () => {
   const { toast } = useToast();
   const { contacts, organizations, addContact, deleteContact } = useDirectorData();
+  const directorSession = JSON.parse(sessionStorage.getItem("directorSession") || "{}");
+  const currentUserName = directorSession.name || directorSession.displayName || "Director";
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,7 +37,7 @@ const Contacts = () => {
       return;
     }
 
-    addContact(contactForm);
+    addContact({ ...contactForm, addedBy: currentUserName });
     toast({ title: "Success", description: "Contact added" });
     setDialogOpen(false);
     setContactForm({ name: "", phone: "", designation: "", department: "", organization: "", email: "" });
@@ -197,6 +199,11 @@ const Contacts = () => {
                       <p className="font-semibold text-foreground">{contact.name}</p>
                       {contact.designation && (
                         <p className="text-sm text-muted-foreground">{contact.designation}</p>
+                      )}
+                      {contact.addedBy && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Added by: <span className="font-medium">{contact.addedBy}</span>
+                        </p>
                       )}
                     </div>
                   </div>

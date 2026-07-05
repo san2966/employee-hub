@@ -75,6 +75,7 @@ export interface Contact {
   department: string;
   organization: string;
   email: string;
+  addedBy?: string;
 }
 
 export interface LeaveRequest {
@@ -202,6 +203,7 @@ export const useDirectorData = () => {
       id: c.id, name: c.name, phone: c.phone,
       designation: c.designation, department: c.department,
       organization: "", email: c.email || "",
+      addedBy: (c as any).added_by || "",
     })));
   }, []);
 
@@ -460,8 +462,9 @@ export const useDirectorData = () => {
         designation: contact.designation,
         department: contact.department,
         email: contact.email || null,
+        added_by: contact.addedBy || null,
         is_active: true,
-      })
+      } as any)
       .select()
       .single();
 

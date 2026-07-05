@@ -285,6 +285,7 @@ export type Database = {
       }
       contacts: {
         Row: {
+          added_by: string | null
           created_at: string | null
           department: string
           designation: string
@@ -296,6 +297,7 @@ export type Database = {
           phone: string
         }
         Insert: {
+          added_by?: string | null
           created_at?: string | null
           department: string
           designation: string
@@ -307,6 +309,7 @@ export type Database = {
           phone: string
         }
         Update: {
+          added_by?: string | null
           created_at?: string | null
           department?: string
           designation?: string
@@ -1290,6 +1293,54 @@ export type Database = {
         }
         Relationships: []
       }
+      operations_outwards: {
+        Row: {
+          additional_documents: string[] | null
+          created_at: string
+          created_by: string | null
+          employee_name: string
+          file_url: string | null
+          id: string
+          organization_name: string
+          outward_date: string | null
+          proposal_id: string | null
+          status: string
+          subject: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          additional_documents?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          employee_name: string
+          file_url?: string | null
+          id?: string
+          organization_name: string
+          outward_date?: string | null
+          proposal_id?: string | null
+          status?: string
+          subject: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          additional_documents?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          employee_name?: string
+          file_url?: string | null
+          id?: string
+          organization_name?: string
+          outward_date?: string | null
+          proposal_id?: string | null
+          status?: string
+          subject?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       operations_presentations: {
         Row: {
           created_at: string | null
@@ -2131,6 +2182,7 @@ export type Database = {
           hidden_in_manager: boolean
           id: string
           priority: Database["public"]["Enums"]["task_priority"] | null
+          report: string | null
           status: Database["public"]["Enums"]["task_status"] | null
           title: string
           updated_at: string | null
@@ -2145,6 +2197,7 @@ export type Database = {
           hidden_in_manager?: boolean
           id?: string
           priority?: Database["public"]["Enums"]["task_priority"] | null
+          report?: string | null
           status?: Database["public"]["Enums"]["task_status"] | null
           title: string
           updated_at?: string | null
@@ -2159,6 +2212,7 @@ export type Database = {
           hidden_in_manager?: boolean
           id?: string
           priority?: Database["public"]["Enums"]["task_priority"] | null
+          report?: string | null
           status?: Database["public"]["Enums"]["task_status"] | null
           title?: string
           updated_at?: string | null

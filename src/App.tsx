@@ -122,6 +122,7 @@ import OperationsDashboard from "./pages/operations/OperationsDashboard";
 import OperationsProposals from "./pages/operations/OperationsProposals";
 import OperationsBrochures from "./pages/operations/OperationsBrochures";
 import OperationsInwards from "./pages/operations/OperationsInwards";
+import OperationsOutwards from "./pages/operations/OperationsOutwards";
 import OperationsPresentations from "./pages/operations/OperationsPresentations";
 import OperationsMedia from "./pages/operations/OperationsMedia";
 import OperationsGR from "./pages/operations/OperationsGR";
@@ -246,6 +247,7 @@ const App = () => (
           <Route path="/operations/proposals" element={<OperationsProposals />} />
           <Route path="/operations/brochures" element={<OperationsBrochures />} />
           <Route path="/operations/inwards" element={<OperationsInwards />} />
+          <Route path="/operations/outwards" element={<OperationsOutwards />} />
           <Route path="/operations/presentations" element={<OperationsPresentations />} />
           <Route path="/operations/media" element={<OperationsMedia />} />
           <Route path="/operations/gr" element={<OperationsGR />} />

@@ -166,6 +166,18 @@ export function useAttendanceData(selectedDate: Date) {
     return true;
   };
 
+  const savePartialTime = async (
+    employeeId: string,
+    location: LocationType,
+    field: "in_time" | "out_time",
+    value: string,
+  ) => {
+    const existing = records.find(r => r.employee_id === employeeId && r.date === dateStr);
+    const inTime = field === "in_time" ? value : (existing?.in_time || "");
+    const outTime = field === "out_time" ? value : (existing?.out_time || "");
+    return saveAttendance(employeeId, location, inTime, outTime);
+  };
+
   const deleteAttendance = async (id: string) => {
     const { error } = await supabase.from("attendance").delete().eq("id", id);
     if (error) {
@@ -218,6 +230,7 @@ export function useAttendanceData(selectedDate: Date) {
     loading,
     counts,
     pendingCounts,
+    savePartialTime,
     saveAttendance,
     deleteAttendance,
     approveRequest,

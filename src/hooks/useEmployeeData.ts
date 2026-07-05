@@ -36,6 +36,7 @@ export interface Contact {
   department?: string;
   organization: string;
   email?: string;
+  addedBy?: string;
 }
 
 export interface Requirement {
@@ -204,6 +205,7 @@ export const useEmployeeData = (employeeId: string) => {
         department: c.department || undefined,
         organization: c.department || "",
         email: c.email || undefined,
+        addedBy: (c as any).added_by || undefined,
       })));
     }
   }, []);
@@ -733,11 +735,12 @@ export const useEmployeeData = (employeeId: string) => {
   // ════════════════════════════════════════════
   const getAssignedTasks = useCallback((): Task[] => assignedTasks, [assignedTasks]);
 
-  const completeAssignedTask = useCallback(async (taskId: string) => {
+  const completeAssignedTask = useCallback(async (taskId: string, report?: string) => {
     await supabase.from("tasks").update({
       status: "completed",
       completed_at: new Date().toISOString(),
-    }).eq("id", taskId);
+      ...(report !== undefined ? { report } : {}),
+    } as any).eq("id", taskId);
     await fetchAssignedTasks();
   }, [fetchAssignedTasks]);
 
