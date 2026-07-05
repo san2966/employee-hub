@@ -29,7 +29,10 @@ const EmployeeTaskManager = () => {
   const [updateDialog, setUpdateDialog] = useState(false);
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [taskForm, setTaskForm] = useState({ subject: "", description: "" });
-  const [updateForm, setUpdateForm] = useState({ subject: "", description: "" });
+  const [updateForm, setUpdateForm] = useState({ subject: "", description: "", report: "" });
+  const [personalCompleteDialog, setPersonalCompleteDialog] = useState(false);
+  const [personalSelected, setPersonalSelected] = useState<string | null>(null);
+  const [personalReport, setPersonalReport] = useState("");
   
   const assignedTasks = getAssignedTasks();
   
@@ -46,19 +49,39 @@ const EmployeeTaskManager = () => {
   };
   
   const handleUpdateAssignedTask = () => {
-    if (!selectedTask || !updateForm.subject || !updateForm.description) return;
-    
-    completeAssignedTask(selectedTask);
+    if (!selectedTask || !updateForm.report.trim()) {
+      toast({ variant: "destructive", title: "Error", description: "Please fill the report" });
+      return;
+    }
+    completeAssignedTask(selectedTask, updateForm.report);
     toast({ title: "Task updated and marked as completed" });
     setUpdateDialog(false);
     setSelectedTask(null);
-    setUpdateForm({ subject: "", description: "" });
+    setUpdateForm({ subject: "", description: "", report: "" });
   };
   
   const openUpdateDialog = (task: typeof assignedTasks[0]) => {
     setSelectedTask(task.id);
-    setUpdateForm({ subject: task.subject, description: task.description });
+    setUpdateForm({ subject: task.subject, description: task.description, report: "" });
     setUpdateDialog(true);
+  };
+
+  const openPersonalComplete = (id: string) => {
+    setPersonalSelected(id);
+    setPersonalReport("");
+    setPersonalCompleteDialog(true);
+  };
+
+  const submitPersonalComplete = () => {
+    if (!personalSelected || !personalReport.trim()) {
+      toast({ variant: "destructive", title: "Error", description: "Please fill the report" });
+      return;
+    }
+    updatePersonalTask(personalSelected, { status: "completed", description: personalReport } as any);
+    toast({ title: "Task completed" });
+    setPersonalCompleteDialog(false);
+    setPersonalSelected(null);
+    setPersonalReport("");
   };
 
   return (
@@ -133,7 +156,8 @@ const EmployeeTaskManager = () => {
                                       <Label>Subject</Label>
                                       <Input 
                                         value={updateForm.subject} 
-                                        onChange={e => setUpdateForm({ ...updateForm, subject: e.target.value })} 
+                                        readOnly
+                                        className="bg-muted"
                                       />
                                     </div>
                                     <div>
@@ -141,7 +165,17 @@ const EmployeeTaskManager = () => {
                                       <Textarea 
                                         rows={4}
                                         value={updateForm.description} 
-                                        onChange={e => setUpdateForm({ ...updateForm, description: e.target.value })} 
+                                        readOnly
+                                        className="bg-muted"
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label>Report *</Label>
+                                      <Textarea
+                                        rows={4}
+                                        placeholder="Write your completion report..."
+                                        value={updateForm.report}
+                                        onChange={e => setUpdateForm({ ...updateForm, report: e.target.value })}
                                       />
                                     </div>
                                     <Button className="w-full" onClick={handleUpdateAssignedTask}>
@@ -234,10 +268,7 @@ const EmployeeTaskManager = () => {
                               <Button 
                                 variant="outline" 
                                 size="sm"
-                                onClick={() => { 
-                                  updatePersonalTask(task.id, { status: "completed" }); 
-                                  toast({ title: "Task completed" }); 
-                                }}
+                                onClick={() => openPersonalComplete(task.id)}
                               >
                                 <CheckCircle2 className="h-4 w-4 mr-1" />
                                 Complete
@@ -265,6 +296,25 @@ const EmployeeTaskManager = () => {
           </TabsContent>
         </Tabs>
       </div>
+      <Dialog open={personalCompleteDialog} onOpenChange={setPersonalCompleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Complete Task — Report</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Report *</Label>
+              <Textarea
+                rows={5}
+                placeholder="Write your report..."
+                value={personalReport}
+                onChange={e => setPersonalReport(e.target.value)}
+              />
+            </div>
+            <Button className="w-full" onClick={submitPersonalComplete}>Submit</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </EmployeeLayout>
   );
 };

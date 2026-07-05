@@ -150,11 +150,21 @@ const OperationsGR = () => {
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-4xl h-[80vh] p-2">
-          <DialogHeader className="p-2">
+          <DialogHeader className="p-2 flex flex-row items-center justify-between">
             <DialogTitle>GR Preview</DialogTitle>
+            {previewUrl && (
+              <Button size="sm" variant="outline" onClick={() => window.open(previewUrl, "_blank")}>
+                <Download className="h-3 w-3 mr-1" />Open / Download
+              </Button>
+            )}
           </DialogHeader>
           {previewUrl && (
-            <iframe src={previewUrl} className="w-full h-full rounded border" title="GR Preview" />
+            <object data={previewUrl} type="application/pdf" className="w-full h-full rounded border">
+              <iframe src={previewUrl} className="w-full h-full rounded border" title="GR Preview" />
+              <p className="p-4 text-sm text-muted-foreground">
+                Unable to preview inline. <a href={previewUrl} target="_blank" rel="noreferrer" className="text-primary underline">Open in a new tab</a>.
+              </p>
+            </object>
           )}
         </DialogContent>
       </Dialog>

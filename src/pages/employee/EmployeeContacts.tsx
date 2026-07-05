@@ -203,6 +203,11 @@ const EmployeeContacts = () => {
                   </div>
                   
                   <h3 className="font-semibold text-lg">{contact.name}</h3>
+                  {(contact as any).addedBy && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Added by: <span className="font-medium">{(contact as any).addedBy}</span>
+                    </p>
+                  )}
                   
                   <div className="mt-3 space-y-2">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">

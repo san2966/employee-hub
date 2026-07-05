@@ -30,7 +30,7 @@ const AdminAttendance = () => {
 
   const {
     records, employees, counts, pendingCounts,
-    saveAttendance, deleteAttendance, loading, fetchMonthlyRecords,
+    saveAttendance, savePartialTime, deleteAttendance, loading, fetchMonthlyRecords,
   } = useAttendanceData(selectedDate);
 
   const handleSave = async () => {
@@ -49,6 +49,18 @@ const AdminAttendance = () => {
       setInTime("09:00");
       setOutTime("18:00");
     }
+  };
+
+  const handleSaveField = async (field: "in_time" | "out_time", value: string) => {
+    if (!employeeId) {
+      toast({ title: "Error", description: "Please select an employee", variant: "destructive" });
+      return;
+    }
+    if (!value) {
+      toast({ title: "Error", description: "Please enter a time", variant: "destructive" });
+      return;
+    }
+    await savePartialTime(employeeId, location, field, value);
   };
 
   const handleLoadMonthly = async () => {
@@ -153,7 +165,7 @@ const AdminAttendance = () => {
         {/* Record Attendance Form */}
         <div className="bg-card rounded-xl border p-6">
           <h3 className="text-lg font-semibold text-foreground mb-4">Record Attendance</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground mb-1 block">Employee</label>
               <Select value={employeeId} onValueChange={setEmployeeId}>
@@ -180,14 +192,20 @@ const AdminAttendance = () => {
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground mb-1 block">In Time</label>
-              <Input type="time" value={inTime} onChange={e => setInTime(e.target.value)} />
+              <div className="flex gap-2">
+                <Input type="time" value={inTime} onChange={e => setInTime(e.target.value)} />
+                <Button variant="secondary" onClick={() => handleSaveField("in_time", inTime)}>Save</Button>
+              </div>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground mb-1 block">Out Time</label>
-              <Input type="time" value={outTime} onChange={e => setOutTime(e.target.value)} />
+              <div className="flex gap-2">
+                <Input type="time" value={outTime} onChange={e => setOutTime(e.target.value)} />
+                <Button variant="secondary" onClick={() => handleSaveField("out_time", outTime)}>Save</Button>
+              </div>
             </div>
             <div className="flex items-end">
-              <Button onClick={handleSave} className="w-full">Save</Button>
+              <Button onClick={handleSave} className="w-full">Save All</Button>
             </div>
           </div>
         </div>

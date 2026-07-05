@@ -66,6 +66,7 @@ export function useOperationsData() {
   const reminders = useCrudTable("operations_reminders");
   const notes = useCrudTable("operations_notes");
   const events = useCrudTable("operations_events");
+  const outwards = useCrudTable("operations_outwards");
 
   const uploadFile = useCallback(async (file: File, folder: string) => {
     const ext = file.name.split(".").pop();
@@ -102,7 +103,7 @@ export function useOperationsData() {
   }, []);
 
   return {
-    proposals, brochures, inwards, presentations, media, gr,
+    proposals, brochures, inwards, outwards, presentations, media, gr,
     reminders, notes, events, uploadFile, getSignedUrl, generateProposalId,
   };
 }
