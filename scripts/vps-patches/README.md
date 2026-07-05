@@ -1,3 +1,19 @@
+# VPS Patch — 2026-07-05: Task reports, Contacts Added_by, Operations Outward
+
+```bash
+psql -h localhost -U postgres -d postgres \
+  -f scripts/vps-patches/2026-07-05_tasks_outwards_contacts_report.sql
+```
+
+What it does:
+1. **Contacts** — adds `added_by` column so every module can see who created each contact.
+2. **Tasks** — adds `report` column so employees can submit their completion report when marking an assigned task complete.
+3. **Operations Outward Management** — creates `public.operations_outwards` (with RLS + realtime) to track outgoing documents (proposal ID, type, employee name, organization, subject, additional docs checklist, date, uploaded PDF, status Submitted/Returned).
+
+After running: rebuild the frontend and **hard-refresh** (Ctrl+F5).
+
+---
+
 # VPS Patch — 2026-07-03: GR Manager, admin_task, Paid Leave = 6, IT Asset Tracker
 
 ```bash
