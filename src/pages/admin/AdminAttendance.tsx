@@ -354,41 +354,11 @@ const AdminAttendance = () => {
               {filteredMonthly.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">No records found</p>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Employee</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>In Time</TableHead>
-                      <TableHead>Out Time</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredMonthly.map(record => {
-                      const color = LOCATION_COLORS[record.location as LocationType] || LOCATION_COLORS.Office;
-                      return (
-                        <TableRow key={record.id}>
-                          <TableCell className="font-medium">{record.employee_name}</TableCell>
-                          <TableCell>{record.date}</TableCell>
-                          <TableCell>
-                            <Badge className={cn(color.bg, color.text, "border-0")}>
-                              {color.emoji} {record.location}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{record.in_time || "-"}</TableCell>
-                          <TableCell>{record.out_time || "-"}</TableCell>
-                          <TableCell>
-                            <Badge variant={record.status === "Approved" ? "default" : record.status === "Rejected" ? "destructive" : "secondary"}>
-                              {record.status}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                <MonthlyPivotTable
+                  records={filteredMonthly}
+                  year={filterYear}
+                  month={filterMonth}
+                />
               )}
             </div>
           )}
@@ -399,3 +369,95 @@ const AdminAttendance = () => {
 };
 
 export default AdminAttendance;
+
+function computeHours(inT?: string | null, outT?: string | null): string {
+  if (!inT || !outT) return "-";
+  const [ih, im] = inT.split(":").map(Number);
+  const [oh, om] = outT.split(":").map(Number);
+  if ([ih, im, oh, om].some(n => Number.isNaN(n))) return "-";
+  let mins = (oh * 60 + om) - (ih * 60 + im);
+  if (mins <= 0) return "-";
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h}:${String(m).padStart(2, "0")}`;
+}
+
+function MonthlyPivotTable({ records, year, month }: { records: any[]; year: number; month: number }) {
+  const days = getDaysInMonth(new Date(year, month - 1, 1));
+  const dayNums = Array.from({ length: days }, (_, i) => i + 1);
+
+  // Group by employee -> date -> record
+  const grouped = new Map<string, { name: string; byDay: Record<number, any> }>();
+  records.forEach(r => {
+    const key = r.employee_id;
+    if (!grouped.has(key)) grouped.set(key, { name: r.employee_name || "Unknown", byDay: {} });
+    const d = Number((r.date as string).slice(8, 10));
+    grouped.get(key)!.byDay[d] = r;
+  });
+
+  const employees = Array.from(grouped.entries()).sort((a, b) => a[1].name.localeCompare(b[1].name));
+
+  return (
+    <div className="overflow-x-auto border rounded-lg">
+      <table className="min-w-full text-xs">
+        <thead className="bg-muted/60">
+          <tr>
+            <th className="sticky left-0 bg-muted/60 text-left px-3 py-2 font-semibold border-r">Employee</th>
+            {dayNums.map(d => (
+              <th key={d} className="px-2 py-2 font-semibold text-center border-r">{d}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {employees.map(([empId, { name, byDay }]) => (
+            <>
+              <tr key={`${empId}-loc`} className="bg-card">
+                <td rowSpan={4} className="sticky left-0 bg-card font-semibold px-3 py-2 border-r border-t align-top">
+                  {name}
+                </td>
+                {dayNums.map(d => {
+                  const rec = byDay[d];
+                  const loc = rec?.location as LocationType | undefined;
+                  const color = loc ? LOCATION_COLORS[loc] : null;
+                  return (
+                    <td key={d} className="px-1 py-1 text-center border-r border-t">
+                      {loc ? (
+                        <span className={cn("inline-block px-1.5 py-0.5 rounded text-[10px] font-medium", color?.bg, color?.text)}>
+                          {loc}
+                        </span>
+                      ) : "-"}
+                    </td>
+                  );
+                })}
+              </tr>
+              <tr key={`${empId}-in`}>
+                {dayNums.map(d => (
+                  <td key={d} className="px-1 py-1 text-center text-muted-foreground border-r">
+                    <span className="block text-[9px] uppercase text-muted-foreground/70">In</span>
+                    {byDay[d]?.in_time || "-"}
+                  </td>
+                ))}
+              </tr>
+              <tr key={`${empId}-out`}>
+                {dayNums.map(d => (
+                  <td key={d} className="px-1 py-1 text-center text-muted-foreground border-r">
+                    <span className="block text-[9px] uppercase text-muted-foreground/70">Out</span>
+                    {byDay[d]?.out_time || "-"}
+                  </td>
+                ))}
+              </tr>
+              <tr key={`${empId}-hrs`} className="border-b">
+                {dayNums.map(d => (
+                  <td key={d} className="px-1 py-1 text-center font-medium border-r">
+                    <span className="block text-[9px] uppercase text-muted-foreground/70">Hrs</span>
+                    {computeHours(byDay[d]?.in_time, byDay[d]?.out_time)}
+                  </td>
+                ))}
+              </tr>
+            </>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
