@@ -30,6 +30,7 @@ const menuItems = [
   { icon: ClipboardList, label: "Task Manager", path: "/director/tasks" },
   { icon: ClipboardList, label: "Department Tasks", path: "/director/department-tasks" },
   { icon: FileText, label: "Reports", path: "/director/reports" },
+  { icon: FileText, label: "EOD", path: "/director/eod" },
   { icon: Bell, label: "Notice/Announcements", path: "/director/notices" },
   { icon: Calendar, label: "Leave Manager", path: "/director/leaves" },
   { icon: Calendar, label: "Attendance Manager", path: "/director/attendance" },
