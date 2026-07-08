@@ -91,6 +91,7 @@ import DirectorRecordManagement from "./pages/director/RecordManagement";
 import DirectorAttendance from "./pages/director/DirectorAttendance";
 import DirectorDepartmentTasks from "./pages/director/DirectorDepartmentTasks";
 import DirectorGRManager from "./pages/director/GRManager";
+import DirectorEOD from "./pages/director/EOD";
 
 // IT Head Module
 import ITHeadLogin from "./pages/ithead/ITHeadLogin";
@@ -148,6 +149,7 @@ const App = () => (
           <Route path="/director/dashboard" element={<DirectorDashboard />} />
           <Route path="/director/tasks" element={<TaskManager />} />
           <Route path="/director/reports" element={<Reports />} />
+          <Route path="/director/eod" element={<DirectorEOD />} />
           <Route path="/director/notices" element={<Notices />} />
           <Route path="/director/leaves" element={<LeaveManager />} />
           <Route path="/director/requirements" element={<Requirements />} />

@@ -248,6 +248,7 @@ export type Database = {
           out_time: string | null
           status: string
           updated_at: string | null
+          visit_location: string | null
         }
         Insert: {
           approved_by?: string | null
@@ -260,6 +261,7 @@ export type Database = {
           out_time?: string | null
           status?: string
           updated_at?: string | null
+          visit_location?: string | null
         }
         Update: {
           approved_by?: string | null
@@ -272,6 +274,7 @@ export type Database = {
           out_time?: string | null
           status?: string
           updated_at?: string | null
+          visit_location?: string | null
         }
         Relationships: [
           {

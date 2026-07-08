@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAttendanceData, LOCATION_COLORS, LocationType } from "@/hooks/useAttendanceData";
-import { format } from "date-fns";
+import { format, getDaysInMonth } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ const AdminAttendance = () => {
   const [location, setLocation] = useState<LocationType>("Office");
   const [inTime, setInTime] = useState("09:00");
   const [outTime, setOutTime] = useState("18:00");
+  const [visitLocation, setVisitLocation] = useState("");
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,21 +34,35 @@ const AdminAttendance = () => {
     saveAttendance, savePartialTime, deleteAttendance, loading, fetchMonthlyRecords,
   } = useAttendanceData(selectedDate);
 
+  const hideTimes = location === "Leave" || location === "Absent";
+  const showVisit = location === "Field";
+
   const handleSave = async () => {
     if (!employeeId) {
       toast({ title: "Error", description: "Please select an employee", variant: "destructive" });
       return;
     }
-    if (inTime && outTime && inTime >= outTime) {
+    if (!hideTimes && inTime && outTime && inTime >= outTime) {
       toast({ title: "Error", description: "In Time must be before Out Time", variant: "destructive" });
       return;
     }
-    const success = await saveAttendance(employeeId, location, inTime, outTime);
+    if (showVisit && !visitLocation.trim()) {
+      toast({ title: "Error", description: "Please enter Visit Location", variant: "destructive" });
+      return;
+    }
+    const success = await saveAttendance(
+      employeeId,
+      location,
+      hideTimes ? "" : inTime,
+      hideTimes ? "" : outTime,
+      visitLocation,
+    );
     if (success) {
       setEmployeeId("");
       setLocation("Office");
       setInTime("09:00");
       setOutTime("18:00");
+      setVisitLocation("");
     }
   };
 
@@ -60,7 +75,7 @@ const AdminAttendance = () => {
       toast({ title: "Error", description: "Please enter a time", variant: "destructive" });
       return;
     }
-    await savePartialTime(employeeId, location, field, value);
+    await savePartialTime(employeeId, location, field, value, visitLocation);
   };
 
   const handleLoadMonthly = async () => {
@@ -82,6 +97,7 @@ const AdminAttendance = () => {
       Employee: r.employee_name,
       Date: r.date,
       Location: r.location,
+      "Visit Location": r.visit_location || "-",
       "In Time": r.in_time || "-",
       "Out Time": r.out_time || "-",
       Status: r.status,
@@ -103,8 +119,8 @@ const AdminAttendance = () => {
     doc.text(`Generated: ${format(new Date(), "PPP pp")}`, 14, 28);
     autoTable(doc, {
       startY: 35,
-      head: [["Employee", "Date", "Location", "In Time", "Out Time", "Status"]],
-      body: data.map(r => [r.employee_name, r.date, r.location, r.in_time || "-", r.out_time || "-", r.status]),
+      head: [["Employee", "Date", "Location", "Visit Location", "In Time", "Out Time", "Status"]],
+      body: data.map(r => [r.employee_name, r.date, r.location, r.visit_location || "-", r.in_time || "-", r.out_time || "-", r.status]),
     });
     doc.save(filename);
   };
@@ -190,20 +206,30 @@ const AdminAttendance = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground mb-1 block">In Time</label>
-              <div className="flex gap-2">
-                <Input type="time" value={inTime} onChange={e => setInTime(e.target.value)} />
-                <Button variant="secondary" onClick={() => handleSaveField("in_time", inTime)}>Save</Button>
+            {!hideTimes && (
+              <>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground mb-1 block">In Time</label>
+                  <div className="flex gap-2">
+                    <Input type="time" value={inTime} onChange={e => setInTime(e.target.value)} />
+                    <Button variant="secondary" onClick={() => handleSaveField("in_time", inTime)}>Save</Button>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground mb-1 block">Out Time</label>
+                  <div className="flex gap-2">
+                    <Input type="time" value={outTime} onChange={e => setOutTime(e.target.value)} />
+                    <Button variant="secondary" onClick={() => handleSaveField("out_time", outTime)}>Save</Button>
+                  </div>
+                </div>
+              </>
+            )}
+            {showVisit && (
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-1 block">Visit Location</label>
+                <Input value={visitLocation} onChange={e => setVisitLocation(e.target.value)} placeholder="Client site / area" />
               </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground mb-1 block">Out Time</label>
-              <div className="flex gap-2">
-                <Input type="time" value={outTime} onChange={e => setOutTime(e.target.value)} />
-                <Button variant="secondary" onClick={() => handleSaveField("out_time", outTime)}>Save</Button>
-              </div>
-            </div>
+            )}
             <div className="flex items-end">
               <Button onClick={handleSave} className="w-full">Save All</Button>
             </div>
@@ -238,6 +264,7 @@ const AdminAttendance = () => {
                 <TableRow>
                   <TableHead>Employee Name</TableHead>
                   <TableHead>Location</TableHead>
+                  <TableHead>Visit Location</TableHead>
                   <TableHead>In Time</TableHead>
                   <TableHead>Out Time</TableHead>
                   <TableHead>Status</TableHead>
@@ -256,10 +283,16 @@ const AdminAttendance = () => {
                           {record.status === "Pending" && "*"}
                         </Badge>
                       </TableCell>
+                      <TableCell>{(record as any).visit_location || "-"}</TableCell>
                       <TableCell>{record.in_time || "-"}</TableCell>
                       <TableCell>{record.out_time || "-"}</TableCell>
                       <TableCell>
-                        <Badge variant={record.status === "Approved" ? "default" : record.status === "Rejected" ? "destructive" : "secondary"}>
+                        <Badge variant={
+                          record.status === "Approved" ? "default"
+                          : record.status === "Rejected" ? "destructive"
+                          : record.status === "Late" ? "destructive"
+                          : "secondary"
+                        }>
                           {record.status}
                         </Badge>
                       </TableCell>
@@ -321,41 +354,11 @@ const AdminAttendance = () => {
               {filteredMonthly.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">No records found</p>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Employee</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>In Time</TableHead>
-                      <TableHead>Out Time</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredMonthly.map(record => {
-                      const color = LOCATION_COLORS[record.location as LocationType] || LOCATION_COLORS.Office;
-                      return (
-                        <TableRow key={record.id}>
-                          <TableCell className="font-medium">{record.employee_name}</TableCell>
-                          <TableCell>{record.date}</TableCell>
-                          <TableCell>
-                            <Badge className={cn(color.bg, color.text, "border-0")}>
-                              {color.emoji} {record.location}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{record.in_time || "-"}</TableCell>
-                          <TableCell>{record.out_time || "-"}</TableCell>
-                          <TableCell>
-                            <Badge variant={record.status === "Approved" ? "default" : record.status === "Rejected" ? "destructive" : "secondary"}>
-                              {record.status}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                <MonthlyPivotTable
+                  records={filteredMonthly}
+                  year={filterYear}
+                  month={filterMonth}
+                />
               )}
             </div>
           )}
@@ -366,3 +369,95 @@ const AdminAttendance = () => {
 };
 
 export default AdminAttendance;
+
+function computeHours(inT?: string | null, outT?: string | null): string {
+  if (!inT || !outT) return "-";
+  const [ih, im] = inT.split(":").map(Number);
+  const [oh, om] = outT.split(":").map(Number);
+  if ([ih, im, oh, om].some(n => Number.isNaN(n))) return "-";
+  let mins = (oh * 60 + om) - (ih * 60 + im);
+  if (mins <= 0) return "-";
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h}:${String(m).padStart(2, "0")}`;
+}
+
+function MonthlyPivotTable({ records, year, month }: { records: any[]; year: number; month: number }) {
+  const days = getDaysInMonth(new Date(year, month - 1, 1));
+  const dayNums = Array.from({ length: days }, (_, i) => i + 1);
+
+  // Group by employee -> date -> record
+  const grouped = new Map<string, { name: string; byDay: Record<number, any> }>();
+  records.forEach(r => {
+    const key = r.employee_id;
+    if (!grouped.has(key)) grouped.set(key, { name: r.employee_name || "Unknown", byDay: {} });
+    const d = Number((r.date as string).slice(8, 10));
+    grouped.get(key)!.byDay[d] = r;
+  });
+
+  const employees = Array.from(grouped.entries()).sort((a, b) => a[1].name.localeCompare(b[1].name));
+
+  return (
+    <div className="overflow-x-auto border rounded-lg">
+      <table className="min-w-full text-xs">
+        <thead className="bg-muted/60">
+          <tr>
+            <th className="sticky left-0 bg-muted/60 text-left px-3 py-2 font-semibold border-r">Employee</th>
+            {dayNums.map(d => (
+              <th key={d} className="px-2 py-2 font-semibold text-center border-r">{d}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {employees.map(([empId, { name, byDay }]) => (
+            <Fragment key={empId}>
+              <tr className="bg-card">
+                <td rowSpan={4} className="sticky left-0 bg-card font-semibold px-3 py-2 border-r border-t align-top">
+                  {name}
+                </td>
+                {dayNums.map(d => {
+                  const rec = byDay[d];
+                  const loc = rec?.location as LocationType | undefined;
+                  const color = loc ? LOCATION_COLORS[loc] : null;
+                  return (
+                    <td key={d} className="px-1 py-1 text-center border-r border-t">
+                      {loc ? (
+                        <span className={cn("inline-block px-1.5 py-0.5 rounded text-[10px] font-medium", color?.bg, color?.text)}>
+                          {loc}
+                        </span>
+                      ) : "-"}
+                    </td>
+                  );
+                })}
+              </tr>
+              <tr>
+                {dayNums.map(d => (
+                  <td key={d} className="px-1 py-1 text-center text-muted-foreground border-r">
+                    <span className="block text-[9px] uppercase text-muted-foreground/70">In</span>
+                    {byDay[d]?.in_time || "-"}
+                  </td>
+                ))}
+              </tr>
+              <tr>
+                {dayNums.map(d => (
+                  <td key={d} className="px-1 py-1 text-center text-muted-foreground border-r">
+                    <span className="block text-[9px] uppercase text-muted-foreground/70">Out</span>
+                    {byDay[d]?.out_time || "-"}
+                  </td>
+                ))}
+              </tr>
+              <tr className="border-b">
+                {dayNums.map(d => (
+                  <td key={d} className="px-1 py-1 text-center font-medium border-r">
+                    <span className="block text-[9px] uppercase text-muted-foreground/70">Hrs</span>
+                    {computeHours(byDay[d]?.in_time, byDay[d]?.out_time)}
+                  </td>
+                ))}
+              </tr>
+            </Fragment>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
