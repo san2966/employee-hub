@@ -1,7 +1,7 @@
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAttendanceData, LOCATION_COLORS, LocationType } from "@/hooks/useAttendanceData";
-import { format } from "date-fns";
+import { format, getDaysInMonth } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ const AdminAttendance = () => {
   const [location, setLocation] = useState<LocationType>("Office");
   const [inTime, setInTime] = useState("09:00");
   const [outTime, setOutTime] = useState("18:00");
+  const [visitLocation, setVisitLocation] = useState("");
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,21 +34,35 @@ const AdminAttendance = () => {
     saveAttendance, savePartialTime, deleteAttendance, loading, fetchMonthlyRecords,
   } = useAttendanceData(selectedDate);
 
+  const hideTimes = location === "Leave" || location === "Absent";
+  const showVisit = location === "Field";
+
   const handleSave = async () => {
     if (!employeeId) {
       toast({ title: "Error", description: "Please select an employee", variant: "destructive" });
       return;
     }
-    if (inTime && outTime && inTime >= outTime) {
+    if (!hideTimes && inTime && outTime && inTime >= outTime) {
       toast({ title: "Error", description: "In Time must be before Out Time", variant: "destructive" });
       return;
     }
-    const success = await saveAttendance(employeeId, location, inTime, outTime);
+    if (showVisit && !visitLocation.trim()) {
+      toast({ title: "Error", description: "Please enter Visit Location", variant: "destructive" });
+      return;
+    }
+    const success = await saveAttendance(
+      employeeId,
+      location,
+      hideTimes ? "" : inTime,
+      hideTimes ? "" : outTime,
+      visitLocation,
+    );
     if (success) {
       setEmployeeId("");
       setLocation("Office");
       setInTime("09:00");
       setOutTime("18:00");
+      setVisitLocation("");
     }
   };
 
@@ -60,7 +75,7 @@ const AdminAttendance = () => {
       toast({ title: "Error", description: "Please enter a time", variant: "destructive" });
       return;
     }
-    await savePartialTime(employeeId, location, field, value);
+    await savePartialTime(employeeId, location, field, value, visitLocation);
   };
 
   const handleLoadMonthly = async () => {
@@ -82,6 +97,7 @@ const AdminAttendance = () => {
       Employee: r.employee_name,
       Date: r.date,
       Location: r.location,
+      "Visit Location": r.visit_location || "-",
       "In Time": r.in_time || "-",
       "Out Time": r.out_time || "-",
       Status: r.status,
@@ -103,8 +119,8 @@ const AdminAttendance = () => {
     doc.text(`Generated: ${format(new Date(), "PPP pp")}`, 14, 28);
     autoTable(doc, {
       startY: 35,
-      head: [["Employee", "Date", "Location", "In Time", "Out Time", "Status"]],
-      body: data.map(r => [r.employee_name, r.date, r.location, r.in_time || "-", r.out_time || "-", r.status]),
+      head: [["Employee", "Date", "Location", "Visit Location", "In Time", "Out Time", "Status"]],
+      body: data.map(r => [r.employee_name, r.date, r.location, r.visit_location || "-", r.in_time || "-", r.out_time || "-", r.status]),
     });
     doc.save(filename);
   };
