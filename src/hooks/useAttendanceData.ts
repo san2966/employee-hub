@@ -10,6 +10,7 @@ export interface AttendanceRecord {
   location: string;
   in_time: string | null;
   out_time: string | null;
+  visit_location?: string | null;
   status: string;
   approved_by: string | null;
   created_at: string;
@@ -129,9 +130,19 @@ export function useAttendanceData(selectedDate: Date) {
     return () => { supabase.removeChannel(channel); };
   }, [fetchRecords, fetchApprovalRequests]);
 
-  const saveAttendance = async (employeeId: string, location: LocationType, inTime: string, outTime: string) => {
+  const saveAttendance = async (
+    employeeId: string,
+    location: LocationType,
+    inTime: string,
+    outTime: string,
+    visitLocation: string = "",
+  ) => {
+    const noTime = location === "Leave" || location === "Absent";
+    const finalIn = noTime ? "" : inTime;
+    const finalOut = noTime ? "" : outTime;
     const needsApproval = ["WFH", "Field", "Half-Day"].includes(location);
-    const status = needsApproval ? "Pending" : "Approved";
+    let status: string = needsApproval ? "Pending" : "Approved";
+    if (location === "Office" && finalIn && finalIn > "09:45") status = "Late";
 
     const { data, error } = await supabase
       .from("attendance")
@@ -139,10 +150,11 @@ export function useAttendanceData(selectedDate: Date) {
         employee_id: employeeId,
         date: dateStr,
         location,
-        in_time: inTime || null,
-        out_time: outTime || null,
+        in_time: finalIn || null,
+        out_time: finalOut || null,
+        visit_location: location === "Field" ? (visitLocation || null) : null,
         status,
-      }, { onConflict: "employee_id,date" })
+      } as any, { onConflict: "employee_id,date" })
       .select()
       .single();
 
@@ -171,11 +183,12 @@ export function useAttendanceData(selectedDate: Date) {
     location: LocationType,
     field: "in_time" | "out_time",
     value: string,
+    visitLocation: string = "",
   ) => {
     const existing = records.find(r => r.employee_id === employeeId && r.date === dateStr);
     const inTime = field === "in_time" ? value : (existing?.in_time || "");
     const outTime = field === "out_time" ? value : (existing?.out_time || "");
-    return saveAttendance(employeeId, location, inTime, outTime);
+    return saveAttendance(employeeId, location, inTime, outTime, visitLocation || (existing as any)?.visit_location || "");
   };
 
   const deleteAttendance = async (id: string) => {
