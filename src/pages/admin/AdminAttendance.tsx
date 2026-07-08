@@ -206,20 +206,30 @@ const AdminAttendance = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground mb-1 block">In Time</label>
-              <div className="flex gap-2">
-                <Input type="time" value={inTime} onChange={e => setInTime(e.target.value)} />
-                <Button variant="secondary" onClick={() => handleSaveField("in_time", inTime)}>Save</Button>
+            {!hideTimes && (
+              <>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground mb-1 block">In Time</label>
+                  <div className="flex gap-2">
+                    <Input type="time" value={inTime} onChange={e => setInTime(e.target.value)} />
+                    <Button variant="secondary" onClick={() => handleSaveField("in_time", inTime)}>Save</Button>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground mb-1 block">Out Time</label>
+                  <div className="flex gap-2">
+                    <Input type="time" value={outTime} onChange={e => setOutTime(e.target.value)} />
+                    <Button variant="secondary" onClick={() => handleSaveField("out_time", outTime)}>Save</Button>
+                  </div>
+                </div>
+              </>
+            )}
+            {showVisit && (
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-1 block">Visit Location</label>
+                <Input value={visitLocation} onChange={e => setVisitLocation(e.target.value)} placeholder="Client site / area" />
               </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground mb-1 block">Out Time</label>
-              <div className="flex gap-2">
-                <Input type="time" value={outTime} onChange={e => setOutTime(e.target.value)} />
-                <Button variant="secondary" onClick={() => handleSaveField("out_time", outTime)}>Save</Button>
-              </div>
-            </div>
+            )}
             <div className="flex items-end">
               <Button onClick={handleSave} className="w-full">Save All</Button>
             </div>
@@ -254,6 +264,7 @@ const AdminAttendance = () => {
                 <TableRow>
                   <TableHead>Employee Name</TableHead>
                   <TableHead>Location</TableHead>
+                  <TableHead>Visit Location</TableHead>
                   <TableHead>In Time</TableHead>
                   <TableHead>Out Time</TableHead>
                   <TableHead>Status</TableHead>
@@ -272,10 +283,16 @@ const AdminAttendance = () => {
                           {record.status === "Pending" && "*"}
                         </Badge>
                       </TableCell>
+                      <TableCell>{(record as any).visit_location || "-"}</TableCell>
                       <TableCell>{record.in_time || "-"}</TableCell>
                       <TableCell>{record.out_time || "-"}</TableCell>
                       <TableCell>
-                        <Badge variant={record.status === "Approved" ? "default" : record.status === "Rejected" ? "destructive" : "secondary"}>
+                        <Badge variant={
+                          record.status === "Approved" ? "default"
+                          : record.status === "Rejected" ? "destructive"
+                          : record.status === "Late" ? "destructive"
+                          : "secondary"
+                        }>
                           {record.status}
                         </Badge>
                       </TableCell>
