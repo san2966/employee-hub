@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAttendanceData, LOCATION_COLORS, LocationType } from "@/hooks/useAttendanceData";
 import { format, getDaysInMonth } from "date-fns";
@@ -410,8 +410,8 @@ function MonthlyPivotTable({ records, year, month }: { records: any[]; year: num
         </thead>
         <tbody>
           {employees.map(([empId, { name, byDay }]) => (
-            <>
-              <tr key={`${empId}-loc`} className="bg-card">
+            <Fragment key={empId}>
+              <tr className="bg-card">
                 <td rowSpan={4} className="sticky left-0 bg-card font-semibold px-3 py-2 border-r border-t align-top">
                   {name}
                 </td>
@@ -430,7 +430,7 @@ function MonthlyPivotTable({ records, year, month }: { records: any[]; year: num
                   );
                 })}
               </tr>
-              <tr key={`${empId}-in`}>
+              <tr>
                 {dayNums.map(d => (
                   <td key={d} className="px-1 py-1 text-center text-muted-foreground border-r">
                     <span className="block text-[9px] uppercase text-muted-foreground/70">In</span>
@@ -438,7 +438,7 @@ function MonthlyPivotTable({ records, year, month }: { records: any[]; year: num
                   </td>
                 ))}
               </tr>
-              <tr key={`${empId}-out`}>
+              <tr>
                 {dayNums.map(d => (
                   <td key={d} className="px-1 py-1 text-center text-muted-foreground border-r">
                     <span className="block text-[9px] uppercase text-muted-foreground/70">Out</span>
@@ -446,7 +446,7 @@ function MonthlyPivotTable({ records, year, month }: { records: any[]; year: num
                   </td>
                 ))}
               </tr>
-              <tr key={`${empId}-hrs`} className="border-b">
+              <tr className="border-b">
                 {dayNums.map(d => (
                   <td key={d} className="px-1 py-1 text-center font-medium border-r">
                     <span className="block text-[9px] uppercase text-muted-foreground/70">Hrs</span>
@@ -454,7 +454,7 @@ function MonthlyPivotTable({ records, year, month }: { records: any[]; year: num
                   </td>
                 ))}
               </tr>
-            </>
+            </Fragment>
           ))}
         </tbody>
       </table>
