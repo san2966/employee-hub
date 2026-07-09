@@ -15,18 +15,20 @@ import {
   FileText,
   Settings,
   LogOut,
-  X
+  X,
+  Clock
 } from "lucide-react";
 
 const menuItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/employee/dashboard" },
-  { label: "Task Manager", icon: ListTodo, path: "/employee/tasks" },
+  { label: "Daily Task", icon: Clock, path: "/employee/daily-tasks" },
+  { label: "Director Tasks", icon: ListTodo, path: "/employee/tasks" },
   { label: "Contacts", icon: Users, path: "/employee/contacts" },
   { label: "Requirements", icon: Package, path: "/employee/requirements" },
   { label: "Payments", icon: CreditCard, path: "/employee/payments" },
   { label: "Notice", icon: Bell, path: "/employee/notices" },
   { label: "Leave Manager", icon: Calendar, path: "/employee/leaves" },
-  { label: "Reports", icon: FileText, path: "/employee/reports" },
+  { label: "EOD", icon: FileText, path: "/employee/reports" },
   { label: "Settings", icon: Settings, path: "/employee/settings" },
 ];
 
