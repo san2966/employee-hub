@@ -24,6 +24,7 @@ const Reports = () => {
   };
 
   const filteredTasks = tasks.filter(task => {
+    if (task.isPersonal) return false;
     if (filterEmployee !== "all" && task.employeeId !== filterEmployee) return false;
     if (filterDate && !task.createdAt.startsWith(filterDate)) return false;
     return true;
@@ -68,20 +69,20 @@ const Reports = () => {
               portal="Director"
               type="Reports"
               columns={[
-                { key: "employeeName", header: "Employee Name" },
+                { key: "employeeName", header: "Employee" },
                 { key: "date", header: "Date" },
-                { key: "department", header: "Department" },
-                { key: "task", header: "Task" },
-                { key: "status", header: "Status" },
+                { key: "title", header: "Title" },
                 { key: "description", header: "Description" },
+                { key: "status", header: "Status" },
+                { key: "report", header: "Report" },
               ]}
               data={filteredTasks.map(task => ({
                 employeeName: getEmployeeName(task.employeeId),
                 date: new Date(task.createdAt).toLocaleDateString(),
-                department: getEmployeeDepartment(task.employeeId),
-                task: task.subject,
-                status: task.status.replace("-", " "),
+                title: task.subject,
                 description: task.description,
+                status: task.status === "completed" ? "Completed" : "In Progress",
+                report: task.report || "",
               }))}
               dateRange={{ from: filterDate || undefined }}
             />
@@ -90,12 +91,12 @@ const Reports = () => {
             <table className="w-full">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left p-4 text-sm font-medium text-foreground">Employee Name</th>
+                  <th className="text-left p-4 text-sm font-medium text-foreground">Employee</th>
                   <th className="text-left p-4 text-sm font-medium text-foreground">Date</th>
-                  <th className="text-left p-4 text-sm font-medium text-foreground">Department</th>
-                  <th className="text-left p-4 text-sm font-medium text-foreground">Task</th>
-                  <th className="text-left p-4 text-sm font-medium text-foreground">Status</th>
+                  <th className="text-left p-4 text-sm font-medium text-foreground">Title</th>
                   <th className="text-left p-4 text-sm font-medium text-foreground">Description</th>
+                  <th className="text-left p-4 text-sm font-medium text-foreground">Status</th>
+                  <th className="text-left p-4 text-sm font-medium text-foreground">Report</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -113,22 +114,18 @@ const Reports = () => {
                       <td className="p-4 text-sm text-muted-foreground">
                         {new Date(task.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="p-4 text-sm text-muted-foreground">
-                        {getEmployeeDepartment(task.employeeId)}
-                      </td>
                       <td className="p-4 text-sm font-medium">{task.subject}</td>
+                      <td className="p-4 text-sm text-muted-foreground max-w-xs">{task.description}</td>
                       <td className="p-4">
                         <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${
                           task.status === "completed" ? "bg-success/10 text-success" :
                           task.status === "in-progress" ? "bg-warning/10 text-warning" :
                           "bg-destructive/10 text-destructive"
                         }`}>
-                          {task.status.replace("-", " ")}
+                          {task.status === "completed" ? "Completed" : "In Progress"}
                         </span>
                       </td>
-                      <td className="p-4 text-sm text-muted-foreground max-w-xs truncate">
-                        {task.description}
-                      </td>
+                      <td className="p-4 text-sm text-muted-foreground max-w-xs">{task.report || "-"}</td>
                     </tr>
                   ))
                 )}

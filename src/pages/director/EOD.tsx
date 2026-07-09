@@ -48,6 +48,7 @@ const DailyTaskTab = () => {
   const getEmployeeDepartment = (id: string) => employees.find(e => e.id === id)?.department || "N/A";
 
   const filteredTasks = tasks.filter(t => {
+    if (!t.isPersonal) return false;
     if (filterEmployee !== "all" && t.employeeId !== filterEmployee) return false;
     if (filterDate && !t.createdAt.startsWith(filterDate)) return false;
     return true;
