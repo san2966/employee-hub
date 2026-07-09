@@ -186,7 +186,6 @@ export const useEmployeeData = (employeeId: string) => {
     };
     setEvents(loadData("events", []));
     setNotes(loadData("notes", []));
-    setPersonalTasks(loadData("personal_tasks", []));
   }, [employeeId]);
 
   const saveData = <T,>(key: string, data: T) => {
@@ -379,16 +378,19 @@ export const useEmployeeData = (employeeId: string) => {
       .eq("assigned_to", effectiveEmployeeId)
       .order("created_at", { ascending: false });
     if (data) {
-      setAssignedTasks(data.map((t: any) => ({
+      const all = data.map((t: any) => ({
         id: t.id,
         employeeId: t.assigned_to || effectiveEmployeeId,
         subject: t.title,
         description: t.description || "",
-        status: t.status === "completed" ? "completed" : "in-progress",
+        status: (t.status === "completed" ? "completed" : "in-progress") as Task["status"],
         createdAt: t.created_at,
         updatedAt: t.updated_at,
-        isPersonal: false,
-      })));
+        isPersonal: !!t.is_personal,
+        report: (t as any).report || "",
+      })) as (Task & { report?: string })[];
+      setAssignedTasks(all.filter(t => !t.isPersonal));
+      setPersonalTasks(all.filter(t => t.isPersonal));
     }
   }, [effectiveEmployeeId]);
 
