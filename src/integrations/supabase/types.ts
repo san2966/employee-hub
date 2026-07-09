@@ -2184,6 +2184,7 @@ export type Database = {
           due_date: string | null
           hidden_in_manager: boolean
           id: string
+          is_personal: boolean
           priority: Database["public"]["Enums"]["task_priority"] | null
           report: string | null
           status: Database["public"]["Enums"]["task_status"] | null
@@ -2199,6 +2200,7 @@ export type Database = {
           due_date?: string | null
           hidden_in_manager?: boolean
           id?: string
+          is_personal?: boolean
           priority?: Database["public"]["Enums"]["task_priority"] | null
           report?: string | null
           status?: Database["public"]["Enums"]["task_status"] | null
@@ -2214,6 +2216,7 @@ export type Database = {
           due_date?: string | null
           hidden_in_manager?: boolean
           id?: string
+          is_personal?: boolean
           priority?: Database["public"]["Enums"]["task_priority"] | null
           report?: string | null
           status?: Database["public"]["Enums"]["task_status"] | null
