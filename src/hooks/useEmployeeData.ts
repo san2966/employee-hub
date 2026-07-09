@@ -26,6 +26,7 @@ export interface Task {
   createdAt: string;
   updatedAt: string;
   isPersonal?: boolean;
+  report?: string;
 }
 
 export interface Contact {
@@ -521,31 +522,37 @@ export const useEmployeeData = (employeeId: string) => {
   // ════════════════════════════════════════════
   // Personal Tasks (localStorage)
   // ════════════════════════════════════════════
-  const addPersonalTask = useCallback((task: { subject: string; description: string }) => {
-    const now = new Date().toISOString();
-    const newTask: Task = {
-      id: crypto.randomUUID(), employeeId, subject: task.subject, description: task.description,
-      status: "in-progress", createdAt: now, updatedAt: now, isPersonal: true,
-    };
-    const updated = [...personalTasks, newTask];
-    setPersonalTasks(updated);
-    saveData("personal_tasks", updated);
-    return newTask;
-  }, [personalTasks, employeeId]);
+  const addPersonalTask = useCallback(async (task: { subject: string; description: string }) => {
+    if (!effectiveEmployeeId) throw new Error("Employee not linked");
+    const { error } = await supabase.from("tasks").insert({
+      title: task.subject,
+      description: task.description,
+      assigned_to: effectiveEmployeeId,
+      status: "in_progress",
+      priority: "medium",
+      is_personal: true,
+    } as any);
+    if (error) throw error;
+    await fetchAssignedTasks();
+  }, [effectiveEmployeeId, fetchAssignedTasks]);
 
-  const updatePersonalTask = useCallback((id: string, data: Partial<Task>) => {
-    const updated = personalTasks.map(t =>
-      t.id === id ? { ...t, ...data, updatedAt: new Date().toISOString() } : t
-    );
-    setPersonalTasks(updated);
-    saveData("personal_tasks", updated);
-  }, [personalTasks, employeeId]);
+  const updatePersonalTask = useCallback(async (id: string, data: Partial<Task>) => {
+    const dbUpdates: any = {};
+    if (data.subject) dbUpdates.title = data.subject;
+    if (data.description) dbUpdates.description = data.description;
+    if (data.status) {
+      dbUpdates.status = data.status === "completed" ? "completed" : "in_progress";
+      if (data.status === "completed") dbUpdates.completed_at = new Date().toISOString();
+    }
+    if (data.report !== undefined) dbUpdates.report = data.report;
+    await supabase.from("tasks").update(dbUpdates).eq("id", id);
+    await fetchAssignedTasks();
+  }, [fetchAssignedTasks]);
 
-  const deletePersonalTask = useCallback((id: string) => {
-    const updated = personalTasks.filter(t => t.id !== id);
-    setPersonalTasks(updated);
-    saveData("personal_tasks", updated);
-  }, [personalTasks, employeeId]);
+  const deletePersonalTask = useCallback(async (id: string) => {
+    await supabase.from("tasks").delete().eq("id", id);
+    await fetchAssignedTasks();
+  }, [fetchAssignedTasks]);
 
   // ════════════════════════════════════════════
   // Contacts (Supabase - read-only for employees, shared table)

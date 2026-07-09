@@ -43,6 +43,7 @@ import AccountsTenderPayments from "./pages/accounts/AccountsTenderPayments";
 import EmployeeLogin from "./pages/employee/EmployeeLogin";
 import EmployeeDashboardPage from "./pages/employee/EmployeeDashboard";
 import EmployeeTaskManager from "./pages/employee/EmployeeTaskManager";
+import EmployeeDailyTasks from "./pages/employee/EmployeeDailyTasks";
 import EmployeeContacts from "./pages/employee/EmployeeContacts";
 import EmployeeRequirements from "./pages/employee/EmployeeRequirements";
 import EmployeePayments from "./pages/employee/EmployeePayments";
@@ -184,6 +185,7 @@ const App = () => (
           {/* Employee Routes */}
           <Route path="/login/employee" element={<EmployeeLogin />} />
           <Route path="/employee/dashboard" element={<EmployeeDashboardPage />} />
+          <Route path="/employee/daily-tasks" element={<EmployeeDailyTasks />} />
           <Route path="/employee/tasks" element={<EmployeeTaskManager />} />
           <Route path="/employee/contacts" element={<EmployeeContacts />} />
           <Route path="/employee/requirements" element={<EmployeeRequirements />} />
