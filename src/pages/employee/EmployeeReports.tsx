@@ -48,7 +48,7 @@ const EmployeeReports = () => {
   };
 
   return (
-    <EmployeeLayout title="Reports">
+    <EmployeeLayout title="EOD">
       <div className="space-y-6">
         {/* Header */}
         <div className="gradient-primary rounded-xl p-6 text-primary-foreground flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

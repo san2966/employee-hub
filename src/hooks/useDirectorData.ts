@@ -56,6 +56,8 @@ export interface Task {
   createdAt: string;
   updatedAt: string;
   hiddenInManager?: boolean;
+  report?: string;
+  isPersonal?: boolean;
 }
 
 export interface Product {
@@ -175,6 +177,8 @@ export const useDirectorData = () => {
       status: t.status === "completed" ? "completed" : t.status === "in_progress" ? "in-progress" : "in-progress" as any,
       createdAt: t.created_at, updatedAt: t.updated_at,
       hiddenInManager: !!t.hidden_in_manager,
+      report: t.report || "",
+      isPersonal: !!t.is_personal,
     })));
   }, []);
 
