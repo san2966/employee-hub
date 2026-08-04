@@ -149,7 +149,7 @@ const OperationsGR = () => {
       </div>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-[98vw] w-[98vw] h-[96vh] p-2 sm:rounded-lg">
+        <DialogContent className="max-w-[90vw] w-[90vw] h-[80vh] p-2 sm:rounded-lg">
           <DialogHeader className="p-2 flex flex-row items-center justify-between">
             <DialogTitle>GR Preview</DialogTitle>
             {previewUrl && (
