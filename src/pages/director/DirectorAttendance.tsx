@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, Download, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MonthlyPivotTable } from "@/components/attendance/MonthlyPivotTable";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
@@ -185,33 +186,11 @@ const DirectorAttendance = () => {
             )}
           </div>
           {showMonthly && (
-            <div className="mt-4 overflow-x-auto">
+            <div className="mt-4">
               {monthlyRecords.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">No records found</p>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Employee</TableHead><TableHead>Date</TableHead><TableHead>Location</TableHead>
-                      <TableHead>In Time</TableHead><TableHead>Out Time</TableHead><TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {monthlyRecords.map(record => {
-                      const color = LOCATION_COLORS[record.location as LocationType] || LOCATION_COLORS.Office;
-                      return (
-                        <TableRow key={record.id}>
-                          <TableCell className="font-medium">{record.employee_name}</TableCell>
-                          <TableCell>{record.date}</TableCell>
-                          <TableCell><Badge className={cn(color.bg, color.text, "border-0")}>{color.emoji} {record.location}</Badge></TableCell>
-                          <TableCell>{record.in_time || "-"}</TableCell>
-                          <TableCell>{record.out_time || "-"}</TableCell>
-                          <TableCell><Badge variant={record.status === "Approved" ? "default" : record.status === "Rejected" ? "destructive" : "secondary"}>{record.status}</Badge></TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                <MonthlyPivotTable records={monthlyRecords} year={filterYear} month={filterMonth} />
               )}
             </div>
           )}

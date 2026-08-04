@@ -739,6 +739,27 @@ export const useEmployeeData = (employeeId: string) => {
     if (!error) await fetchReports();
   }, [effectiveEmployeeId, fetchReports]);
 
+  const updateReport = useCallback(async (
+    id: string,
+    report: {
+      date: string; department: string; task: string;
+      status: "completed" | "pending"; description: string;
+      additionalInfo?: string;
+    },
+  ) => {
+    const content = JSON.stringify({
+      department: report.department, task: report.task,
+      status: report.status, description: report.description,
+      additionalInfo: report.additionalInfo,
+    });
+    const { error } = await supabase
+      .from("daily_reports")
+      .update({ date: report.date, content })
+      .eq("id", id);
+    if (error) throw error;
+    await fetchReports();
+  }, [fetchReports]);
+
   // ════════════════════════════════════════════
   // Assigned Tasks (Supabase - tasks table, read-only for employees)
   // ════════════════════════════════════════════
@@ -822,7 +843,7 @@ export const useEmployeeData = (employeeId: string) => {
     leaveBalance, updateLeaveBalanceFromApproved,
     addExchangeLeave, takeExchangeLeave,
     calculateExchangeBalance, getPendingExchangeAdds,
-    reports, addReport,
+    reports, addReport, updateReport,
     getNotices: getNoticesSync,
   };
 };

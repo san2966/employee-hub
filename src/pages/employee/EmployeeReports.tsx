@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, Pencil } from "lucide-react";
 import { ExportButtons } from "@/components/ExportButtons";
 import { EXPORT_COLUMNS } from "@/lib/exportUtils";
 
@@ -18,10 +18,11 @@ const EmployeeReports = () => {
   const employeeId = session.employeeId || "";
   const employeeName = session.employeeName || "";
   
-  const { reports, addReport } = useEmployeeData(employeeId);
+  const { reports, addReport, updateReport } = useEmployeeData(employeeId);
   const { toast } = useToast();
   
   const [dialog, setDialog] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({
     date: "",
     department: "",
@@ -31,20 +32,45 @@ const EmployeeReports = () => {
     additionalInfo: "",
   });
   
-  const handleSave = () => {
+  const emptyForm = {
+    date: "", department: "", task: "",
+    status: "pending" as "completed" | "pending",
+    description: "", additionalInfo: "",
+  };
+
+  const openEdit = (report: any) => {
+    setEditId(report.id);
+    setForm({
+      date: report.date || "",
+      department: report.department || "",
+      task: report.task || "",
+      status: report.status === "completed" ? "completed" : "pending",
+      description: report.description || "",
+      additionalInfo: report.additionalInfo || "",
+    });
+    setDialog(true);
+  };
+
+  const handleSave = async () => {
     if (!form.date || !form.department || !form.task || !form.description) {
       toast({ variant: "destructive", title: "Error", description: "Please fill required fields" });
       return;
     }
-    
-    addReport({
-      ...form,
-      employeeName,
-    });
-    
-    toast({ title: "Report submitted", description: "Your report has been synced to Director" });
-    setDialog(false);
-    setForm({ date: "", department: "", task: "", status: "pending", description: "", additionalInfo: "" });
+
+    try {
+      if (editId) {
+        await updateReport(editId, form);
+        toast({ title: "Report updated", description: "Changes synced to Director" });
+      } else {
+        await addReport({ ...form, employeeName });
+        toast({ title: "Report submitted", description: "Your report has been synced to Director" });
+      }
+      setDialog(false);
+      setEditId(null);
+      setForm(emptyForm);
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Save failed", description: e?.message || "Please try again" });
+    }
   };
 
   return (
@@ -63,15 +89,15 @@ const EmployeeReports = () => {
               columns={EXPORT_COLUMNS.reports}
               data={reports.map(r => ({ ...r, employeeName }))}
             />
-            <Dialog open={dialog} onOpenChange={setDialog}>
+            <Dialog open={dialog} onOpenChange={(o) => { setDialog(o); if (!o) { setEditId(null); setForm(emptyForm); } }}>
               <DialogTrigger asChild>
-                <Button variant="secondary">
+                <Button variant="secondary" onClick={() => { setEditId(null); setForm(emptyForm); }}>
                   <Plus className="h-4 w-4 mr-2" /> Add Report
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-lg">
                 <DialogHeader>
-                  <DialogTitle>New Report</DialogTitle>
+                  <DialogTitle>{editId ? "Modify Report" : "New Report"}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -93,10 +119,11 @@ const EmployeeReports = () => {
                   </div>
                   <div>
                     <Label>Task *</Label>
-                    <Input 
-                      value={form.task} 
-                      onChange={e => setForm({ ...form, task: e.target.value })} 
-                      placeholder="Task name or title"
+                    <Textarea
+                      rows={3}
+                      value={form.task}
+                      onChange={e => setForm({ ...form, task: e.target.value })}
+                      placeholder="Describe the task in detail"
                     />
                   </div>
                   <div className="flex items-center space-x-2">
@@ -123,7 +150,7 @@ const EmployeeReports = () => {
                       onChange={e => setForm({ ...form, additionalInfo: e.target.value })} 
                     />
                   </div>
-                  <Button className="w-full" onClick={handleSave}>Submit Report</Button>
+                  <Button className="w-full" onClick={handleSave}>{editId ? "Save Changes" : "Submit Report"}</Button>
                 </div>
               </DialogContent>
             </Dialog>
@@ -155,6 +182,7 @@ const EmployeeReports = () => {
                       <th className="text-left p-4 text-sm font-medium">Status</th>
                       <th className="text-left p-4 text-sm font-medium">Description</th>
                       <th className="text-left p-4 text-sm font-medium">Additional Info</th>
+                      <th className="text-left p-4 text-sm font-medium">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -177,6 +205,11 @@ const EmployeeReports = () => {
                         </td>
                         <td className="p-4 text-sm text-muted-foreground max-w-xs truncate">
                           {report.additionalInfo || "-"}
+                        </td>
+                        <td className="p-4">
+                          <Button size="sm" variant="outline" onClick={() => openEdit(report)}>
+                            <Pencil className="h-3.5 w-3.5 mr-1" /> Modify
+                          </Button>
                         </td>
                       </tr>
                     ))}
