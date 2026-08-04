@@ -186,7 +186,7 @@ const DirectorGRManager = () => {
       </div>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-[90vw] w-[90vw] h-[80vh] p-2 sm:rounded-lg">
+        <DialogContent className="max-w-[90vw] w-[90vw] h-[20vh] p-2 sm:rounded-lg">
           <DialogHeader className="p-2"><DialogTitle>GR Preview</DialogTitle></DialogHeader>
           {previewUrl && <iframe src={previewUrl} className="w-full h-full rounded border" title="GR Preview" />}
         </DialogContent>
