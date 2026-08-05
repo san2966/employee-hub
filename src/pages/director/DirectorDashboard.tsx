@@ -7,10 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Plus, Edit, Trash2, Building, Users, Package, StickyNote, BarChart3 } from "lucide-react";
+import { Calendar, Plus, Edit, Trash2, Building, Users, StickyNote, BarChart3 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
+import HolidayCalendar from "@/components/director/HolidayCalendar";
+import DashboardPieCharts from "@/components/director/DashboardPieCharts";
 
 const DirectorDashboard = () => {
   const { toast } = useToast();
@@ -20,7 +22,6 @@ const DirectorDashboard = () => {
     organizations, addOrganization, updateOrganization, deleteOrganization,
     employees,
     getTasksPerDay,
-    getProductSalesPerYear,
   } = useDirectorData();
 
   // Calendar state
@@ -147,7 +148,6 @@ const DirectorDashboard = () => {
   };
 
   const tasksData = getTasksPerDay();
-  const salesData = getProductSalesPerYear();
   const recentNote = notes[0];
   const otherNotes = notes.slice(1);
 
@@ -195,7 +195,8 @@ const DirectorDashboard = () => {
               </DialogContent>
             </Dialog>
           </div>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
+          <HolidayCalendar events={events.map(e => ({ date: e.date, title: e.title }))} />
+          <div className="space-y-3 max-h-40 overflow-y-auto mt-4 border-t pt-3">
             {events.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">No events scheduled</p>
             ) : (
@@ -406,24 +407,8 @@ const DirectorDashboard = () => {
           )}
         </div>
 
-        {/* Product Sales Graph */}
-        <div className="card-corporate p-6 lg:col-span-2">
-          <div className="flex items-center gap-2 mb-4">
-            <Package className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold text-foreground">Product Sales by Year</h3>
-          </div>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={salesData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="year" fontSize={12} />
-                <YAxis fontSize={12} allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="sales" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <DashboardPieCharts />
+
       </div>
 
       {/* View Note Dialog */}
