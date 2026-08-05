@@ -138,6 +138,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <GlobalEventReminder />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login/:role" element={<Login />} />
