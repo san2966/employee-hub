@@ -401,9 +401,20 @@ export const useDirectorData = () => {
     if (data.subject) dbUpdates.title = data.subject;
     if (data.description) dbUpdates.description = data.description;
     if (data.status) {
-      dbUpdates.status = data.status === "in-progress" ? "in_progress" : data.status;
-      if (data.status === "completed") dbUpdates.completed_at = new Date().toISOString();
+      const statusMap: Record<string, string> = {
+        "in-progress": "in_progress",
+        in_progress: "in_progress",
+        pending: "pending",
+        completed: "completed",
+        failed: "rejected",
+      };
+      const mapped = statusMap[data.status as string];
+      if (mapped) dbUpdates.status = mapped;
+      if (mapped === "completed") dbUpdates.completed_at = new Date().toISOString();
     }
+    if ((data as any).report !== undefined) dbUpdates.report = (data as any).report;
+
+    if (Object.keys(dbUpdates).length === 0) return;
 
     const { error } = await supabase.from("tasks").update(dbUpdates).eq("id", id);
     if (error) throw error;
@@ -413,7 +424,11 @@ export const useDirectorData = () => {
   const deleteTask = async (id: string) => {
     // Soft-hide from Task Manager but keep the record for Reports.
     const { error } = await (supabase as any).from("tasks").update({ hidden_in_manager: true }).eq("id", id);
-    if (error) throw error;
+    if (error) {
+      // Older databases may not have the hidden_in_manager column yet.
+      const { error: delError } = await (supabase as any).from("tasks").delete().eq("id", id);
+      if (delError) throw delError;
+    }
     await fetchTasks();
   };
 
