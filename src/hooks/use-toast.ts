@@ -1,4 +1,6 @@
-import * as React from "react";
+import * as React from "react"
+
+import { playNotificationSound } from "@/lib/notificationSound";
 
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
 
@@ -136,6 +138,8 @@ type Toast = Omit<ToasterToast, "id">;
 
 function toast({ ...props }: Toast) {
   const id = genId();
+
+  playNotificationSound();
 
   const update = (props: ToasterToast) =>
     dispatch({

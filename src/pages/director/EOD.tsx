@@ -153,7 +153,7 @@ const EODTab = () => {
     setLoading(true);
     const { data } = await supabase
       .from("daily_reports")
-      .select("*, employees!daily_reports_employee_id_fkey(name, department)")
+      .select("*, employees(name, additional_charge)")
       .order("date", { ascending: false });
     const mapped: EodRow[] = (data || []).map((r: any) => {
       const p = parseContent(r.content);
@@ -162,7 +162,7 @@ const EODTab = () => {
         employeeId: r.employee_id,
         employeeName: r.employees?.name || "Unknown",
         date: r.date,
-        department: p.department || r.employees?.department || "N/A",
+        department: p.department || r.employees?.additional_charge || "N/A",
         task: p.task,
         status: p.status,
         description: p.description,
