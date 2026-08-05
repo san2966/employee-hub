@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, FileText } from "lucide-react";
+import { CalendarIcon, FileText, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ExportButtons } from "@/components/ExportButtons";
@@ -39,10 +40,42 @@ const parseContent = (content: string) => {
   }
 };
 
+interface PreviewRecord {
+  employeeName: string;
+  date: string;
+  department: string;
+  task: string;
+  status: string;
+  description: string;
+}
+
+const PreviewDialog = ({ record, onClose }: { record: PreviewRecord | null; onClose: () => void }) => (
+  <Dialog open={!!record} onOpenChange={(o) => { if (!o) onClose(); }}>
+    <DialogContent className="sm:max-w-2xl">
+      <DialogHeader>
+        <DialogTitle>Record Details</DialogTitle>
+      </DialogHeader>
+      {record && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div><p className="text-xs text-muted-foreground">Employee Name</p><p className="text-sm font-medium">{record.employeeName}</p></div>
+            <div><p className="text-xs text-muted-foreground">Date</p><p className="text-sm font-medium">{record.date}</p></div>
+            <div><p className="text-xs text-muted-foreground">Department</p><p className="text-sm font-medium">{record.department || "N/A"}</p></div>
+            <div><p className="text-xs text-muted-foreground">Status</p><p className="text-sm font-medium capitalize">{record.status}</p></div>
+          </div>
+          <div><p className="text-xs text-muted-foreground">Task</p><p className="text-sm font-medium whitespace-pre-wrap">{record.task || "-"}</p></div>
+          <div><p className="text-xs text-muted-foreground">Description</p><p className="text-sm whitespace-pre-wrap">{record.description || "-"}</p></div>
+        </div>
+      )}
+    </DialogContent>
+  </Dialog>
+);
+
 const DailyTaskTab = () => {
   const { employees, tasks } = useDirectorData();
   const [filterEmployee, setFilterEmployee] = useState<string>("all");
   const [filterDate, setFilterDate] = useState<string>("");
+  const [preview, setPreview] = useState<PreviewRecord | null>(null);
 
   const getEmployeeName = (id: string) => employees.find(e => e.id === id)?.name || "Unknown";
   const getEmployeeDepartment = (id: string) => employees.find(e => e.id === id)?.department || "N/A";
@@ -109,11 +142,12 @@ const DailyTaskTab = () => {
                 <th className="text-left p-4 text-sm font-medium">Task</th>
                 <th className="text-left p-4 text-sm font-medium">Status</th>
                 <th className="text-left p-4 text-sm font-medium">Description</th>
+                <th className="text-left p-4 text-sm font-medium">Preview</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {filteredTasks.length === 0 ? (
-                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">
+                <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">
                   <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   <p>No tasks found</p>
                 </td></tr>
@@ -131,12 +165,25 @@ const DailyTaskTab = () => {
                     }`}>{t.status.replace("-", " ")}</span>
                   </td>
                   <td className="p-4 text-sm text-muted-foreground max-w-xs truncate">{t.description}</td>
+                  <td className="p-4">
+                    <Button variant="outline" size="sm" onClick={() => setPreview({
+                      employeeName: getEmployeeName(t.employeeId),
+                      date: new Date(t.createdAt).toLocaleDateString(),
+                      department: getEmployeeDepartment(t.employeeId),
+                      task: t.subject,
+                      status: t.status.replace("-", " "),
+                      description: t.description,
+                    })}>
+                      <Eye className="h-4 w-4 mr-1" /> Preview
+                    </Button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+      <PreviewDialog record={preview} onClose={() => setPreview(null)} />
     </div>
   );
 };
@@ -148,6 +195,7 @@ const EODTab = () => {
   const [fromDate, setFromDate] = useState<Date | undefined>();
   const [toDate, setToDate] = useState<Date | undefined>();
   const [loading, setLoading] = useState(false);
+  const [preview, setPreview] = useState<PreviewRecord | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -276,13 +324,14 @@ const EODTab = () => {
                 <th className="text-left p-4 text-sm font-medium">Task</th>
                 <th className="text-left p-4 text-sm font-medium">Status</th>
                 <th className="text-left p-4 text-sm font-medium">Description</th>
+                <th className="text-left p-4 text-sm font-medium">Preview</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {loading ? (
-                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Loading...</td></tr>
+                <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">Loading...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">
+                <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">
                   <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   <p>No EOD reports found</p>
                 </td></tr>
@@ -298,12 +347,25 @@ const EODTab = () => {
                     }`}>{r.status === "completed" ? "Completed" : "Pending"}</span>
                   </td>
                   <td className="p-4 text-sm text-muted-foreground max-w-xs truncate">{r.description}</td>
+                  <td className="p-4">
+                    <Button variant="outline" size="sm" onClick={() => setPreview({
+                      employeeName: r.employeeName,
+                      date: new Date(r.date).toLocaleDateString(),
+                      department: r.department,
+                      task: r.task,
+                      status: r.status === "completed" ? "Completed" : "Pending",
+                      description: r.description,
+                    })}>
+                      <Eye className="h-4 w-4 mr-1" /> Preview
+                    </Button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+      <PreviewDialog record={preview} onClose={() => setPreview(null)} />
     </div>
   );
 };
