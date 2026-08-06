@@ -485,6 +485,7 @@ export type Database = {
       }
       employee_payments: {
         Row: {
+          accounts_status: string
           amount: number
           approved_by: string | null
           category: string
@@ -493,8 +494,11 @@ export type Database = {
           description: string
           employee_id: string
           employee_name: string | null
+          expense_type: string | null
           from_location: string | null
+          hr_status: string
           id: string
+          payment_mode: string
           purpose: string | null
           receipt_url: string | null
           status: Database["public"]["Enums"]["payment_status"] | null
@@ -502,6 +506,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          accounts_status?: string
           amount: number
           approved_by?: string | null
           category: string
@@ -510,8 +515,11 @@ export type Database = {
           description: string
           employee_id: string
           employee_name?: string | null
+          expense_type?: string | null
           from_location?: string | null
+          hr_status?: string
           id?: string
+          payment_mode?: string
           purpose?: string | null
           receipt_url?: string | null
           status?: Database["public"]["Enums"]["payment_status"] | null
@@ -519,6 +527,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          accounts_status?: string
           amount?: number
           approved_by?: string | null
           category?: string
@@ -527,8 +536,11 @@ export type Database = {
           description?: string
           employee_id?: string
           employee_name?: string | null
+          expense_type?: string | null
           from_location?: string | null
+          hr_status?: string
           id?: string
+          payment_mode?: string
           purpose?: string | null
           receipt_url?: string | null
           status?: Database["public"]["Enums"]["payment_status"] | null
