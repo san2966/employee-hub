@@ -18,7 +18,7 @@ export async function openPaymentReceipt(pathOrUrl: string) {
 }
 
 export async function getPaymentReceiptUrl(pathOrUrl: string): Promise<string | null> {
-  if (!pathOrUrl) return;
+  if (!pathOrUrl) return null;
   // Backward-compat: if it's already a full URL (legacy blob/http), open directly.
   if (pathOrUrl.startsWith("http") || pathOrUrl.startsWith("blob:")) {
     return pathOrUrl;
