@@ -11,7 +11,8 @@ import {
   Menu,
   X,
   Calendar,
-  ClipboardList
+  ClipboardList,
+  IndianRupee
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -21,6 +22,7 @@ const menuItems = [
   { icon: Users, label: "Manage Employee", path: "/hr/manage-employee" },
   { icon: Calendar, label: "Leave Manager", path: "/hr/leaves" },
   { icon: Calendar, label: "Attendance Manager", path: "/hr/attendance" },
+  { icon: IndianRupee, label: "Payments", path: "/hr/payments" },
   { icon: ClipboardList, label: "Director Tasks", path: "/hr/director-tasks" },
   { icon: Settings, label: "Settings", path: "/hr/settings" },
 ];

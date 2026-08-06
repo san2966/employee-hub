@@ -31,6 +31,7 @@ import HRSettings from "./pages/hr/HRSettings";
 import HRLeaveManager from "./pages/hr/HRLeaveManager";
 import HRAttendance from "./pages/hr/HRAttendance";
 import HRDirectorTasks from "./pages/hr/HRDirectorTasks";
+import HRPayments from "./pages/hr/HRPayments";
 
 // Accounts Module
 import AccountsLogin from "./pages/accounts/AccountsLogin";
@@ -39,6 +40,7 @@ import Vouchers from "./pages/accounts/Vouchers";
 import AccountsSettings from "./pages/accounts/AccountsSettings";
 import AccountsDirectorTasks from "./pages/accounts/AccountsDirectorTasks";
 import AccountsTenderPayments from "./pages/accounts/AccountsTenderPayments";
+import AccountsPayments from "./pages/accounts/AccountsPayments";
 
 // Employee Module
 import EmployeeLogin from "./pages/employee/EmployeeLogin";
@@ -175,6 +177,7 @@ const App = () => (
           <Route path="/hr/settings" element={<HRSettings />} />
           <Route path="/hr/attendance" element={<HRAttendance />} />
           <Route path="/hr/director-tasks" element={<HRDirectorTasks />} />
+          <Route path="/hr/payments" element={<HRPayments />} />
           
           {/* Accounts Routes */}
           <Route path="/login/accounts" element={<AccountsLogin />} />
@@ -183,6 +186,7 @@ const App = () => (
           <Route path="/accounts/settings" element={<AccountsSettings />} />
           <Route path="/accounts/director-tasks" element={<AccountsDirectorTasks />} />
           <Route path="/accounts/tender-payments" element={<AccountsTenderPayments />} />
+          <Route path="/accounts/payments" element={<AccountsPayments />} />
           
           {/* Employee Routes */}
           <Route path="/login/employee" element={<EmployeeLogin />} />
