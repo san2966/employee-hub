@@ -13,18 +13,22 @@ export async function uploadPaymentReceipt(file: File, employeeId: string): Prom
 }
 
 export async function openPaymentReceipt(pathOrUrl: string) {
+  const url = await getPaymentReceiptUrl(pathOrUrl);
+  if (url) window.open(url, "_blank", "noopener");
+}
+
+export async function getPaymentReceiptUrl(pathOrUrl: string): Promise<string | null> {
   if (!pathOrUrl) return;
   // Backward-compat: if it's already a full URL (legacy blob/http), open directly.
   if (pathOrUrl.startsWith("http") || pathOrUrl.startsWith("blob:")) {
-    window.open(pathOrUrl, "_blank", "noopener");
-    return;
+    return pathOrUrl;
   }
   const { data, error } = await supabase.storage
     .from(PAYMENT_RECEIPT_BUCKET)
-    .createSignedUrl(pathOrUrl, 60 * 10);
+    .createSignedUrl(pathOrUrl, 60 * 60);
   if (error || !data?.signedUrl) {
     console.error("Failed to sign receipt URL", error);
-    return;
+    return null;
   }
-  window.open(data.signedUrl, "_blank", "noopener");
+  return data.signedUrl;
 }
