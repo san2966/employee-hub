@@ -286,6 +286,487 @@ export type Database = {
           },
         ]
       }
+      business_activities: {
+        Row: {
+          activity_type: string
+          actor_name: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          opportunity_id: string
+          scheduled_at: string | null
+        }
+        Insert: {
+          activity_type?: string
+          actor_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          opportunity_id: string
+          scheduled_at?: string | null
+        }
+        Update: {
+          activity_type?: string
+          actor_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          opportunity_id?: string
+          scheduled_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_activities_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "business_opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_areas: {
+        Row: {
+          created_at: string
+          district: string
+          id: string
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          district: string
+          id?: string
+          state: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          district?: string
+          id?: string
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      business_employee_plans: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          profile_id: string
+          rows: Json
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          profile_id: string
+          rows?: Json
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          profile_id?: string
+          rows?: Json
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_employee_plans_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_followups: {
+        Row: {
+          called_on: string
+          caller_id: string | null
+          caller_name: string | null
+          contact: string
+          created_at: string
+          created_by: string | null
+          customer_type: string
+          id: string
+          is_opportunity: boolean
+          next_action_at: string | null
+          officer_name: string
+          organization: string
+          outcome: string
+          review_note: string | null
+          review_status: string
+          updated_at: string
+        }
+        Insert: {
+          called_on?: string
+          caller_id?: string | null
+          caller_name?: string | null
+          contact: string
+          created_at?: string
+          created_by?: string | null
+          customer_type?: string
+          id?: string
+          is_opportunity?: boolean
+          next_action_at?: string | null
+          officer_name: string
+          organization: string
+          outcome?: string
+          review_note?: string | null
+          review_status?: string
+          updated_at?: string
+        }
+        Update: {
+          called_on?: string
+          caller_id?: string | null
+          caller_name?: string | null
+          contact?: string
+          created_at?: string
+          created_by?: string | null
+          customer_type?: string
+          id?: string
+          is_opportunity?: boolean
+          next_action_at?: string | null
+          officer_name?: string
+          organization?: string
+          outcome?: string
+          review_note?: string | null
+          review_status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_followups_caller_id_fkey"
+            columns: ["caller_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_opportunities: {
+        Row: {
+          assignee_ids: string[]
+          conversion_doc_url: string | null
+          converted_at: string | null
+          created_at: string
+          created_by: string | null
+          created_by_name: string | null
+          description: string | null
+          email: string | null
+          id: string
+          is_lead: boolean
+          next_followup_at: string | null
+          officer_name: string
+          organization_name: string
+          organization_type: string | null
+          phone: string | null
+          priority: string
+          product_name: string
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_ids?: string[]
+          conversion_doc_url?: string | null
+          converted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_lead?: boolean
+          next_followup_at?: string | null
+          officer_name: string
+          organization_name: string
+          organization_type?: string | null
+          phone?: string | null
+          priority?: string
+          product_name: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_ids?: string[]
+          conversion_doc_url?: string | null
+          converted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_lead?: boolean
+          next_followup_at?: string | null
+          officer_name?: string
+          organization_name?: string
+          organization_type?: string | null
+          phone?: string | null
+          priority?: string
+          product_name?: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      business_profiles: {
+        Row: {
+          area_id: string | null
+          created_at: string
+          designation: Database["public"]["Enums"]["business_designation"]
+          email: string
+          id: string
+          is_active: boolean
+          last_login: string | null
+          must_change_password: boolean
+          name: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          area_id?: string | null
+          created_at?: string
+          designation: Database["public"]["Enums"]["business_designation"]
+          email: string
+          id?: string
+          is_active?: boolean
+          last_login?: string | null
+          must_change_password?: boolean
+          name: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          area_id?: string | null
+          created_at?: string
+          designation?: Database["public"]["Enums"]["business_designation"]
+          email?: string
+          id?: string
+          is_active?: boolean
+          last_login?: string | null
+          must_change_password?: boolean
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_profiles_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "business_areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_rc_tracker: {
+        Row: {
+          contact: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          last_contacted: string | null
+          location_name: string
+          operator_name: string | null
+          organization_name: string
+          remarks: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          contact?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_contacted?: string | null
+          location_name: string
+          operator_name?: string | null
+          organization_name: string
+          remarks?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          contact?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_contacted?: string | null
+          location_name?: string
+          operator_name?: string | null
+          organization_name?: string
+          remarks?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      business_task_reports: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          profile_id: string | null
+          report: string
+          reporter_name: string | null
+          status: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          profile_id?: string | null
+          report: string
+          reporter_name?: string | null
+          status?: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          profile_id?: string | null
+          report?: string
+          reporter_name?: string | null
+          status?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_task_reports_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "business_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_task_reports_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "business_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_tasks: {
+        Row: {
+          assignee_ids: string[]
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          opportunity_id: string | null
+          priority: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_ids?: string[]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          opportunity_id?: string | null
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_ids?: string[]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          opportunity_id?: string | null
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_tasks_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "business_opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_weekly_plans: {
+        Row: {
+          archived: boolean
+          assignee_ids: string[]
+          created_at: string
+          created_by: string | null
+          id: string
+          plan_date: string
+          plan_status: string
+          published: boolean
+          published_at: string | null
+          updated_at: string
+          visit_plan: string
+          week_start: string
+        }
+        Insert: {
+          archived?: boolean
+          assignee_ids?: string[]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          plan_date: string
+          plan_status?: string
+          published?: boolean
+          published_at?: string | null
+          updated_at?: string
+          visit_plan: string
+          week_start: string
+        }
+        Update: {
+          archived?: boolean
+          assignee_ids?: string[]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          plan_date?: string
+          plan_status?: string
+          published?: boolean
+          published_at?: string | null
+          updated_at?: string
+          visit_plan?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           added_by: string | null
@@ -3012,6 +3493,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      business_designation_of: {
+        Args: { _uid: string }
+        Returns: Database["public"]["Enums"]["business_designation"]
+      }
+      business_profile_id_of: { Args: { _uid: string }; Returns: string }
       current_portal_employee_id: { Args: never; Returns: string }
       delete_email: {
         Args: { message_id: number; queue_name: string }
@@ -3050,6 +3536,8 @@ export type Database = {
         Returns: boolean
       }
       hash_password: { Args: { raw_password: string }; Returns: string }
+      is_business_head: { Args: { _uid: string }; Returns: boolean }
+      is_business_member: { Args: { _uid: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -3080,6 +3568,12 @@ export type Database = {
       }
     }
     Enums: {
+      business_designation:
+        | "business_head"
+        | "director"
+        | "area_sales_manager"
+        | "business_development_manager"
+        | "rc_technical"
       leave_status: "pending" | "approved" | "rejected"
       leave_type: "paid" | "medical" | "exchange"
       payment_status: "pending" | "approved" | "rejected"
@@ -3228,6 +3722,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      business_designation: [
+        "business_head",
+        "director",
+        "area_sales_manager",
+        "business_development_manager",
+        "rc_technical",
+      ],
       leave_status: ["pending", "approved", "rejected"],
       leave_type: ["paid", "medical", "exchange"],
       payment_status: ["pending", "approved", "rejected"],
