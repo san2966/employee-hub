@@ -9,6 +9,7 @@ import {
   FileText,
   ShoppingCart,
   Briefcase,
+  TrendingUp,
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -77,6 +78,13 @@ const loginOptions = [
     role: "operations",
     customPath: "/login/operations",
   },
+  {
+    title: "Business Login",
+    description: "Leads, opportunities, follow-ups and weekly plans",
+    icon: TrendingUp,
+    role: "business",
+    customPath: "/business/login",
+  },
 ];
 
 const Index = () => {
@@ -118,6 +126,7 @@ const Index = () => {
                   description={option.description}
                   icon={option.icon}
                   role={option.role}
+                  customPath={option.customPath}
                   delay={index * 100}
                 />
               ))}
