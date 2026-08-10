@@ -4,6 +4,22 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import GlobalEventReminder from "@/components/GlobalEventReminder";
+
+// Business Module
+import BusinessLogin from "./pages/business/BusinessLogin";
+import BusinessSetPassword from "./pages/business/BusinessSetPassword";
+import BusinessDashboard from "./pages/business/BusinessDashboard";
+import BusinessEmployees from "./pages/business/BusinessEmployees";
+import BusinessAreas from "./pages/business/BusinessAreas";
+import BusinessFollowups from "./pages/business/BusinessFollowups";
+import BusinessOpportunities from "./pages/business/BusinessOpportunities";
+import BusinessOpportunityDetail from "./pages/business/BusinessOpportunityDetail";
+import BusinessTasks from "./pages/business/BusinessTasks";
+import BusinessTaskDetail from "./pages/business/BusinessTaskDetail";
+import BusinessReports from "./pages/business/BusinessReports";
+import BusinessWeeklyPlan from "./pages/business/BusinessWeeklyPlan";
+import BusinessRCTracker from "./pages/business/BusinessRCTracker";
+import BusinessSettings from "./pages/business/BusinessSettings";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import About from "./pages/About";
@@ -270,6 +286,24 @@ const App = () => (
           <Route path="/dashboard/employee" element={<EmployeeDashboard />} />
           <Route path="/dashboard/admin" element={<AdminDashboard />} />
           
+          {/* Business Module */}
+          <Route path="/business/login" element={<BusinessLogin />} />
+          <Route path="/business/set-password" element={<BusinessSetPassword />} />
+          <Route path="/business/dashboard" element={<BusinessDashboard />} />
+          <Route path="/business/employees" element={<BusinessEmployees />} />
+          <Route path="/business/areas" element={<BusinessAreas />} />
+          <Route path="/business/followups" element={<BusinessFollowups />} />
+          <Route path="/business/opportunities" element={<BusinessOpportunities mode="opportunity" />} />
+          <Route path="/business/opportunities/:id" element={<BusinessOpportunityDetail />} />
+          <Route path="/business/leads" element={<BusinessOpportunities mode="lead" />} />
+          <Route path="/business/leads/:id" element={<BusinessOpportunityDetail />} />
+          <Route path="/business/tasks" element={<BusinessTasks />} />
+          <Route path="/business/tasks/:id" element={<BusinessTaskDetail />} />
+          <Route path="/business/reports" element={<BusinessReports />} />
+          <Route path="/business/weekly-plan" element={<BusinessWeeklyPlan />} />
+          <Route path="/business/rc-tracker" element={<BusinessRCTracker />} />
+          <Route path="/business/settings" element={<BusinessSettings />} />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
