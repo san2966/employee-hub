@@ -349,6 +349,50 @@ const BusinessWeeklyPlan = () => {
                 <TableRow key={i}>
                   <TableCell>{formatDate(r.date)}</TableCell>
                   <TableCell>{r.date ? dayName(r.date) : "—"}</TableCell>
+                  <TableCell>{r.visit_plan}{r.plan_status ? ` (${r.plan_status})` : ""}</TableCell>
+                </TableRow>
+              ))}
+              {(preview?.sub?.rows ?? []).length === 0 && (
+                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-6">No rows submitted.</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={myOpen} onOpenChange={setMyOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Add Visit Plan</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Date</Label><Input type="date" value={myForm.date} onChange={(e) => setMyForm({ ...myForm, date: e.target.value })} /></div>
+            <div><Label>Visit Plan</Label><Input value={myForm.visit_plan} onChange={(e) => setMyForm({ ...myForm, visit_plan: e.target.value })} /></div>
+            <div>
+              <Label>Status</Label>
+              <Select value={myForm.plan_status} onValueChange={(v) => setMyForm({ ...myForm, plan_status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{PLAN_STATUS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMyOpen(false)}>Cancel</Button>
+            <Button onClick={saveMyRow}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={false}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle>{preview?.staff?.name} — Weekly Plan</DialogTitle></DialogHeader>
+          <Table>
+            <TableHeader>
+              <TableRow><TableHead>Date</TableHead><TableHead>Day</TableHead><TableHead>Visit Plan</TableHead></TableRow>
+            </TableHeader>
+            <TableBody>
+              {(preview?.sub?.rows ?? []).map((r: any, i: number) => (
+                <TableRow key={i}>
+                  <TableCell>{formatDate(r.date)}</TableCell>
+                  <TableCell>{r.date ? dayName(r.date) : "—"}</TableCell>
                   <TableCell>{r.visit_plan}</TableCell>
                 </TableRow>
               ))}
