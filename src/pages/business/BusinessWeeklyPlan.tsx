@@ -340,8 +340,6 @@ const BusinessWeeklyPlan = () => {
       <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>{preview?.staff?.name} — Weekly Plan</DialogTitle></DialogHeader>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader><DialogTitle>{preview?.staff?.name} — Weekly Plan</DialogTitle></DialogHeader>
           <Table>
             <TableHeader>
               <TableRow><TableHead>Date</TableHead><TableHead>Day</TableHead><TableHead>Visit Plan</TableHead></TableRow>
