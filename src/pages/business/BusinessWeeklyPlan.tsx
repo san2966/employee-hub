@@ -381,28 +381,6 @@ const BusinessWeeklyPlan = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={false}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader><DialogTitle>{preview?.staff?.name} — Weekly Plan</DialogTitle></DialogHeader>
-          <Table>
-            <TableHeader>
-              <TableRow><TableHead>Date</TableHead><TableHead>Day</TableHead><TableHead>Visit Plan</TableHead></TableRow>
-            </TableHeader>
-            <TableBody>
-              {(preview?.sub?.rows ?? []).map((r: any, i: number) => (
-                <TableRow key={i}>
-                  <TableCell>{formatDate(r.date)}</TableCell>
-                  <TableCell>{r.date ? dayName(r.date) : "—"}</TableCell>
-                  <TableCell>{r.visit_plan}</TableCell>
-                </TableRow>
-              ))}
-              {(preview?.sub?.rows ?? []).length === 0 && (
-                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-6">No rows submitted.</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </DialogContent>
-      </Dialog>
     </BusinessLayout>
   );
 };
