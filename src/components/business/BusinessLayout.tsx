@@ -9,19 +9,32 @@ import {
   ListTodo, FileBarChart, CalendarRange, Radio, Settings, LogOut,
 } from "lucide-react";
 
+type Designation =
+  | "business_head" | "director" | "area_sales_manager"
+  | "business_development_manager" | "rc_technical";
+
 const allItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/business/dashboard", roles: "all" },
-  { label: "Employees", icon: Users, path: "/business/employees", roles: "head" },
-  { label: "Areas", icon: MapPin, path: "/business/areas", roles: "head" },
-  { label: "Telephonic Followup", icon: PhoneCall, path: "/business/followups", roles: "staff" },
-  { label: "Opportunity", icon: Target, path: "/business/opportunities", roles: "all" },
-  { label: "Lead", icon: Flame, path: "/business/leads", roles: "all" },
-  { label: "Tasks", icon: ListTodo, path: "/business/tasks", roles: "staff" },
-  { label: "Reports", icon: FileBarChart, path: "/business/reports", roles: "headdir" },
-  { label: "Weekly Plan", icon: CalendarRange, path: "/business/weekly-plan", roles: "all" },
-  { label: "RC Tracker", icon: Radio, path: "/business/rc-tracker", roles: "staff" },
-  { label: "Settings", icon: Settings, path: "/business/settings", roles: "all" },
+  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/business/dashboard" },
+  { key: "employees", label: "Employees", icon: Users, path: "/business/employees" },
+  { key: "areas", label: "Areas", icon: MapPin, path: "/business/areas" },
+  { key: "followups", label: "Telephonic Followup", icon: PhoneCall, path: "/business/followups" },
+  { key: "opportunities", label: "Opportunity", icon: Target, path: "/business/opportunities" },
+  { key: "leads", label: "Lead", icon: Flame, path: "/business/leads" },
+  { key: "tasks", label: "Tasks", icon: ListTodo, path: "/business/tasks" },
+  { key: "weekly", label: "Weekly Plan", icon: CalendarRange, path: "/business/weekly-plan" },
+  { key: "reports", label: "Report", icon: FileBarChart, path: "/business/reports" },
+  { key: "rc", label: "RC Tracker", icon: Radio, path: "/business/rc-tracker" },
+  { key: "settings", label: "Settings", icon: Settings, path: "/business/settings" },
 ];
+
+/** Menu composition per designation (order matters). */
+const menuByDesignation: Record<Designation, string[]> = {
+  business_head: ["dashboard", "employees", "areas", "followups", "opportunities", "leads", "tasks", "weekly", "reports", "rc", "settings"],
+  director: ["dashboard", "opportunities", "leads", "weekly", "reports", "settings"],
+  area_sales_manager: ["dashboard", "opportunities", "leads", "tasks", "weekly", "reports", "rc", "settings"],
+  business_development_manager: ["dashboard", "followups", "opportunities", "leads", "tasks", "weekly", "reports", "settings"],
+  rc_technical: ["dashboard", "tasks", "weekly", "reports", "rc", "settings"],
+};
 
 const BusinessLayout = ({ children, title }: { children: ReactNode; title: string }) => {
   const navigate = useNavigate();
@@ -42,15 +55,11 @@ const BusinessLayout = ({ children, title }: { children: ReactNode; title: strin
     navigate("/business/login");
   };
 
-  const isHead = profile?.designation === "business_head";
-  const isDirector = profile?.designation === "director";
-  const items = allItems.filter((i) => {
-    if (i.roles === "all") return true;
-    if (i.roles === "head") return isHead;
-    if (i.roles === "headdir") return isHead || isDirector;
-    if (i.roles === "staff") return !isDirector;
-    return true;
-  });
+  const keys = menuByDesignation[(profile?.designation as Designation) ?? "business_head"]
+    ?? menuByDesignation.business_head;
+  const items = keys
+    .map((k) => allItems.find((i) => i.key === k)!)
+    .filter(Boolean);
 
   const displayName = profile?.name ?? "";
 

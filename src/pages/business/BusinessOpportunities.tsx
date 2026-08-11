@@ -28,7 +28,8 @@ const BusinessOpportunities = ({ mode = "opportunity" }: { mode?: "opportunity" 
   const isLead = mode === "lead";
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { readOnly } = useBusinessAuth();
+  const { profile, isHead, isDirector, readOnly } = useBusinessAuth();
+  const canAdd = isHead;
   const { rows, refresh } = useBusinessCollection<any>("business_opportunities");
   const { rows: staff } = useBusinessCollection<any>("business_profiles", { orderBy: "name", ascending: true });
   const [open, setOpen] = useState(false);
@@ -42,6 +43,7 @@ const BusinessOpportunities = ({ mode = "opportunity" }: { mode?: "opportunity" 
 
   const filtered = useMemo(() => rows
     .filter((r) => !!r.is_lead === isLead)
+    .filter((r) => (isHead || isDirector ? true : (r.assignee_ids || []).includes(profile?.id)))
     .filter((r) => fStatus === "all" || r.status === fStatus)
     .filter((r) => fPriority === "all" || r.priority === fPriority)
     .filter((r) => fAssignee === "all" || (r.assignee_ids || []).includes(fAssignee))
@@ -49,7 +51,7 @@ const BusinessOpportunities = ({ mode = "opportunity" }: { mode?: "opportunity" 
       const q = search.trim().toLowerCase();
       if (!q) return true;
       return [r.product_name, r.organization_name, r.officer_name].join(" ").toLowerCase().includes(q);
-    }), [rows, isLead, fStatus, fPriority, fAssignee, search]);
+    }), [rows, isLead, isHead, isDirector, profile?.id, fStatus, fPriority, fAssignee, search]);
 
   const save = async () => {
     if (!form.product_name.trim() || !form.organization_name.trim() || !form.officer_name.trim()) {
@@ -97,7 +99,7 @@ const BusinessOpportunities = ({ mode = "opportunity" }: { mode?: "opportunity" 
         </div>
       </Card>
 
-      {!isLead && !readOnly && (
+      {!isLead && !readOnly && canAdd && (
         <div className="flex justify-end mb-4">
           <Button onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-2" /> Add Opportunity</Button>
         </div>

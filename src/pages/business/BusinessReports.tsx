@@ -11,15 +11,22 @@ import { exportToPDF } from "@/lib/exportUtils";
 import {
   useBusinessCollection, formatDate, formatDateTime, effectiveTaskStatus, TASK_STATUS_OPTIONS,
 } from "@/hooks/useBusinessData";
+import { useBusinessAuth } from "@/hooks/useBusinessAuth";
 
 const Stat = ({ label, value }: { label: string; value: number }) => (
   <Card className="p-4"><p className="text-xs text-muted-foreground">{label}</p><p className="text-2xl font-bold mt-1">{value}</p></Card>
 );
 
 const BusinessReports = () => {
-  const { rows: tasks } = useBusinessCollection<any>("business_tasks");
-  const { rows: opps } = useBusinessCollection<any>("business_opportunities");
+  const { profile, isHead, isDirector } = useBusinessAuth();
+  const { rows: allTasks } = useBusinessCollection<any>("business_tasks");
+  const { rows: allOpps } = useBusinessCollection<any>("business_opportunities");
   const { rows: staff } = useBusinessCollection<any>("business_profiles", { orderBy: "name", ascending: true });
+
+  const seesAll = isHead || isDirector;
+  const mine = (r: any) => seesAll || (r.assignee_ids || []).includes(profile?.id);
+  const tasks = useMemo(() => allTasks.filter(mine), [allTasks, seesAll, profile?.id]);
+  const opps = useMemo(() => allOpps.filter(mine), [allOpps, seesAll, profile?.id]);
 
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");

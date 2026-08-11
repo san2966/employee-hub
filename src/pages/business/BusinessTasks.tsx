@@ -28,7 +28,7 @@ const empty = {
 const BusinessTasks = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { profile, isHead } = useBusinessAuth();
+  const { profile, isHead, isDirector } = useBusinessAuth();
   const { rows: tasks, refresh } = useBusinessCollection<any>("business_tasks");
   const { rows: staff } = useBusinessCollection<any>("business_profiles", { orderBy: "name", ascending: true });
   const { rows: opps } = useBusinessCollection<any>("business_opportunities");
@@ -62,10 +62,13 @@ const BusinessTasks = () => {
       return;
     }
     const { data: { user } } = await supabase.auth.getUser();
+    const assignees = form.assignee_ids.length > 0
+      ? form.assignee_ids
+      : (profile?.id ? [profile.id] : []);
     const { error } = await (supabase as any).from("business_tasks").insert({
       title: form.title,
       opportunity_id: form.opportunity_id || null,
-      assignee_ids: form.assignee_ids,
+      assignee_ids: assignees,
       due_date: form.due_date || null,
       priority: form.priority,
       status: "Pending",
@@ -129,7 +132,7 @@ const BusinessTasks = () => {
               </SelectContent>
             </Select>
           </div>
-          {isHead && (
+          {!isDirector && (
             <Button onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-1" /> New Task</Button>
           )}
         </div>
