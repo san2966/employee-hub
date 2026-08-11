@@ -582,6 +582,65 @@ export type Database = {
           },
         ]
       }
+      business_rc_calls: {
+        Row: {
+          battery_run_time: string | null
+          caller_name: string | null
+          charging_socket: string | null
+          craft_operational: string | null
+          created_at: string
+          created_by: string | null
+          emergency_ready: string | null
+          id: string
+          output: string | null
+          proper_storage: string | null
+          rc_id: string
+          rescue_remote: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          battery_run_time?: string | null
+          caller_name?: string | null
+          charging_socket?: string | null
+          craft_operational?: string | null
+          created_at?: string
+          created_by?: string | null
+          emergency_ready?: string | null
+          id?: string
+          output?: string | null
+          proper_storage?: string | null
+          rc_id: string
+          rescue_remote?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          battery_run_time?: string | null
+          caller_name?: string | null
+          charging_socket?: string | null
+          craft_operational?: string | null
+          created_at?: string
+          created_by?: string | null
+          emergency_ready?: string | null
+          id?: string
+          output?: string | null
+          proper_storage?: string | null
+          rc_id?: string
+          rescue_remote?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_rc_calls_rc_id_fkey"
+            columns: ["rc_id"]
+            isOneToOne: false
+            referencedRelation: "business_rc_tracker"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_rc_tracker: {
         Row: {
           contact: string | null
@@ -592,6 +651,7 @@ export type Database = {
           location_name: string
           operator_name: string | null
           organization_name: string
+          rc_code: string | null
           remarks: string | null
           status: string
           updated_at: string
@@ -605,6 +665,7 @@ export type Database = {
           location_name: string
           operator_name?: string | null
           organization_name: string
+          rc_code?: string | null
           remarks?: string | null
           status?: string
           updated_at?: string
@@ -618,6 +679,7 @@ export type Database = {
           location_name?: string
           operator_name?: string | null
           organization_name?: string
+          rc_code?: string | null
           remarks?: string | null
           status?: string
           updated_at?: string
