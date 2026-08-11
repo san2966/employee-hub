@@ -28,7 +28,7 @@ const empty = {
 const BusinessTasks = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { profile, isHead } = useBusinessAuth();
+  const { profile, isHead, isDirector } = useBusinessAuth();
   const { rows: tasks, refresh } = useBusinessCollection<any>("business_tasks");
   const { rows: staff } = useBusinessCollection<any>("business_profiles", { orderBy: "name", ascending: true });
   const { rows: opps } = useBusinessCollection<any>("business_opportunities");
@@ -129,7 +129,7 @@ const BusinessTasks = () => {
               </SelectContent>
             </Select>
           </div>
-          {isHead && (
+          {!isDirector && (
             <Button onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-1" /> New Task</Button>
           )}
         </div>
