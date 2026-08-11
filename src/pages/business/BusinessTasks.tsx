@@ -62,10 +62,13 @@ const BusinessTasks = () => {
       return;
     }
     const { data: { user } } = await supabase.auth.getUser();
+    const assignees = form.assignee_ids.length > 0
+      ? form.assignee_ids
+      : (profile?.id ? [profile.id] : []);
     const { error } = await (supabase as any).from("business_tasks").insert({
       title: form.title,
       opportunity_id: form.opportunity_id || null,
-      assignee_ids: form.assignee_ids,
+      assignee_ids: assignees,
       due_date: form.due_date || null,
       priority: form.priority,
       status: "Pending",
