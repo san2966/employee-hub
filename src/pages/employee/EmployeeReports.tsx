@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import EmployeeLayout from "@/components/employee/EmployeeLayout";
 import { useEmployeeData } from "@/hooks/useEmployeeData";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,8 @@ const EmployeeReports = () => {
   
   const [dialog, setDialog] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [form, setForm] = useState({
     date: "",
     department: "",
@@ -38,6 +40,17 @@ const EmployeeReports = () => {
     status: "pending" as "completed" | "pending",
     description: "", additionalInfo: "",
   };
+
+  const filteredReports = useMemo(
+    () =>
+      reports.filter((r: any) => {
+        const d = (r.date || "").slice(0, 10);
+        if (fromDate && d < fromDate) return false;
+        if (toDate && d > toDate) return false;
+        return true;
+      }),
+    [reports, fromDate, toDate]
+  );
 
   const openEdit = (report: any) => {
     setEditId(report.id);
