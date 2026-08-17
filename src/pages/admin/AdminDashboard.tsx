@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2, Calendar as CalendarIcon, FileText, ListTodo, Users, Bell } from "lucide-react";
 import { format } from "date-fns";
+import { KpiCard } from "@/components/dashboard/KpiCard";
 
 const AdminDashboard = () => {
   const { 
@@ -93,6 +94,19 @@ const AdminDashboard = () => {
 
   return (
     <AdminLayout title="Dashboard">
+      <div className="space-y-6">
+        <div className="gradient-primary rounded-xl p-6 text-primary-foreground">
+          <h2 className="text-2xl font-bold mb-1">Administration Overview</h2>
+          <p className="opacity-90">Events, notes, tasks and visitor activity</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KpiCard label="Today's Events" value={todayEvents.length} icon={CalendarIcon} tone="primary" sub={`${calendarEvents.length} total`} />
+          <KpiCard label="Open Tasks" value={tasks.filter((t: any) => t.status !== "Completed").length} icon={ListTodo} tone="warning" sub={`${tasks.length} total`} />
+          <KpiCard label="Visitors" value={visitors.length} icon={Users} tone="success" />
+          <KpiCard label="Notes" value={notes.length} icon={FileText} tone="muted" />
+        </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Calendar Section */}
         <Card>
