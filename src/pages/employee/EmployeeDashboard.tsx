@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { 
+import { formatDate } from "@/lib/dateFormat";
   Calendar, 
   Plus, 
   Trash2, 
@@ -205,7 +206,7 @@ const EmployeeDashboard = () => {
                         <p className="font-medium">{event.title}</p>
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {new Date(event.date).toLocaleDateString()} at {event.time}
+                          {formatDate(event.date)} at {event.time}
                         </p>
                       </div>
                       <div className="flex gap-1">
@@ -409,7 +410,7 @@ const EmployeeDashboard = () => {
                           {notice.type}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(notice.createdAt).toLocaleDateString()}
+                          {formatDate(notice.createdAt)}
                         </span>
                       </div>
                       <h4 className="font-semibold">{notice.title}</h4>

@@ -10,6 +10,7 @@ import { Download, Receipt, Search, X } from "lucide-react";
 import { ExportButtons } from "@/components/ExportButtons";
 import { EXPORT_COLUMNS } from "@/lib/exportUtils";
 import { openPaymentReceipt } from "@/lib/paymentReceipt";
+import { formatDate } from "@/lib/dateFormat";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -130,7 +131,7 @@ const Vouchers = () => {
                         <TableCell className="text-success font-semibold">
                           ₹{voucher.amount.toLocaleString("en-IN")}
                         </TableCell>
-                        <TableCell>{new Date(voucher.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{formatDate(voucher.date)}</TableCell>
                         <TableCell>
                           {voucher.receiptUrl ? (
                             <button

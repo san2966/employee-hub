@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, Plus, Clock } from "lucide-react";
+import { formatDate } from "@/lib/dateFormat";
 
 const EmployeeDailyTasks = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
@@ -85,7 +86,7 @@ const EmployeeDailyTasks = () => {
                 <tbody className="divide-y">
                   {personalTasks.map(t => (
                     <tr key={t.id} className="hover:bg-muted/30">
-                      <td className="p-4 text-sm text-muted-foreground">{new Date(t.createdAt).toLocaleDateString()}</td>
+                      <td className="p-4 text-sm text-muted-foreground">{formatDate(t.createdAt)}</td>
                       <td className="p-4 text-sm font-medium">{t.subject}</td>
                       <td className="p-4 text-sm text-muted-foreground max-w-md">{t.description}</td>
                       <td className="p-4">

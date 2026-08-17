@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bell, Megaphone } from "lucide-react";
+import { formatDate } from "@/lib/dateFormat";
 
 const EmployeeNotice = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
@@ -51,7 +52,7 @@ const EmployeeNotice = () => {
                           <div className="flex items-center justify-between mb-2">
                             <h3 className="font-semibold">{notice.title}</h3>
                             <span className="text-xs text-muted-foreground">
-                              {new Date(notice.createdAt).toLocaleDateString()}
+                              {formatDate(notice.createdAt)}
                             </span>
                           </div>
                           <p className="text-sm text-muted-foreground">{notice.content}</p>
@@ -88,7 +89,7 @@ const EmployeeNotice = () => {
                               <h3 className="font-semibold">{announcement.title}</h3>
                             </div>
                             <span className="text-xs text-muted-foreground">
-                              {new Date(announcement.createdAt).toLocaleDateString()}
+                              {formatDate(announcement.createdAt)}
                             </span>
                           </div>
                           <p className="text-sm text-muted-foreground">{announcement.content}</p>

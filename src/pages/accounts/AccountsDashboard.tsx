@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/pagination";
 import { FileText, DollarSign, Receipt, TrendingUp, RefreshCcw, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/lib/dateFormat";
 
 const AccountsDashboard = () => {
   const { vouchers, travelExpenses, refresh, getTotalVoucherAmount, getTotalTravelAmount } = useAccountsData();
@@ -138,7 +139,7 @@ const AccountsDashboard = () => {
                         <TableCell className="text-success font-semibold">
                           ₹{(record.amount || 0).toLocaleString()}
                         </TableCell>
-                        <TableCell>{new Date(record.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{formatDate(record.date)}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             record.type === "travel" 

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileText } from "lucide-react";
 import { ExportButtons } from "@/components/ExportButtons";
 import { EXPORT_COLUMNS } from "@/lib/exportUtils";
+import { formatDate } from "@/lib/dateFormat";
 
 const Reports = () => {
   const { employees, tasks } = useDirectorData();
@@ -78,7 +79,7 @@ const Reports = () => {
               ]}
               data={filteredTasks.map(task => ({
                 employeeName: getEmployeeName(task.employeeId),
-                date: new Date(task.createdAt).toLocaleDateString(),
+                date: formatDate(task.createdAt),
                 title: task.subject,
                 description: task.description,
                 status: task.status === "completed" ? "Completed" : "In Progress",
@@ -112,7 +113,7 @@ const Reports = () => {
                     <tr key={task.id} className="hover:bg-muted/30">
                       <td className="p-4 text-sm">{getEmployeeName(task.employeeId)}</td>
                       <td className="p-4 text-sm text-muted-foreground">
-                        {new Date(task.createdAt).toLocaleDateString()}
+                        {formatDate(task.createdAt)}
                       </td>
                       <td className="p-4 text-sm font-medium">{task.subject}</td>
                       <td className="p-4 text-sm text-muted-foreground max-w-xs">{task.description}</td>

@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ListTodo } from "lucide-react";
+import { formatDate } from "@/lib/dateFormat";
 
 const EmployeeTaskManager = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
@@ -62,7 +63,7 @@ const EmployeeTaskManager = () => {
                   {assignedTasks.map(t => (
                     <tr key={t.id} className="hover:bg-muted/30">
                       <td className="p-4 text-sm">{employeeName}</td>
-                      <td className="p-4 text-sm text-muted-foreground">{new Date(t.createdAt).toLocaleDateString()}</td>
+                      <td className="p-4 text-sm text-muted-foreground">{formatDate(t.createdAt)}</td>
                       <td className="p-4 text-sm font-medium">{t.subject}</td>
                       <td className="p-4 text-sm text-muted-foreground max-w-xs">{t.description}</td>
                       <td className="p-4">

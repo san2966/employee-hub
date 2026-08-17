@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FileText, Plus, Pencil } from "lucide-react";
 import { ExportButtons } from "@/components/ExportButtons";
 import { EXPORT_COLUMNS } from "@/lib/exportUtils";
+import { formatDate } from "@/lib/dateFormat";
 
 const EmployeeReports = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
@@ -189,7 +190,7 @@ const EmployeeReports = () => {
                     {reports.map(report => (
                       <tr key={report.id} className="hover:bg-muted/30">
                         <td className="p-4 text-sm">
-                          {new Date(report.date).toLocaleDateString()}
+                          {formatDate(report.date)}
                         </td>
                         <td className="p-4 text-sm">{report.department}</td>
                         <td className="p-4 text-sm font-medium">{report.task}</td>
