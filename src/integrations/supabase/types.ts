@@ -1029,66 +1029,75 @@ export type Database = {
       employee_payments: {
         Row: {
           accounts_status: string
-          amount: number
+          amount: number | null
           approved_by: string | null
-          category: string
+          category: string | null
           created_at: string | null
-          date: string
-          description: string
+          date: string | null
+          description: string | null
           employee_id: string
           employee_name: string | null
           expense_type: string | null
           from_location: string | null
           hr_status: string
           id: string
+          month: number | null
           payment_mode: string
           purpose: string | null
           receipt_url: string | null
+          sheet_url: string | null
           status: Database["public"]["Enums"]["payment_status"] | null
           to_location: string | null
           updated_at: string | null
+          year: number | null
         }
         Insert: {
           accounts_status?: string
-          amount: number
+          amount?: number | null
           approved_by?: string | null
-          category: string
+          category?: string | null
           created_at?: string | null
-          date: string
-          description: string
+          date?: string | null
+          description?: string | null
           employee_id: string
           employee_name?: string | null
           expense_type?: string | null
           from_location?: string | null
           hr_status?: string
           id?: string
+          month?: number | null
           payment_mode?: string
           purpose?: string | null
           receipt_url?: string | null
+          sheet_url?: string | null
           status?: Database["public"]["Enums"]["payment_status"] | null
           to_location?: string | null
           updated_at?: string | null
+          year?: number | null
         }
         Update: {
           accounts_status?: string
-          amount?: number
+          amount?: number | null
           approved_by?: string | null
-          category?: string
+          category?: string | null
           created_at?: string | null
-          date?: string
-          description?: string
+          date?: string | null
+          description?: string | null
           employee_id?: string
           employee_name?: string | null
           expense_type?: string | null
           from_location?: string | null
           hr_status?: string
           id?: string
+          month?: number | null
           payment_mode?: string
           purpose?: string | null
           receipt_url?: string | null
+          sheet_url?: string | null
           status?: Database["public"]["Enums"]["payment_status"] | null
           to_location?: string | null
           updated_at?: string | null
+          year?: number | null
         }
         Relationships: []
       }

@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { KpiCard } from "@/components/dashboard/KpiCard";
+import { FileSearch, ListChecks } from "lucide-react";
 
 const TenderDashboard = () => {
   const { data: reminders, add: addReminder, remove: removeReminder } = useTenderReminders();
@@ -103,6 +105,19 @@ const TenderDashboard = () => {
 
   return (
     <TenderLayout title="Dashboard">
+      <div className="space-y-6">
+        <div className="gradient-primary rounded-xl p-6 text-primary-foreground">
+          <h2 className="text-2xl font-bold mb-1">Tender Control Center</h2>
+          <p className="opacity-90">Track research, reminders and upcoming openings at a glance</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KpiCard label="Research Records" value={research.length} icon={FileSearch} tone="primary" />
+          <KpiCard label="Active Reminders" value={reminders.length} icon={CalendarClock} tone="warning" />
+          <KpiCard label="Today's Alerts" value={notifications.length} icon={Bell} tone="destructive" />
+          <KpiCard label="Notes" value={notes.length} icon={ListChecks} tone="success" />
+        </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Notifications */}
         <Card>
@@ -145,7 +160,7 @@ const TenderDashboard = () => {
                         <PopoverTrigger asChild>
                           <Button variant="outline" className="w-full justify-start">
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {reminderDate ? format(reminderDate, "PPP") : "Pick a date"}
+                            {reminderDate ? format(reminderDate, "dd-MM-yyyy") : "Pick a date"}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={reminderDate} onSelect={setReminderDate} /></PopoverContent>
@@ -222,6 +237,7 @@ const TenderDashboard = () => {
             )}
           </CardContent>
         </Card>
+      </div>
       </div>
     </TenderLayout>
   );

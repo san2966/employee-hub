@@ -113,7 +113,7 @@ const TenderDocuments = () => {
               <Label>Date *</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start"><CalendarIcon className="mr-2 h-4 w-4" />{bidDate ? format(bidDate, "PPP") : "Pick a date"}</Button>
+                  <Button variant="outline" className="w-full justify-start"><CalendarIcon className="mr-2 h-4 w-4" />{bidDate ? format(bidDate, "dd-MM-yyyy") : "Pick a date"}</Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={bidDate} onSelect={setBidDate} /></PopoverContent>
               </Popover>

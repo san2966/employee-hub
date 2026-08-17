@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, Briefcase, HeartPulse, RefreshCcw, Plus, Minus } from "lucide-react";
+import { formatDate } from "@/lib/dateFormat";
 
 const EmployeeLeaveManager = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
@@ -159,12 +160,12 @@ const EmployeeLeaveManager = () => {
       <div className="flex items-start justify-between">
         <div>
           <p className="font-medium">
-            {leave.isAddLeave ? "Worked on" : "Leave on"} {new Date(leave.date).toLocaleDateString()}
+            {leave.isAddLeave ? "Worked on" : "Leave on"} {formatDate(leave.date)}
           </p>
           <p className="text-sm text-muted-foreground mt-1">{leave.reason}</p>
           {leave.workingDate && !leave.isAddLeave && (
             <p className="text-xs text-muted-foreground mt-1">
-              Working Date: {new Date(leave.workingDate).toLocaleDateString()}
+              Working Date: {formatDate(leave.workingDate)}
             </p>
           )}
         </div>

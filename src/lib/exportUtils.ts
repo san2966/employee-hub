@@ -34,7 +34,7 @@ export const exportToCSV = (config: ExportConfig): void => {
       if (value && typeof value === "string" && !isNaN(Date.parse(value))) {
         const date = new Date(value);
         if (date.getFullYear() > 1990) {
-          value = format(date, "yyyy-MM-dd");
+          value = format(date, "dd-MM-yyyy");
         }
       }
       // Format amounts
@@ -90,14 +90,20 @@ export const exportToPDF = (config: ExportConfig): void => {
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100, 100, 100);
 
+  const pretty = (v?: string) => {
+    if (!v) return "N/A";
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? v : format(d, "dd-MM-yyyy");
+  };
+
   let yPos = 48;
   if (dateRange?.from || dateRange?.to) {
-    const rangeText = `Date Range: ${dateRange.from || "N/A"} to ${dateRange.to || "N/A"}`;
+    const rangeText = `Date Range: ${pretty(dateRange.from)} to ${pretty(dateRange.to)}`;
     doc.text(rangeText, 14, yPos);
     yPos += 5;
   }
 
-  doc.text(`Exported on: ${format(new Date(), "PPpp")}`, 14, yPos);
+  doc.text(`Exported on: ${format(new Date(), "dd-MM-yyyy hh:mm a")}`, 14, yPos);
   doc.text(`Total Records: ${data.length}`, pageWidth - 50, yPos);
 
   // Prepare table data
@@ -109,7 +115,7 @@ export const exportToPDF = (config: ExportConfig): void => {
       if (value && typeof value === "string" && !isNaN(Date.parse(value))) {
         const date = new Date(value);
         if (date.getFullYear() > 1990) {
-          value = format(date, "yyyy-MM-dd");
+          value = format(date, "dd-MM-yyyy");
         }
       }
       // Format amounts

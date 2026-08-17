@@ -76,7 +76,7 @@ const TenderMonitor = () => {
     pdf.setFont("helvetica", "normal");
     pdf.text("Tender Report", 14, 22);
     pdf.setFontSize(8);
-    pdf.text(`Generated: ${format(new Date(), "PPpp")}`, pageWidth - 14, 22, { align: "right" });
+    pdf.text(`Generated: ${format(new Date(), "dd-MM-yyyy hh:mm a")}`, pageWidth - 14, 22, { align: "right" });
 
     // Title
     pdf.setTextColor(0, 0, 0);

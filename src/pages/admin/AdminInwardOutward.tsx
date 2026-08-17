@@ -262,7 +262,7 @@ const AdminInwardOutward = () => {
                 ) : (
                   inwardRecords.map((record) => (
                     <TableRow key={record.id}>
-                      <TableCell>{format(new Date(record.date), "PP")}</TableCell>
+                      <TableCell>{format(new Date(record.date), "dd-MM-yyyy")}</TableCell>
                       <TableCell>{record.senderName}</TableCell>
                       <TableCell>{record.documentType || "-"}</TableCell>
                       <TableCell>{record.receiverName}</TableCell>
@@ -397,7 +397,7 @@ const AdminInwardOutward = () => {
                 ) : (
                   outwardRecords.map((record) => (
                     <TableRow key={record.id}>
-                      <TableCell>{format(new Date(record.date), "PP")}</TableCell>
+                      <TableCell>{format(new Date(record.date), "dd-MM-yyyy")}</TableCell>
                       <TableCell>{record.receiverName}</TableCell>
                       <TableCell>{record.documentType || "-"}</TableCell>
                       <TableCell>{record.senderName}</TableCell>

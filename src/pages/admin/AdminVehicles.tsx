@@ -385,7 +385,7 @@ const AdminVehicles = () => {
                 ) : (
                   vehicleAssignments.map((assignment) => (
                     <TableRow key={assignment.id}>
-                      <TableCell>{format(new Date(assignment.date), "PP")}</TableCell>
+                      <TableCell>{format(new Date(assignment.date), "dd-MM-yyyy")}</TableCell>
                       <TableCell>{assignment.vehicleInfo}</TableCell>
                       <TableCell>{assignment.employeeName}</TableCell>
                       <TableCell>{assignment.previousKm.toLocaleString()} km</TableCell>
@@ -495,7 +495,7 @@ const AdminVehicles = () => {
                 ) : (
                   fuelEntries.map((entry) => (
                     <TableRow key={entry.id}>
-                      <TableCell>{format(new Date(entry.date), "PP")}</TableCell>
+                      <TableCell>{format(new Date(entry.date), "dd-MM-yyyy")}</TableCell>
                       <TableCell>{entry.vehicleInfo}</TableCell>
                       <TableCell>{entry.quantity} Ltr</TableCell>
                       <TableCell>₹{entry.amount.toLocaleString()}</TableCell>

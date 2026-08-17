@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Bell, Megaphone, Send } from "lucide-react";
+import { formatDate } from "@/lib/dateFormat";
 
 const Notices = () => {
   const { toast } = useToast();
@@ -187,7 +188,7 @@ const Notices = () => {
                       <div className="flex items-start justify-between">
                         <p className="font-medium text-sm">{notice.title}</p>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(notice.createdAt).toLocaleDateString()}
+                          {formatDate(notice.createdAt)}
                         </span>
                       </div>
                       <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{notice.content}</p>
@@ -213,7 +214,7 @@ const Notices = () => {
                       <div className="flex items-start justify-between">
                         <p className="font-medium text-sm">{notice.title}</p>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(notice.createdAt).toLocaleDateString()}
+                          {formatDate(notice.createdAt)}
                         </span>
                       </div>
                       <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{notice.content}</p>

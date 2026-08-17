@@ -19,6 +19,10 @@ import {
 } from "@/components/ui/pagination";
 import { FileText, DollarSign, Receipt, TrendingUp, RefreshCcw, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/lib/dateFormat";
+import { KpiCard } from "@/components/dashboard/KpiCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 const AccountsDashboard = () => {
   const { vouchers, travelExpenses, refresh, getTotalVoucherAmount, getTotalTravelAmount } = useAccountsData();
@@ -48,32 +52,23 @@ const AccountsDashboard = () => {
   const totalTravelAmount = getTotalTravelAmount(travelExpenses);
   const totalAmount = totalVoucherAmount + totalTravelAmount;
 
-  const stats = [
-    { 
-      title: "Total Records", 
-      value: allRecords.length.toString(), 
-      icon: Receipt,
-      color: "text-primary"
-    },
-    { 
-      title: "Total Amount", 
-      value: `₹${totalAmount.toLocaleString()}`, 
-      icon: DollarSign,
-      color: "text-success"
-    },
-    { 
-      title: "Vouchers", 
-      value: `₹${totalVoucherAmount.toLocaleString()}`, 
-      icon: FileText,
-      color: "text-warning"
-    },
-    { 
-      title: "Travel Expenses", 
-      value: `₹${totalTravelAmount.toLocaleString()}`, 
-      icon: Plane,
-      color: "text-info"
-    },
-  ];
+  const monthlyTrend = (() => {
+    const map: Record<string, number> = {};
+    allRecords.forEach((r: any) => {
+      const key = (r.date || "").slice(0, 7);
+      if (key) map[key] = (map[key] || 0) + (r.amount || 0);
+    });
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-6)
+      .map(([month, amount]) => ({ month, amount }));
+  })();
+
+  const splitData = [
+    { name: "Vouchers", value: totalVoucherAmount },
+    { name: "Travel", value: totalTravelAmount },
+  ].filter(d => d.value > 0);
+  const pieColors = ["hsl(var(--primary))", "hsl(var(--warning))"];
 
   return (
     <AccountsLayout title="Dashboard">
@@ -90,21 +85,58 @@ const AccountsDashboard = () => {
           </Button>
         </div>
 
-        {/* Stats Grid */}
+        {/* KPI Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((stat, index) => (
-            <div key={index} className="card-corporate p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{stat.title}</p>
-                  <p className="text-2xl font-bold mt-1">{stat.value}</p>
-                </div>
-                <div className={`p-3 rounded-full bg-muted ${stat.color}`}>
-                  <stat.icon className="h-6 w-6" />
-                </div>
-              </div>
-            </div>
-          ))}
+          <KpiCard label="Total Records" value={allRecords.length} icon={Receipt} tone="primary" />
+          <KpiCard label="Total Amount" value={`₹${totalAmount.toLocaleString()}`} icon={DollarSign} tone="success" />
+          <KpiCard label="Vouchers" value={`₹${totalVoucherAmount.toLocaleString()}`} icon={FileText} tone="warning" sub={`${vouchers.length} entries`} />
+          <KpiCard label="Travel Expenses" value={`₹${totalTravelAmount.toLocaleString()}`} icon={Plane} tone="muted" sub={`${travelExpenses.length} entries`} />
+        </div>
+
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="card-corporate lg:col-span-2">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-primary" /> Monthly Spend
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {monthlyTrend.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-10 text-center">No data yet</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={monthlyTrend}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" fontSize={12} />
+                    <YAxis fontSize={12} />
+                    <Tooltip formatter={(v: any) => `₹${Number(v).toLocaleString()}`} />
+                    <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+          <Card className="card-corporate">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Expense Split</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {splitData.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-10 text-center">No data yet</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={240}>
+                  <PieChart>
+                    <Pie data={splitData} dataKey="value" nameKey="name" innerRadius={45} outerRadius={80} paddingAngle={3}>
+                      {splitData.map((_, i) => <Cell key={i} fill={pieColors[i % pieColors.length]} />)}
+                    </Pie>
+                    <Tooltip formatter={(v: any) => `₹${Number(v).toLocaleString()}`} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Records Table */}
@@ -138,7 +170,7 @@ const AccountsDashboard = () => {
                         <TableCell className="text-success font-semibold">
                           ₹{(record.amount || 0).toLocaleString()}
                         </TableCell>
-                        <TableCell>{new Date(record.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{formatDate(record.date)}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             record.type === "travel" 

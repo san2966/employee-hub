@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ExportButtons } from "@/components/ExportButtons";
 import { useDirectorData } from "@/hooks/useDirectorData";
+import { formatDate } from "@/lib/dateFormat";
 
 interface EodRow {
   id: string;
@@ -124,7 +125,7 @@ const DailyTaskTab = () => {
             ]}
             data={filteredTasks.map(t => ({
               employeeName: getEmployeeName(t.employeeId),
-              date: new Date(t.createdAt).toLocaleDateString(),
+              date: formatDate(t.createdAt),
               department: getEmployeeDepartment(t.employeeId),
               task: t.subject,
               status: t.status.replace("-", " "),
@@ -154,7 +155,7 @@ const DailyTaskTab = () => {
               ) : filteredTasks.map(t => (
                 <tr key={t.id} className="hover:bg-muted/30">
                   <td className="p-4 text-sm">{getEmployeeName(t.employeeId)}</td>
-                  <td className="p-4 text-sm text-muted-foreground">{new Date(t.createdAt).toLocaleDateString()}</td>
+                  <td className="p-4 text-sm text-muted-foreground">{formatDate(t.createdAt)}</td>
                   <td className="p-4 text-sm text-muted-foreground">{getEmployeeDepartment(t.employeeId)}</td>
                   <td className="p-4 text-sm font-medium">{t.subject}</td>
                   <td className="p-4">
@@ -168,7 +169,7 @@ const DailyTaskTab = () => {
                   <td className="p-4">
                     <Button variant="outline" size="sm" onClick={() => setPreview({
                       employeeName: getEmployeeName(t.employeeId),
-                      date: new Date(t.createdAt).toLocaleDateString(),
+                      date: formatDate(t.createdAt),
                       department: getEmployeeDepartment(t.employeeId),
                       task: t.subject,
                       status: t.status.replace("-", " "),
@@ -261,7 +262,7 @@ const EODTab = () => {
               <PopoverTrigger asChild>
                 <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !fromDate && "text-muted-foreground")}>
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {fromDate ? format(fromDate, "PPP") : "Pick date"}
+                  {fromDate ? format(fromDate, "dd-MM-yyyy") : "Pick date"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -275,7 +276,7 @@ const EODTab = () => {
               <PopoverTrigger asChild>
                 <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !toDate && "text-muted-foreground")}>
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {toDate ? format(toDate, "PPP") : "Pick date"}
+                  {toDate ? format(toDate, "dd-MM-yyyy") : "Pick date"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -338,7 +339,7 @@ const EODTab = () => {
               ) : filtered.map(r => (
                 <tr key={r.id} className="hover:bg-muted/30">
                   <td className="p-4 text-sm">{r.employeeName}</td>
-                  <td className="p-4 text-sm text-muted-foreground">{new Date(r.date).toLocaleDateString()}</td>
+                  <td className="p-4 text-sm text-muted-foreground">{formatDate(r.date)}</td>
                   <td className="p-4 text-sm text-muted-foreground">{r.department}</td>
                   <td className="p-4 text-sm font-medium">{r.task || "-"}</td>
                   <td className="p-4">
@@ -350,7 +351,7 @@ const EODTab = () => {
                   <td className="p-4">
                     <Button variant="outline" size="sm" onClick={() => setPreview({
                       employeeName: r.employeeName,
-                      date: new Date(r.date).toLocaleDateString(),
+                      date: formatDate(r.date),
                       department: r.department,
                       task: r.task,
                       status: r.status === "completed" ? "Completed" : "Pending",

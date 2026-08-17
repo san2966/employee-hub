@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import EmployeeLayout from "@/components/employee/EmployeeLayout";
 import { useEmployeeData } from "@/hooks/useEmployeeData";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FileText, Plus, Pencil } from "lucide-react";
 import { ExportButtons } from "@/components/ExportButtons";
 import { EXPORT_COLUMNS } from "@/lib/exportUtils";
+import { formatDate } from "@/lib/dateFormat";
 
 const EmployeeReports = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
@@ -23,6 +24,8 @@ const EmployeeReports = () => {
   
   const [dialog, setDialog] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [form, setForm] = useState({
     date: "",
     department: "",
@@ -37,6 +40,17 @@ const EmployeeReports = () => {
     status: "pending" as "completed" | "pending",
     description: "", additionalInfo: "",
   };
+
+  const filteredReports = useMemo(
+    () =>
+      reports.filter((r: any) => {
+        const d = (r.date || "").slice(0, 10);
+        if (fromDate && d < fromDate) return false;
+        if (toDate && d > toDate) return false;
+        return true;
+      }),
+    [reports, fromDate, toDate]
+  );
 
   const openEdit = (report: any) => {
     setEditId(report.id);
@@ -83,12 +97,6 @@ const EmployeeReports = () => {
             <p className="opacity-90">Submit and track your daily reports</p>
           </div>
           <div className="flex gap-2">
-            <ExportButtons
-              portal="Employee"
-              type="Reports"
-              columns={EXPORT_COLUMNS.reports}
-              data={reports.map(r => ({ ...r, employeeName }))}
-            />
             <Dialog open={dialog} onOpenChange={(o) => { setDialog(o); if (!o) { setEditId(null); setForm(emptyForm); } }}>
               <DialogTrigger asChild>
                 <Button variant="secondary" onClick={() => { setEditId(null); setForm(emptyForm); }}>
@@ -157,8 +165,37 @@ const EmployeeReports = () => {
           </div>
         </div>
 
+        {/* Date filter + exports */}
+        <Card className="card-corporate">
+          <CardContent className="p-4 flex flex-wrap items-end gap-4">
+            <div>
+              <Label className="text-sm text-muted-foreground">From Date</Label>
+              <Input type="date" className="w-44" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-sm text-muted-foreground">To Date</Label>
+              <Input type="date" className="w-44" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+            </div>
+            {(fromDate || toDate) && (
+              <Button variant="ghost" size="sm" onClick={() => { setFromDate(""); setToDate(""); }}>
+                Clear
+              </Button>
+            )}
+            <div className="ml-auto flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">{filteredReports.length} record(s)</span>
+              <ExportButtons
+                portal="Employee"
+                type="EOD"
+                columns={EXPORT_COLUMNS.reports}
+                data={filteredReports.map((r: any) => ({ ...r, employeeName }))}
+                dateRange={{ from: fromDate, to: toDate }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Reports List */}
-        {reports.length === 0 ? (
+        {filteredReports.length === 0 ? (
           <Card className="card-corporate">
             <CardContent className="py-12 text-center text-muted-foreground">
               <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -186,10 +223,10 @@ const EmployeeReports = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {reports.map(report => (
+                    {filteredReports.map(report => (
                       <tr key={report.id} className="hover:bg-muted/30">
                         <td className="p-4 text-sm">
-                          {new Date(report.date).toLocaleDateString()}
+                          {formatDate(report.date)}
                         </td>
                         <td className="p-4 text-sm">{report.department}</td>
                         <td className="p-4 text-sm font-medium">{report.task}</td>

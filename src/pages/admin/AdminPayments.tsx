@@ -140,7 +140,7 @@ const AdminPayments = () => {
               ) : (
                 payments.map((payment) => (
                   <TableRow key={payment.id}>
-                    <TableCell>{format(new Date(payment.date), "PP")}</TableCell>
+                    <TableCell>{format(new Date(payment.date), "dd-MM-yyyy")}</TableCell>
                     <TableCell>{payment.purpose}</TableCell>
                     <TableCell>₹{payment.amount.toLocaleString()}</TableCell>
                     <TableCell>

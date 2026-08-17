@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
 import { getPaymentReceiptUrl } from "@/lib/paymentReceipt";
 import { PaymentStatusBadge } from "./PaymentStatusBadge";
+import { formatDateTime, monthLabel } from "@/lib/dateFormat";
 import type { ExpensePayment } from "@/hooks/useExpensePayments";
 
 interface Props {
@@ -19,50 +20,52 @@ const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
 );
 
 export const PaymentDetailsDialog = ({ payment, onOpenChange }: Props) => {
-  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const storedPath = payment?.sheet_url || payment?.receipt_url || null;
 
   useEffect(() => {
-    setReceiptUrl(null);
-    if (payment?.receipt_url) getPaymentReceiptUrl(payment.receipt_url).then(setReceiptUrl);
-  }, [payment]);
+    setFileUrl(null);
+    if (storedPath) getPaymentReceiptUrl(storedPath).then(setFileUrl);
+  }, [storedPath]);
 
-  const isPdf = !!receiptUrl && receiptUrl.toLowerCase().includes(".pdf");
+  const lower = (storedPath || "").toLowerCase();
+  const isPdf = lower.endsWith(".pdf");
+  const isImage = /\.(png|jpe?g|gif|webp)$/.test(lower);
 
   return (
     <Dialog open={!!payment} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Payment Details</DialogTitle>
+          <DialogTitle>Expense Sheet Details</DialogTitle>
         </DialogHeader>
         {payment && (
           <div className="space-y-5">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <Field label="Employee" value={payment.employee_name} />
-              <Field label="Date" value={new Date(payment.date).toLocaleDateString()} />
-              <Field label="Expense Type" value={payment.expense_type} />
-              <Field label="Amount" value={`₹${payment.amount.toLocaleString("en-IN")}`} />
-              <Field label="Mode" value={payment.payment_mode} />
-              <Field label="Submitted" value={payment.created_at ? new Date(payment.created_at).toLocaleString() : "-"} />
-              {payment.from_location && <Field label="From" value={payment.from_location} />}
-              {payment.to_location && <Field label="To" value={payment.to_location} />}
+              <Field label="Employee Name" value={payment.display_name || payment.employee_name} />
+              <Field label="Month" value={monthLabel(payment.month)} />
+              <Field label="Year" value={payment.year ?? "-"} />
               <Field label="HR Status" value={<PaymentStatusBadge status={payment.hr_status} />} />
               <Field label="Accounts Status" value={<PaymentStatusBadge status={payment.accounts_status} />} />
+              <Field label="Submitted" value={formatDateTime(payment.created_at)} />
             </div>
-            <Field label="Purpose of Payment" value={payment.purpose || payment.description} />
             <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Receipt</p>
-              {!payment.receipt_url ? (
-                <p className="text-sm text-muted-foreground">No receipt uploaded</p>
-              ) : !receiptUrl ? (
+              <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Expense Sheet</p>
+              {!storedPath ? (
+                <p className="text-sm text-muted-foreground">No file uploaded</p>
+              ) : !fileUrl ? (
                 <p className="text-sm text-muted-foreground">Loading preview…</p>
               ) : (
                 <div className="space-y-2">
                   {isPdf ? (
-                    <iframe src={receiptUrl} title="Receipt" className="w-full h-[60vh] rounded-lg border" />
+                    <iframe src={fileUrl} title="Expense sheet" className="w-full h-[60vh] rounded-lg border" />
+                  ) : isImage ? (
+                    <img src={fileUrl} alt="Expense sheet" className="max-h-[60vh] rounded-lg border object-contain" />
                   ) : (
-                    <img src={receiptUrl} alt="Payment receipt" className="max-h-[60vh] rounded-lg border object-contain" />
+                    <p className="text-sm text-muted-foreground">
+                      Spreadsheet files cannot be previewed in the browser — open it in a new tab to download.
+                    </p>
                   )}
-                  <Button variant="outline" size="sm" onClick={() => window.open(receiptUrl, "_blank", "noopener")}>
+                  <Button variant="outline" size="sm" onClick={() => window.open(fileUrl, "_blank", "noopener")}>
                     <ExternalLink className="h-4 w-4 mr-2" /> Open in new tab
                   </Button>
                 </div>

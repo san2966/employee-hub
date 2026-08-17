@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { ExportButtons } from "@/components/ExportButtons";
 import { EXPORT_COLUMNS } from "@/lib/exportUtils";
+import { formatDate } from "@/lib/dateFormat";
 
 const HRLeaveManager = () => {
   const { 
@@ -128,11 +129,11 @@ const HRLeaveManager = () => {
               {leaves.map((leave) => (
                 <TableRow key={leave.id}>
                   <TableCell className="font-medium">{leave.employeeName}</TableCell>
-                  <TableCell>{new Date(leave.date).toLocaleDateString()}</TableCell>
+                  <TableCell>{formatDate(leave.date)}</TableCell>
                   <TableCell className="max-w-xs truncate">{leave.reason}</TableCell>
                   <TableCell>{getStatusBadge(leave.status)}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {new Date(leave.createdAt).toLocaleDateString()}
+                    {formatDate(leave.createdAt)}
                   </TableCell>
                   <TableCell className="text-right">
                     <AlertDialog>

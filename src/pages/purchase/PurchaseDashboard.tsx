@@ -12,6 +12,8 @@ import { Plus, ChevronRight, Trash2, Bell, CalendarPlus } from "lucide-react";
 import { usePurchaseProjects, usePurchaseQuotes, usePurchaseDispatches, usePurchaseEvents } from "@/hooks/usePurchaseData";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { KpiCard } from "@/components/dashboard/KpiCard";
+import { FolderKanban, FileCheck2, Truck, CalendarDays } from "lucide-react";
 
 const checkboxFields = [
   { key: "vendor_discussion", label: "Vendor Discussion" },
@@ -76,6 +78,21 @@ const PurchaseDashboard = () => {
   return (
     <PurchaseLayout title="Dashboard">
       <div className="space-y-6">
+        <div className="gradient-primary rounded-xl p-6 text-primary-foreground">
+          <h2 className="text-2xl font-bold mb-1">Purchase Overview</h2>
+          <p className="opacity-90">Projects, quotes and dispatches in one place</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KpiCard label="Active Projects" value={projects.length} icon={FolderKanban} tone="primary"
+            sub={`Avg progress ${projects.length ? Math.round(projects.reduce((s: number, p: any) => s + (p.progress || 0), 0) / projects.length) : 0}%`} />
+          <KpiCard label="Quotes" value={quotes.length} icon={FileCheck2} tone="success"
+            sub={`${quotes.filter((q: any) => q.status === "Approved").length} approved`} />
+          <KpiCard label="Dispatches" value={dispatches.length} icon={Truck} tone="warning"
+            sub={`${dispatches.filter((d: any) => d.status === "Delivered").length} delivered`} />
+          <KpiCard label="Upcoming Events" value={events.length} icon={CalendarDays} tone="muted" />
+        </div>
+
         {/* Project Tracking */}
         <Card>
           <CardHeader>

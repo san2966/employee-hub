@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, Plus, Bell, StickyNote, BarChart3, Trash2 } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { KpiCard } from "@/components/dashboard/KpiCard";
+import { FileText, Inbox, CheckCircle2, Clock } from "lucide-react";
 
 const OperationsDashboard = () => {
   const { toast } = useToast();
@@ -93,6 +95,18 @@ const OperationsDashboard = () => {
   return (
     <OperationsLayout title="Dashboard">
       <div className="space-y-6">
+        <div className="gradient-primary rounded-xl p-6 text-primary-foreground">
+          <h2 className="text-2xl font-bold mb-1">Operations Overview</h2>
+          <p className="opacity-90">Proposals, inwards and daily schedule at a glance</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KpiCard label="Proposals" value={proposals.data.length} icon={FileText} tone="primary" />
+          <KpiCard label="Approved" value={proposals.data.filter((p: any) => p.status === "Approved").length} icon={CheckCircle2} tone="success" />
+          <KpiCard label="Pending" value={proposals.data.filter((p: any) => (p.status || "Pending") === "Pending").length} icon={Clock} tone="warning" />
+          <KpiCard label="Inwards" value={inwards.data.length} icon={Inbox} tone="muted" />
+        </div>
+
         {/* Top Row: Calendar, Reminders, Notifications */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Calendar Events */}

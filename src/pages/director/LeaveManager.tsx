@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { ExportButtons } from "@/components/ExportButtons";
 import { EXPORT_COLUMNS } from "@/lib/exportUtils";
+import { formatDate } from "@/lib/dateFormat";
 
 const LeaveManager = () => {
   const { toast } = useToast();
@@ -113,7 +114,7 @@ const LeaveManager = () => {
       <div className="flex items-start justify-between mb-3">
         <div>
           <p className="font-semibold">{leave.employeeName}</p>
-          <p className="text-xs text-muted-foreground">{new Date(leave.date).toLocaleDateString()}</p>
+          <p className="text-xs text-muted-foreground">{formatDate(leave.date)}</p>
         </div>
         <span className={`px-2 py-1 rounded text-xs ${
           leave.status === "approved" ? "bg-success/10 text-success" :
@@ -140,7 +141,7 @@ const LeaveManager = () => {
         {leave.workingDate && (
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Working Date:</span>
-            <span>{new Date(leave.workingDate).toLocaleDateString()}</span>
+            <span>{formatDate(leave.workingDate)}</span>
           </div>
         )}
         <div>

@@ -116,7 +116,7 @@ const AdminAttendance = () => {
     doc.setFontSize(16);
     doc.text(title, 14, 20);
     doc.setFontSize(10);
-    doc.text(`Generated: ${format(new Date(), "PPP pp")}`, 14, 28);
+    doc.text(`Generated: ${format(new Date(), "dd-MM-yyyy hh:mm a")}`, 14, 28);
     autoTable(doc, {
       startY: 35,
       head: [["Employee", "Date", "Location", "Visit Location", "In Time", "Out Time", "Status"]],
@@ -136,7 +136,7 @@ const AdminAttendance = () => {
             <PopoverTrigger asChild>
               <Button variant="outline" className={cn("w-[240px] justify-start text-left font-normal")}>
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {format(selectedDate, "PPP")}
+                {format(selectedDate, "dd-MM-yyyy")}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -152,7 +152,7 @@ const AdminAttendance = () => {
             <Button variant="outline" size="sm" onClick={() => downloadCSV(records, `Attendance_${format(selectedDate, "yyyy-MM-dd")}.csv`)}>
               <Download className="h-4 w-4 mr-1" /> CSV
             </Button>
-            <Button variant="outline" size="sm" onClick={() => downloadPDF(records, `Attendance - ${format(selectedDate, "PPP")}`, `Attendance_${format(selectedDate, "yyyy-MM-dd")}.pdf`)}>
+            <Button variant="outline" size="sm" onClick={() => downloadPDF(records, `Attendance - ${format(selectedDate, "dd-MM-yyyy")}`, `Attendance_${format(selectedDate, "yyyy-MM-dd")}.pdf`)}>
               <Download className="h-4 w-4 mr-1" /> PDF
             </Button>
           </div>
@@ -241,7 +241,7 @@ const AdminAttendance = () => {
           <div className="p-6 border-b">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <h3 className="text-lg font-semibold text-foreground">
-                Records for {format(selectedDate, "PPP")}
+                Records for {format(selectedDate, "dd-MM-yyyy")}
               </h3>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

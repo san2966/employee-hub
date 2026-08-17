@@ -190,7 +190,7 @@ const PurchaseTechnicalSupport = () => {
                           <TableCell className="max-w-32 truncate">{t.description}</TableCell>
                           <TableCell><Badge variant={t.priority === "High" ? "destructive" : t.priority === "Medium" ? "secondary" : "outline"}>{t.priority}</Badge></TableCell>
                           <TableCell><Badge variant={t.status === "Completed" ? "default" : "secondary"}>{t.status}</Badge></TableCell>
-                          <TableCell className="text-xs">{t.created_at ? format(new Date(t.created_at), "PPp") : "-"}</TableCell>
+                          <TableCell className="text-xs">{t.created_at ? format(new Date(t.created_at), "dd-MM-yyyy hh:mm a") : "-"}</TableCell>
                           <TableCell className="max-w-32 truncate">{t.report || "-"}</TableCell>
                           <TableCell>
                             {t.status !== "Completed" && (

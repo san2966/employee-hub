@@ -230,7 +230,7 @@ const AdminVisitors = () => {
                         </span>
                       )}
                     </TableCell>
-                    <TableCell>{format(new Date(visitor.checkInTime), "PPp")}</TableCell>
+                    <TableCell>{format(new Date(visitor.checkInTime), "dd-MM-yyyy hh:mm a")}</TableCell>
                     <TableCell>
                       <Button
                         variant="ghost"

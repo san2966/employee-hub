@@ -9,6 +9,7 @@ interface ExportButtonsProps {
   data: Record<string, any>[];
   dateRange?: { from?: string; to?: string };
   className?: string;
+  variant?: "outline" | "secondary";
 }
 
 export const ExportButtons = ({
@@ -18,6 +19,7 @@ export const ExportButtons = ({
   data,
   dateRange,
   className = "",
+  variant = "outline",
 }: ExportButtonsProps) => {
   const handleExportCSV = () => {
     exportToCSV({ portal, type, columns, data, dateRange });
@@ -30,21 +32,21 @@ export const ExportButtons = ({
   return (
     <div className={`flex gap-2 ${className}`}>
       <Button
-        variant="outline"
+        variant={variant}
         size="sm"
         onClick={handleExportCSV}
         disabled={data.length === 0}
-        className="gap-2"
+        className="gap-2 shadow-sm"
       >
         <FileSpreadsheet className="h-4 w-4" />
         Export CSV
       </Button>
       <Button
-        variant="outline"
+        variant={variant}
         size="sm"
         onClick={handleExportPDF}
         disabled={data.length === 0}
-        className="gap-2"
+        className="gap-2 shadow-sm"
       >
         <FileText className="h-4 w-4" />
         Export PDF

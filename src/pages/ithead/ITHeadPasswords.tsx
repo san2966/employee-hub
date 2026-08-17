@@ -207,7 +207,7 @@ const ITHeadPasswords = () => {
                         </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
-                        {format(new Date(entry.createdAt), "PP")}
+                        {format(new Date(entry.createdAt), "dd-MM-yyyy")}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">

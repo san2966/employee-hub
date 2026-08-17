@@ -3,63 +3,53 @@ import EmployeeLayout from "@/components/employee/EmployeeLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, FileSpreadsheet, FileText, Pencil, Plus, Trash2, Receipt } from "lucide-react";
+import { CheckCircle2, Clock, Eye, FileSpreadsheet, FileText, Pencil, Plus, Receipt, Trash2, Wallet } from "lucide-react";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 import { uploadPaymentReceipt } from "@/lib/paymentReceipt";
+import { MONTHS, YEAR_OPTIONS, monthLabel } from "@/lib/dateFormat";
 import {
-  EXPENSE_TYPES,
   PAYMENT_EXPORT_COLUMNS,
   filterPayments,
+  paymentExportRows,
   useExpensePayments,
   type ExpensePayment,
 } from "@/hooks/useExpensePayments";
 import { PaymentStatusBadge } from "@/components/payments/PaymentStatusBadge";
 import { PaymentDetailsDialog } from "@/components/payments/PaymentDetailsDialog";
+import { KpiCard } from "@/components/dashboard/KpiCard";
 
-const emptyForm = {
-  expense_type: "",
-  date: "",
-  amount: "",
-  purpose: "",
-  from_location: "",
-  to_location: "",
-  payment_mode: "Cash",
-  receipt_url: "",
-};
+const emptyForm = { month: "", year: String(new Date().getFullYear()), sheet_url: "" };
 
 const EmployeePayments = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
   const employeeId = session.employeeId || "";
   const employeeName = session.employeeName || "";
 
-  const { payments, addPayment, updatePayment, deletePayment } = useExpensePayments(employeeId);
+  const { payments, addSheet, updateSheet, deletePayment } = useExpensePayments(employeeId);
   const { toast } = useToast();
 
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [month, setMonth] = useState("");
+  const [year, setYear] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<ExpensePayment | null>(null);
 
-  const filtered = useMemo(() => filterPayments(payments, { from, to }), [payments, from, to]);
+  const filtered = useMemo(() => filterPayments(payments, { month, year }), [payments, month, year]);
 
-  const monthKey = new Date().toISOString().slice(0, 7);
-  const monthly = payments.filter((p) => p.date.startsWith(monthKey));
-  const sum = (rows: ExpensePayment[]) => rows.reduce((t, r) => t + r.amount, 0);
+  const count = (fn: (p: ExpensePayment) => boolean) => payments.filter(fn).length;
 
-  const summary = [
-    { label: "This Month", value: `₹${sum(monthly).toLocaleString("en-IN")}`, sub: `${monthly.length} records` },
-    { label: "Filtered Total", value: `₹${sum(filtered).toLocaleString("en-IN")}`, sub: `${filtered.length} records` },
-    { label: "HR Approved", value: filtered.filter((p) => p.hr_status === "Approved").length, sub: "records" },
-    { label: "Paid", value: filtered.filter((p) => p.accounts_status === "Paid").length, sub: "records" },
+  const kpis = [
+    { label: "Total Sheets", value: payments.length, sub: "submitted so far", icon: Wallet, tone: "primary" as const },
+    { label: "Pending with HR", value: count((p) => (p.hr_status || "Pending") === "Pending"), sub: "awaiting review", icon: Clock, tone: "warning" as const },
+    { label: "HR Approved", value: count((p) => p.hr_status === "Approved"), sub: "approved sheets", icon: CheckCircle2, tone: "success" as const },
+    { label: "Paid", value: count((p) => p.accounts_status === "Paid"), sub: "settled by accounts", icon: Receipt, tone: "success" as const },
   ];
 
   const openAdd = () => {
@@ -71,14 +61,9 @@ const EmployeePayments = () => {
   const openEdit = (p: ExpensePayment) => {
     setEditingId(p.id);
     setForm({
-      expense_type: p.expense_type || "Other",
-      date: p.date,
-      amount: String(p.amount),
-      purpose: p.purpose || p.description || "",
-      from_location: p.from_location || "",
-      to_location: p.to_location || "",
-      payment_mode: p.payment_mode || "Cash",
-      receipt_url: p.receipt_url || "",
+      month: p.month ? String(p.month) : "",
+      year: p.year ? String(p.year) : String(new Date().getFullYear()),
+      sheet_url: p.sheet_url || "",
     });
     setDialogOpen(true);
   };
@@ -86,40 +71,40 @@ const EmployeePayments = () => {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const ok = /\.(pdf|xls|xlsx|csv)$/i.test(file.name);
+    if (!ok) {
+      toast({ variant: "destructive", title: "Invalid file", description: "Upload a PDF or Excel file only" });
+      e.target.value = "";
+      return;
+    }
+    setUploading(true);
     try {
       const path = await uploadPaymentReceipt(file, employeeId);
-      setForm((f) => ({ ...f, receipt_url: path }));
-      toast({ title: "Receipt uploaded" });
+      setForm((f) => ({ ...f, sheet_url: path }));
+      toast({ title: "Expense sheet uploaded" });
     } catch (err: any) {
       toast({ variant: "destructive", title: "Upload failed", description: err?.message });
+    } finally {
+      setUploading(false);
     }
   };
 
   const handleSubmit = async () => {
-    if (!form.expense_type || !form.date || !form.amount || !form.purpose) {
-      toast({ variant: "destructive", title: "Missing details", description: "Please fill all required fields" });
-      return;
-    }
-    if (form.payment_mode === "Online" && !form.receipt_url) {
-      toast({ variant: "destructive", title: "Receipt required", description: "Upload a receipt for online payments" });
+    if (!form.month || !form.year || !form.sheet_url) {
+      toast({ variant: "destructive", title: "Missing details", description: "Select month, year and upload the expense sheet" });
       return;
     }
     try {
       const payload = {
         employee_id: employeeId,
         employee_name: employeeName,
-        date: form.date,
-        amount: parseFloat(form.amount),
-        expense_type: form.expense_type,
-        purpose: form.purpose,
-        from_location: form.expense_type === "Travel" ? form.from_location : null,
-        to_location: form.expense_type === "Travel" ? form.to_location : null,
-        payment_mode: form.payment_mode,
-        receipt_url: form.receipt_url || null,
+        month: Number(form.month),
+        year: Number(form.year),
+        sheet_url: form.sheet_url,
       };
-      if (editingId) await updatePayment(editingId, payload);
-      else await addPayment(payload);
-      toast({ title: editingId ? "Record updated" : "Record added" });
+      if (editingId) await updateSheet(editingId, payload);
+      else await addSheet(payload);
+      toast({ title: editingId ? "Expense sheet updated" : "Expense sheet submitted" });
       setDialogOpen(false);
       setForm(emptyForm);
       setEditingId(null);
@@ -137,21 +122,15 @@ const EmployeePayments = () => {
     }
   };
 
-  const exportData = filtered.map((p) => ({ ...p, employee_name: p.employee_name || employeeName }));
+  const exportData = paymentExportRows(filtered);
 
   return (
     <EmployeeLayout title="Payments">
       <div className="space-y-6">
-        {/* Summary */}
+        {/* KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {summary.map((s) => (
-            <Card key={s.label} className="card-corporate">
-              <CardContent className="p-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">{s.label}</p>
-                <p className="text-2xl font-bold mt-1">{s.value}</p>
-                <p className="text-xs text-muted-foreground">{s.sub}</p>
-              </CardContent>
-            </Card>
+          {kpis.map((k) => (
+            <KpiCard key={k.label} {...k} />
           ))}
         </div>
 
@@ -159,21 +138,33 @@ const EmployeePayments = () => {
         <Card className="card-corporate">
           <CardContent className="p-4 flex flex-wrap items-end gap-4">
             <div>
-              <Label className="text-sm text-muted-foreground">From Date</Label>
-              <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-44" />
+              <Label className="text-sm text-muted-foreground">Month</Label>
+              <Select value={month || "all"} onValueChange={(v) => setMonth(v === "all" ? "" : v)}>
+                <SelectTrigger className="w-44"><SelectValue placeholder="All Months" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Months</SelectItem>
+                  {MONTHS.map((m, i) => <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div>
-              <Label className="text-sm text-muted-foreground">To Date</Label>
-              <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-44" />
+              <Label className="text-sm text-muted-foreground">Year</Label>
+              <Select value={year || "all"} onValueChange={(v) => setYear(v === "all" ? "" : v)}>
+                <SelectTrigger className="w-36"><SelectValue placeholder="All Years" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Years</SelectItem>
+                  {YEAR_OPTIONS.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex gap-2 ml-auto">
-              <Button variant="outline" size="icon" title="Export to PDF" disabled={!filtered.length}
-                onClick={() => exportToPDF({ portal: "Employee", type: "Payments", columns: PAYMENT_EXPORT_COLUMNS, data: exportData, dateRange: { from, to } })}>
-                <FileText className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" title="Export to Excel" disabled={!filtered.length}
+              <Button variant="outline" size="sm" className="gap-2" disabled={!filtered.length}
                 onClick={() => exportToCSV({ portal: "Employee", type: "Payments", columns: PAYMENT_EXPORT_COLUMNS, data: exportData })}>
-                <FileSpreadsheet className="h-4 w-4" />
+                <FileSpreadsheet className="h-4 w-4" /> Export CSV
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2" disabled={!filtered.length}
+                onClick={() => exportToPDF({ portal: "Employee", type: "Payments", columns: PAYMENT_EXPORT_COLUMNS, data: exportData })}>
+                <FileText className="h-4 w-4" /> Export PDF
               </Button>
               <Button onClick={openAdd}>
                 <Plus className="h-4 w-4 mr-2" /> Add
@@ -188,17 +179,16 @@ const EmployeePayments = () => {
             {filtered.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="font-medium">No payment records</p>
-                <p className="text-sm mt-1">Click Add to submit an expense</p>
+                <p className="font-medium">No expense sheets</p>
+                <p className="text-sm mt-1">Click Add to upload your monthly expense sheet</p>
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead>Date</TableHead>
-                    <TableHead>Expense Type</TableHead>
-                    <TableHead>Amount (₹)</TableHead>
-                    <TableHead>Receipt</TableHead>
+                    <TableHead>Month</TableHead>
+                    <TableHead>Year</TableHead>
+                    <TableHead>File</TableHead>
                     <TableHead>HR Status</TableHead>
                     <TableHead>Accounts Status</TableHead>
                     <TableHead className="text-right">Action</TableHead>
@@ -207,10 +197,9 @@ const EmployeePayments = () => {
                 <TableBody>
                   {filtered.map((p) => (
                     <TableRow key={p.id} className="cursor-pointer" onClick={() => setPreview(p)}>
-                      <TableCell>{new Date(p.date).toLocaleDateString()}</TableCell>
-                      <TableCell>{p.expense_type || "Other"}</TableCell>
-                      <TableCell className="font-semibold">₹{p.amount.toLocaleString("en-IN")}</TableCell>
-                      <TableCell>{p.receipt_url ? "Attached" : "-"}</TableCell>
+                      <TableCell className="font-medium">{monthLabel(p.month)}</TableCell>
+                      <TableCell>{p.year ?? "-"}</TableCell>
+                      <TableCell>{p.sheet_url || p.receipt_url ? "Attached" : "-"}</TableCell>
                       <TableCell><PaymentStatusBadge status={p.hr_status} /></TableCell>
                       <TableCell><PaymentStatusBadge status={p.accounts_status} /></TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
@@ -239,69 +228,36 @@ const EmployeePayments = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingId ? "Modify Payment" : "Add Payment"}</DialogTitle>
+            <DialogTitle>{editingId ? "Modify Expense Sheet" : "Add Expense Sheet"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label>Expense Type *</Label>
-              <Select value={form.expense_type} onValueChange={(v) => setForm({ ...form, expense_type: v })}>
-                <SelectTrigger><SelectValue placeholder="Select expense type" /></SelectTrigger>
-                <SelectContent>
-                  {EXPENSE_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Date *</Label>
-                <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+                <Label>Month *</Label>
+                <Select value={form.month} onValueChange={(v) => setForm({ ...form, month: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select month" /></SelectTrigger>
+                  <SelectContent>
+                    {MONTHS.map((m, i) => <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
-                <Label>Amount (₹) *</Label>
-                <Input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+                <Label>Year *</Label>
+                <Select value={form.year} onValueChange={(v) => setForm({ ...form, year: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select year" /></SelectTrigger>
+                  <SelectContent>
+                    {YEAR_OPTIONS.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div>
-              <Label>Purpose of Payment *</Label>
-              <Textarea value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })} />
+              <Label>Upload Expense Sheet * (PDF or Excel)</Label>
+              <Input type="file" accept=".pdf,.xls,.xlsx,.csv" onChange={handleUpload} />
+              {uploading && <p className="text-xs text-muted-foreground mt-1">Uploading…</p>}
+              {form.sheet_url && !uploading && <p className="text-xs text-success mt-1">File attached</p>}
             </div>
-            {form.expense_type === "Travel" && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>From</Label>
-                  <Input value={form.from_location} onChange={(e) => setForm({ ...form, from_location: e.target.value })} />
-                </div>
-                <div>
-                  <Label>To</Label>
-                  <Input value={form.to_location} onChange={(e) => setForm({ ...form, to_location: e.target.value })} />
-                </div>
-              </div>
-            )}
-            <div>
-              <Label>Payment Mode *</Label>
-              <RadioGroup
-                value={form.payment_mode}
-                onValueChange={(v) => setForm({ ...form, payment_mode: v })}
-                className="flex gap-6 mt-2"
-              >
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="Cash" id="mode-cash" />
-                  <Label htmlFor="mode-cash" className="font-normal">Cash</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="Online" id="mode-online" />
-                  <Label htmlFor="mode-online" className="font-normal">Online</Label>
-                </div>
-              </RadioGroup>
-            </div>
-            {form.payment_mode === "Online" && (
-              <div>
-                <Label>Upload a Receipt *</Label>
-                <Input type="file" accept="image/*,.pdf" onChange={handleUpload} />
-                {form.receipt_url && <p className="text-xs text-success mt-1">Receipt attached</p>}
-              </div>
-            )}
-            <Button className="w-full" onClick={handleSubmit}>Submit</Button>
+            <Button className="w-full" onClick={handleSubmit} disabled={uploading}>Submit</Button>
           </div>
         </DialogContent>
       </Dialog>

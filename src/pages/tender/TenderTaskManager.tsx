@@ -114,7 +114,7 @@ const TenderTaskManager = () => {
                   ) : assignedTasks.map((task: any, idx: number) => (
                     <TableRow key={task.id}>
                       <TableCell>{idx + 1}</TableCell>
-                      <TableCell>{format(new Date(task.created_at), "dd/MM/yyyy")}</TableCell>
+                      <TableCell>{format(new Date(task.created_at), "dd-MM-yyyy")}</TableCell>
                       <TableCell>{isHead ? task.assigned_to : task.assigned_by}</TableCell>
                       <TableCell>{task.task_title}</TableCell>
                       <TableCell>
@@ -163,7 +163,7 @@ const TenderTaskManager = () => {
                   ) : currentTasks.map((task: any, idx: number) => (
                     <TableRow key={task.id}>
                       <TableCell>{idx + 1}</TableCell>
-                      <TableCell>{format(new Date(task.created_at), "dd/MM/yyyy")}</TableCell>
+                      <TableCell>{format(new Date(task.created_at), "dd-MM-yyyy")}</TableCell>
                       <TableCell>{task.assigned_to}</TableCell>
                       <TableCell>{task.task_title}</TableCell>
                       <TableCell>

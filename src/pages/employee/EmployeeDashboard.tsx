@@ -19,6 +19,7 @@ import {
   Clock,
   Edit
 } from "lucide-react";
+import { formatDate } from "@/lib/dateFormat";
 
 const EmployeeDashboard = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
@@ -205,7 +206,7 @@ const EmployeeDashboard = () => {
                         <p className="font-medium">{event.title}</p>
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {new Date(event.date).toLocaleDateString()} at {event.time}
+                          {formatDate(event.date)} at {event.time}
                         </p>
                       </div>
                       <div className="flex gap-1">
@@ -409,7 +410,7 @@ const EmployeeDashboard = () => {
                           {notice.type}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(notice.createdAt).toLocaleDateString()}
+                          {formatDate(notice.createdAt)}
                         </span>
                       </div>
                       <h4 className="font-semibold">{notice.title}</h4>

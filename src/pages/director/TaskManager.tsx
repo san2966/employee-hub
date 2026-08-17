@@ -11,6 +11,7 @@ import { Plus, Edit, Trash2, CheckCircle, Clock, XCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { ExportButtons } from "@/components/ExportButtons";
 import { EXPORT_COLUMNS } from "@/lib/exportUtils";
+import { formatDate } from "@/lib/dateFormat";
 
 const TaskManager = () => {
   const { toast } = useToast();
@@ -171,7 +172,7 @@ const TaskManager = () => {
                             <p className="font-medium text-sm">{task.subject}</p>
                             <p className="text-xs text-muted-foreground">{task.description}</p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              Created: {new Date(task.createdAt).toLocaleDateString()}
+                              Created: {formatDate(task.createdAt)}
                             </p>
                           </div>
                         </div>
