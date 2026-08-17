@@ -97,12 +97,6 @@ const EmployeeReports = () => {
             <p className="opacity-90">Submit and track your daily reports</p>
           </div>
           <div className="flex gap-2">
-            <ExportButtons
-              portal="Employee"
-              type="Reports"
-              columns={EXPORT_COLUMNS.reports}
-              data={reports.map(r => ({ ...r, employeeName }))}
-            />
             <Dialog open={dialog} onOpenChange={(o) => { setDialog(o); if (!o) { setEditId(null); setForm(emptyForm); } }}>
               <DialogTrigger asChild>
                 <Button variant="secondary" onClick={() => { setEditId(null); setForm(emptyForm); }}>
@@ -170,6 +164,35 @@ const EmployeeReports = () => {
             </Dialog>
           </div>
         </div>
+
+        {/* Date filter + exports */}
+        <Card className="card-corporate">
+          <CardContent className="p-4 flex flex-wrap items-end gap-4">
+            <div>
+              <Label className="text-sm text-muted-foreground">From Date</Label>
+              <Input type="date" className="w-44" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-sm text-muted-foreground">To Date</Label>
+              <Input type="date" className="w-44" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+            </div>
+            {(fromDate || toDate) && (
+              <Button variant="ghost" size="sm" onClick={() => { setFromDate(""); setToDate(""); }}>
+                Clear
+              </Button>
+            )}
+            <div className="ml-auto flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">{filteredReports.length} record(s)</span>
+              <ExportButtons
+                portal="Employee"
+                type="EOD"
+                columns={EXPORT_COLUMNS.reports}
+                data={filteredReports.map((r: any) => ({ ...r, employeeName }))}
+                dateRange={{ from: fromDate, to: toDate }}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Reports List */}
         {reports.length === 0 ? (
