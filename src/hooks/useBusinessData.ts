@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate } from "@/lib/dateFormat";
+import { formatDate as formatDateDMY, formatDateTime as formatDateTimeDMY } from "@/lib/dateFormat";
 
 /** Weeks run Friday -> Thursday (the plan resets every Friday morning). */
 export const getWeekStart = (d: Date = new Date()) => {
@@ -13,15 +13,9 @@ export const getWeekStart = (d: Date = new Date()) => {
 export const dayName = (iso: string) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString("en-IN", { weekday: "long" });
 
-export const formatDate = (value?: string | null) =>
-  value ? formatDate(value) : "—";
+export const formatDate = (value?: string | null) => (value ? formatDateDMY(value) : "—");
 
-export const formatDateTime = (value?: string | null) =>
-  value
-    ? new Date(value).toLocaleString("en-IN", {
-        day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
-      })
-    : "—";
+export const formatDateTime = (value?: string | null) => (value ? formatDateTimeDMY(value) : "—");
 
 export const isOverdue = (task: { due_date?: string | null; status?: string }) => {
   if (!task.due_date) return false;
