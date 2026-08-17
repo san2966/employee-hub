@@ -90,9 +90,15 @@ export const exportToPDF = (config: ExportConfig): void => {
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100, 100, 100);
 
+  const pretty = (v?: string) => {
+    if (!v) return "N/A";
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? v : format(d, "dd-MM-yyyy");
+  };
+
   let yPos = 48;
   if (dateRange?.from || dateRange?.to) {
-    const rangeText = `Date Range: ${dateRange.from || "N/A"} to ${dateRange.to || "N/A"}`;
+    const rangeText = `Date Range: ${pretty(dateRange.from)} to ${pretty(dateRange.to)}`;
     doc.text(rangeText, 14, yPos);
     yPos += 5;
   }
