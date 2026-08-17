@@ -195,7 +195,7 @@ const EmployeeReports = () => {
         </Card>
 
         {/* Reports List */}
-        {reports.length === 0 ? (
+        {filteredReports.length === 0 ? (
           <Card className="card-corporate">
             <CardContent className="py-12 text-center text-muted-foreground">
               <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -223,7 +223,7 @@ const EmployeeReports = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {reports.map(report => (
+                    {filteredReports.map(report => (
                       <tr key={report.id} className="hover:bg-muted/30">
                         <td className="p-4 text-sm">
                           {formatDate(report.date)}
