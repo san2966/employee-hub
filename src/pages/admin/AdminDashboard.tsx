@@ -130,7 +130,7 @@ const AdminDashboard = () => {
                     />
                   </div>
                   <div>
-                    <Label>Date: {selectedDate ? format(selectedDate, "PPP") : "Select a date"}</Label>
+                    <Label>Date: {selectedDate ? format(selectedDate, "dd-MM-yyyy") : "Select a date"}</Label>
                   </div>
                   <Button onClick={handleAddEvent} className="w-full">Save Event</Button>
                 </div>
@@ -214,7 +214,7 @@ const AdminDashboard = () => {
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    {format(new Date(sortedNotes[0].createdAt), "PPp")}
+                    {format(new Date(sortedNotes[0].createdAt), "dd-MM-yyyy hh:mm a")}
                   </p>
                 </div>
                 {/* Older Notes */}
@@ -226,7 +226,7 @@ const AdminDashboard = () => {
                           <div>
                             <p className="text-sm line-clamp-2">{note.content}</p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {format(new Date(note.createdAt), "PPp")}
+                              {format(new Date(note.createdAt), "dd-MM-yyyy hh:mm a")}
                             </p>
                           </div>
                           <Button
@@ -302,7 +302,7 @@ const AdminDashboard = () => {
                         <p className="text-sm text-muted-foreground">{visitor.organization}</p>
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        {format(new Date(visitor.checkInTime), "PPp")}
+                        {format(new Date(visitor.checkInTime), "dd-MM-yyyy hh:mm a")}
                       </span>
                     </div>
                     <p className="text-sm mt-1">Meeting: {visitor.whomToMeet}</p>

@@ -74,7 +74,7 @@ const DirectorTasksTab = ({ department }: DirectorTasksTabProps) => {
               </TableRow>
             ) : sorted.map((task) => (
               <TableRow key={task.id} className={task.status === "Overdue" ? "bg-red-50 dark:bg-red-950/20" : ""}>
-                <TableCell className="text-sm">{format(new Date(task.created_at), "dd/MM/yyyy")}</TableCell>
+                <TableCell className="text-sm">{format(new Date(task.created_at), "dd-MM-yyyy")}</TableCell>
                 <TableCell className="max-w-xs">{task.task}</TableCell>
                 <TableCell>{task.expected_days}</TableCell>
                 <TableCell>{getStatusBadge(task.status)}</TableCell>
@@ -101,7 +101,7 @@ const DirectorTasksTab = ({ department }: DirectorTasksTabProps) => {
               <div className="p-3 bg-muted rounded-md">
                 <p className="text-sm font-medium">{updateTask.task}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Expected: {updateTask.expected_days} days from {format(new Date(updateTask.created_at), "dd/MM/yyyy")}
+                  Expected: {updateTask.expected_days} days from {format(new Date(updateTask.created_at), "dd-MM-yyyy")}
                 </p>
               </div>
               <div>

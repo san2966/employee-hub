@@ -112,7 +112,7 @@ const PurchaseDocuments = () => {
                       <TableRow key={d.id}>
                         <TableCell className="font-medium">{d.name}</TableCell>
                         <TableCell>{d.type === "Other" ? d.custom_type || "Other" : d.type}</TableCell>
-                        <TableCell className="text-xs">{d.uploaded_at ? format(new Date(d.uploaded_at), "PPp") : "-"}</TableCell>
+                        <TableCell className="text-xs">{d.uploaded_at ? format(new Date(d.uploaded_at), "dd-MM-yyyy hh:mm a") : "-"}</TableCell>
                         <TableCell>{d.file_url && <Button size="sm" variant="outline" asChild><a href={d.file_url} download><Download className="h-3 w-3" /></a></Button>}</TableCell>
                       </TableRow>
                     ))}

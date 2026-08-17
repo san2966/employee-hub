@@ -312,7 +312,7 @@ const AdminAssets = () => {
                 <CardContent className="space-y-2 text-sm">
                   {asset.brand && <p><span className="text-muted-foreground">Brand:</span> {asset.brand}</p>}
                   <p><span className="text-muted-foreground">Cost:</span> ₹{asset.cost.toLocaleString()}</p>
-                  <p><span className="text-muted-foreground">Purchased:</span> {format(new Date(asset.purchaseDate), "PP")}</p>
+                  <p><span className="text-muted-foreground">Purchased:</span> {format(new Date(asset.purchaseDate), "dd-MM-yyyy")}</p>
                   {asset.assignedTo && (
                     <p className="font-medium text-primary">Assigned to: {asset.assignedTo}</p>
                   )}

@@ -123,7 +123,7 @@ const ITHeadNetwork = () => {
                 <CardContent className="p-3">
                   <h3 className="font-medium text-sm truncate">{image.name}</h3>
                   <p className="text-xs text-muted-foreground">
-                    Added {format(new Date(image.createdAt), "PP")}
+                    Added {format(new Date(image.createdAt), "dd-MM-yyyy")}
                   </p>
                 </CardContent>
               </Card>

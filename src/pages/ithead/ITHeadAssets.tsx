@@ -347,7 +347,7 @@ const ITHeadAssets = () => {
                           {asset.warrantyTill && (
                             <p className="text-xs">
                               <span className="text-muted-foreground">Warranty:</span>{" "}
-                              {format(new Date(asset.warrantyTill), "PP")}
+                              {format(new Date(asset.warrantyTill), "dd-MM-yyyy")}
                             </p>
                           )}
                         </div>

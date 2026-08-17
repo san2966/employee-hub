@@ -87,7 +87,7 @@ const PurchaseTaskManager = () => {
                   <TableRow key={task.id}>
                     <TableCell className="font-medium">{task.name}</TableCell>
                     <TableCell className="max-w-48 truncate">{task.description}</TableCell>
-                    <TableCell className="text-xs">{task.created_at ? format(new Date(task.created_at), "PPp") : "-"}</TableCell>
+                    <TableCell className="text-xs">{task.created_at ? format(new Date(task.created_at), "dd-MM-yyyy hh:mm a") : "-"}</TableCell>
                     <TableCell>
                       <Badge variant={task.status === "Completed" ? "default" : "secondary"}>
                         {task.status}

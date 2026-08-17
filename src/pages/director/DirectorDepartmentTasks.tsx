@@ -100,7 +100,7 @@ const DirectorDepartmentTasks = () => {
                 ) : sorted.map((task) => (
                   <TableRow key={task.id} className={task.status === "Overdue" ? "bg-red-50 dark:bg-red-950/20" : ""}>
                     <TableCell className="text-sm">
-                      {format(new Date(task.created_at), "dd/MM/yyyy")}
+                      {format(new Date(task.created_at), "dd-MM-yyyy")}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{task.department}</Badge>
@@ -190,12 +190,12 @@ const DirectorDepartmentTasks = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Created</span>
-                <span className="text-sm">{format(new Date(previewTask.created_at), "PPp")}</span>
+                <span className="text-sm">{format(new Date(previewTask.created_at), "dd-MM-yyyy hh:mm a")}</span>
               </div>
               {previewTask.completed_at && (
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Completed</span>
-                  <span className="text-sm">{format(new Date(previewTask.completed_at), "PPp")}</span>
+                  <span className="text-sm">{format(new Date(previewTask.completed_at), "dd-MM-yyyy hh:mm a")}</span>
                 </div>
               )}
               <div>

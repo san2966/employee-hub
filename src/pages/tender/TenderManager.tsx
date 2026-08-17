@@ -189,7 +189,7 @@ const TenderManager = () => {
     pdf.setFont("helvetica", "normal");
     pdf.text("Tender Report", 14, 22);
     pdf.setFontSize(8);
-    pdf.text(`Generated: ${format(new Date(), "PPpp")}`, pageWidth - 14, 22, { align: "right" });
+    pdf.text(`Generated: ${format(new Date(), "dd-MM-yyyy hh:mm a")}`, pageWidth - 14, 22, { align: "right" });
 
     // Title
     pdf.setTextColor(0, 0, 0);
@@ -384,7 +384,7 @@ const TenderManager = () => {
               <Label>Technical Opening Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start"><CalendarIcon className="mr-2 h-4 w-4" />{techDate ? format(techDate, "PPP") : "Pick a date"}</Button>
+                  <Button variant="outline" className="w-full justify-start"><CalendarIcon className="mr-2 h-4 w-4" />{techDate ? format(techDate, "dd-MM-yyyy") : "Pick a date"}</Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={techDate} onSelect={setTechDate} /></PopoverContent>
               </Popover>
@@ -434,7 +434,7 @@ const TenderManager = () => {
           <div className="space-y-4">
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start"><CalendarIcon className="mr-2 h-4 w-4" />{finDate ? format(finDate, "PPP") : "Pick a date"}</Button>
+                <Button variant="outline" className="w-full justify-start"><CalendarIcon className="mr-2 h-4 w-4" />{finDate ? format(finDate, "dd-MM-yyyy") : "Pick a date"}</Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={finDate} onSelect={setFinDate} /></PopoverContent>
             </Popover>

@@ -149,7 +149,7 @@ const AdminTasks = () => {
                     <p className="text-sm mb-3">{task.description}</p>
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-muted-foreground">
-                        {format(new Date(task.createdAt), "PPp")}
+                        {format(new Date(task.createdAt), "dd-MM-yyyy hh:mm a")}
                       </span>
                       <div className="flex gap-2">
                         <Button
@@ -205,7 +205,7 @@ const AdminTasks = () => {
                     <p className="text-sm mb-3">{task.description}</p>
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-muted-foreground">
-                        {format(new Date(task.createdAt), "PPp")}
+                        {format(new Date(task.createdAt), "dd-MM-yyyy hh:mm a")}
                       </span>
                       <Button
                         variant="ghost"

@@ -145,7 +145,7 @@ const TenderDashboard = () => {
                         <PopoverTrigger asChild>
                           <Button variant="outline" className="w-full justify-start">
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {reminderDate ? format(reminderDate, "PPP") : "Pick a date"}
+                            {reminderDate ? format(reminderDate, "dd-MM-yyyy") : "Pick a date"}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={reminderDate} onSelect={setReminderDate} /></PopoverContent>

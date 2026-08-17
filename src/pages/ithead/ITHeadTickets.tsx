@@ -286,7 +286,7 @@ const ITHeadTickets = () => {
                           {ticket.subject}
                         </TableCell>
                         <TableCell>
-                          {format(new Date(ticket.created_at), "PP")}
+                          {format(new Date(ticket.created_at), "dd-MM-yyyy")}
                         </TableCell>
                         <TableCell>
                           <Badge

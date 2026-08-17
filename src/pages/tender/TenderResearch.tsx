@@ -98,12 +98,12 @@ const TenderResearch = () => {
             <div><Label>Tender Amount</Label><Input type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} /></div>
             <div>
               <Label>Opening Date</Label>
-              <Popover><PopoverTrigger asChild><Button variant="outline" className="w-full justify-start"><CalendarIcon className="mr-2 h-4 w-4" />{openDate ? format(openDate, "PPP") : "Pick"}</Button></PopoverTrigger>
+              <Popover><PopoverTrigger asChild><Button variant="outline" className="w-full justify-start"><CalendarIcon className="mr-2 h-4 w-4" />{openDate ? format(openDate, "dd-MM-yyyy") : "Pick"}</Button></PopoverTrigger>
               <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={openDate} onSelect={setOpenDate} /></PopoverContent></Popover>
             </div>
             <div>
               <Label>Closing Date</Label>
-              <Popover><PopoverTrigger asChild><Button variant="outline" className="w-full justify-start"><CalendarIcon className="mr-2 h-4 w-4" />{closeDate ? format(closeDate, "PPP") : "Pick"}</Button></PopoverTrigger>
+              <Popover><PopoverTrigger asChild><Button variant="outline" className="w-full justify-start"><CalendarIcon className="mr-2 h-4 w-4" />{closeDate ? format(closeDate, "dd-MM-yyyy") : "Pick"}</Button></PopoverTrigger>
               <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={closeDate} onSelect={setCloseDate} /></PopoverContent></Popover>
             </div>
             <Button onClick={handleSubmit} className="w-full" disabled={submitting}>{submitting ? "Submitting..." : "Submit"}</Button>

@@ -172,7 +172,7 @@ const ITHeadDashboard = () => {
                         <div className="flex-1">
                           <p className="text-sm text-foreground whitespace-pre-wrap">{recentNote.content}</p>
                           <p className="text-xs text-muted-foreground mt-2">
-                            {format(new Date(recentNote.createdAt), "PPp")}
+                            {format(new Date(recentNote.createdAt), "dd-MM-yyyy hh:mm a")}
                           </p>
                         </div>
                         <div className="flex gap-1">
@@ -234,7 +234,7 @@ const ITHeadDashboard = () => {
                               <div className="flex-1">
                                 <p className="text-sm text-foreground line-clamp-2">{note.content}</p>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  {format(new Date(note.createdAt), "PP")}
+                                  {format(new Date(note.createdAt), "dd-MM-yyyy")}
                                 </p>
                               </div>
                               <div className="flex gap-1">
@@ -314,7 +314,7 @@ const ITHeadDashboard = () => {
                                 isExpiringSoon ? "text-warning" :
                                 "text-foreground"
                               }`}>
-                                {format(warrantyDate, "PP")}
+                                {format(warrantyDate, "dd-MM-yyyy")}
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 {isExpired ? "Expired" : isExpiringSoon ? "Expiring Soon" : "Active"}

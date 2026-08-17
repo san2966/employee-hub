@@ -184,7 +184,7 @@ const ITHeadAssetTracker = () => {
                         <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No assignment records</td></tr>
                       ) : filteredAssignments.map(r => (
                         <tr key={r.id} className="border-t hover:bg-muted/30">
-                          <td className="px-4 py-3">{r.assignedAt ? format(new Date(r.assignedAt), "PP") : ""}</td>
+                          <td className="px-4 py-3">{r.assignedAt ? format(new Date(r.assignedAt), "dd-MM-yyyy") : ""}</td>
                           <td className="px-4 py-3 font-mono text-xs">{r.asset?.registrationNumber}</td>
                           <td className="px-4 py-3">{r.asset?.type}</td>
                           <td className="px-4 py-3">{r.asset?.brand}</td>
