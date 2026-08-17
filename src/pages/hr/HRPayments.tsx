@@ -1,38 +1,54 @@
 import { useMemo, useState } from "react";
 import HRLayout from "@/components/hr/HRLayout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Eye, FileSpreadsheet, FileText, Receipt, X } from "lucide-react";
+import { Check, Clock, Eye, FileSpreadsheet, FileText, MessageSquareWarning, Receipt, RefreshCw, X, XCircle } from "lucide-react";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
-import { PAYMENT_EXPORT_COLUMNS, filterPayments, useExpensePayments, type ExpensePayment } from "@/hooks/useExpensePayments";
+import { MONTHS, YEAR_OPTIONS, monthLabel } from "@/lib/dateFormat";
+import {
+  PAYMENT_EXPORT_COLUMNS,
+  filterPayments,
+  paymentExportRows,
+  useExpensePayments,
+  type ExpensePayment,
+} from "@/hooks/useExpensePayments";
 import { PaymentStatusBadge } from "@/components/payments/PaymentStatusBadge";
 import { PaymentDetailsDialog } from "@/components/payments/PaymentDetailsDialog";
+import { KpiCard } from "@/components/dashboard/KpiCard";
 
 const HRPayments = () => {
   const { payments, setHrStatus } = useExpensePayments();
   const { toast } = useToast();
 
   const [employee, setEmployee] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [month, setMonth] = useState("");
+  const [year, setYear] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [preview, setPreview] = useState<ExpensePayment | null>(null);
 
   const employees = useMemo(
-    () => [...new Set(payments.map((p) => p.employee_name).filter(Boolean) as string[])].sort(),
+    () => [...new Set(payments.map((p) => p.display_name).filter(Boolean) as string[])].sort(),
     [payments]
   );
 
   const filtered = useMemo(
-    () => filterPayments(payments, { employeeName: employee || undefined, from, to }),
-    [payments, employee, from, to]
+    () => filterPayments(payments, { employeeName: employee || undefined, month, year }),
+    [payments, employee, month, year]
   );
+
+  const count = (fn: (p: ExpensePayment) => boolean) => filtered.filter(fn).length;
+
+  const kpis = [
+    { label: "Total Sheets", value: filtered.length, sub: "in current filter", icon: Receipt, tone: "primary" as const },
+    { label: "Pending", value: count((p) => (p.hr_status || "Pending") === "Pending"), sub: "awaiting your review", icon: Clock, tone: "warning" as const },
+    { label: "Approved", value: count((p) => p.hr_status === "Approved"), sub: "sent to accounts", icon: Check, tone: "success" as const },
+    { label: "Rejected / Changes", value: count((p) => p.hr_status === "Rejected" || p.hr_status === "Requested Changes"), sub: "need employee action", icon: XCircle, tone: "destructive" as const },
+  ];
 
   const toggle = (id: string) =>
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
@@ -49,9 +65,15 @@ const HRPayments = () => {
     }
   };
 
+  const exportData = paymentExportRows(filtered);
+
   return (
     <HRLayout title="Payments">
       <div className="space-y-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {kpis.map((k) => <KpiCard key={k.label} {...k} />)}
+        </div>
+
         <Card className="card-corporate">
           <CardContent className="p-4 flex flex-wrap items-end gap-4">
             <div>
@@ -65,21 +87,33 @@ const HRPayments = () => {
               </Select>
             </div>
             <div>
-              <Label className="text-sm text-muted-foreground">From Date</Label>
-              <Input type="date" className="w-44" value={from} onChange={(e) => setFrom(e.target.value)} />
+              <Label className="text-sm text-muted-foreground">Month</Label>
+              <Select value={month || "all"} onValueChange={(v) => setMonth(v === "all" ? "" : v)}>
+                <SelectTrigger className="w-44"><SelectValue placeholder="All Months" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Months</SelectItem>
+                  {MONTHS.map((m, i) => <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div>
-              <Label className="text-sm text-muted-foreground">To Date</Label>
-              <Input type="date" className="w-44" value={to} onChange={(e) => setTo(e.target.value)} />
+              <Label className="text-sm text-muted-foreground">Year</Label>
+              <Select value={year || "all"} onValueChange={(v) => setYear(v === "all" ? "" : v)}>
+                <SelectTrigger className="w-36"><SelectValue placeholder="All Years" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Years</SelectItem>
+                  {YEAR_OPTIONS.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex gap-2 ml-auto">
-              <Button variant="outline" size="icon" title="Export to PDF" disabled={!filtered.length}
-                onClick={() => exportToPDF({ portal: "HR", type: "Payments", columns: PAYMENT_EXPORT_COLUMNS, data: filtered, dateRange: { from, to } })}>
-                <FileText className="h-4 w-4" />
+              <Button variant="outline" size="sm" className="gap-2" disabled={!filtered.length}
+                onClick={() => exportToCSV({ portal: "HR", type: "Payments", columns: PAYMENT_EXPORT_COLUMNS, data: exportData })}>
+                <FileSpreadsheet className="h-4 w-4" /> Export CSV
               </Button>
-              <Button variant="outline" size="icon" title="Export to Excel" disabled={!filtered.length}
-                onClick={() => exportToCSV({ portal: "HR", type: "Payments", columns: PAYMENT_EXPORT_COLUMNS, data: filtered })}>
-                <FileSpreadsheet className="h-4 w-4" />
+              <Button variant="outline" size="sm" className="gap-2" disabled={!filtered.length}
+                onClick={() => exportToPDF({ portal: "HR", type: "Payments", columns: PAYMENT_EXPORT_COLUMNS, data: exportData })}>
+                <FileText className="h-4 w-4" /> Export PDF
               </Button>
             </div>
           </CardContent>
@@ -91,7 +125,7 @@ const HRPayments = () => {
               <span className="text-sm font-medium">{selected.length} selected</span>
               <Button size="sm" onClick={() => applyStatus(selected, "Approved")}>Approve</Button>
               <Button size="sm" variant="destructive" onClick={() => applyStatus(selected, "Rejected")}>Reject</Button>
-              <Button size="sm" variant="outline" onClick={() => applyStatus(selected, "Changes Required")}>Request Changes</Button>
+              <Button size="sm" variant="outline" onClick={() => applyStatus(selected, "Requested Changes")}>Request Changes</Button>
             </CardContent>
           </Card>
         )}
@@ -101,7 +135,7 @@ const HRPayments = () => {
             {filtered.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="font-medium">No payment records found</p>
+                <p className="font-medium">No expense sheets found</p>
               </div>
             ) : (
               <Table>
@@ -114,10 +148,9 @@ const HRPayments = () => {
                       />
                     </TableHead>
                     <TableHead>Employee Name</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Expense Type</TableHead>
-                    <TableHead>Amount (₹)</TableHead>
-                    <TableHead>Receipt</TableHead>
+                    <TableHead>Month</TableHead>
+                    <TableHead>Year</TableHead>
+                    <TableHead>File</TableHead>
                     <TableHead>HR Status</TableHead>
                     <TableHead>Accounts Status</TableHead>
                     <TableHead className="text-right">Action</TableHead>
@@ -129,11 +162,10 @@ const HRPayments = () => {
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <Checkbox checked={selected.includes(p.id)} onCheckedChange={() => toggle(p.id)} />
                       </TableCell>
-                      <TableCell className="font-medium">{p.employee_name || "-"}</TableCell>
-                      <TableCell>{new Date(p.date).toLocaleDateString()}</TableCell>
-                      <TableCell>{p.expense_type || "Other"}</TableCell>
-                      <TableCell className="font-semibold">₹{p.amount.toLocaleString("en-IN")}</TableCell>
-                      <TableCell>{p.receipt_url ? "Attached" : "-"}</TableCell>
+                      <TableCell className="font-medium">{p.display_name || "-"}</TableCell>
+                      <TableCell>{monthLabel(p.month)}</TableCell>
+                      <TableCell>{p.year ?? "-"}</TableCell>
+                      <TableCell>{p.sheet_url || p.receipt_url ? "Attached" : "-"}</TableCell>
                       <TableCell><PaymentStatusBadge status={p.hr_status} /></TableCell>
                       <TableCell><PaymentStatusBadge status={p.accounts_status} /></TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
@@ -143,6 +175,9 @@ const HRPayments = () => {
                           </Button>
                           <Button variant="ghost" size="icon" title="Approve" onClick={() => applyStatus([p.id], "Approved")}>
                             <Check className="h-4 w-4 text-success" />
+                          </Button>
+                          <Button variant="ghost" size="icon" title="Request Changes" onClick={() => applyStatus([p.id], "Requested Changes")}>
+                            <RefreshCw className="h-4 w-4 text-warning" />
                           </Button>
                           <Button variant="ghost" size="icon" title="Reject" onClick={() => applyStatus([p.id], "Rejected")}>
                             <X className="h-4 w-4 text-destructive" />
