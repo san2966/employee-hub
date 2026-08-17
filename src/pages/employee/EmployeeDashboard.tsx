@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { 
-import { formatDate } from "@/lib/dateFormat";
   Calendar, 
   Plus, 
   Trash2, 
@@ -20,6 +19,7 @@ import { formatDate } from "@/lib/dateFormat";
   Clock,
   Edit
 } from "lucide-react";
+import { formatDate } from "@/lib/dateFormat";
 
 const EmployeeDashboard = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
