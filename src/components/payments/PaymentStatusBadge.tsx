@@ -6,6 +6,8 @@ const STYLES: Record<string, string> = {
   Paid: "bg-success/15 text-success",
   Rejected: "bg-destructive/15 text-destructive",
   Hold: "bg-warning/15 text-warning",
+  "On Hold": "bg-warning/15 text-warning",
+  "Requested Changes": "bg-warning/15 text-warning",
   "Changes Required": "bg-warning/15 text-warning",
 };
 
