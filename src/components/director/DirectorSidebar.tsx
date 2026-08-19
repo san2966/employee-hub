@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Building2,
   FolderArchive,
+  Gauge,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -31,6 +32,7 @@ const menuItems = [
   { icon: ClipboardList, label: "Department Tasks", path: "/director/department-tasks" },
   { icon: FileText, label: "Reports", path: "/director/reports" },
   { icon: FileText, label: "EOD", path: "/director/eod" },
+  { icon: Gauge, label: "Employee Performance", path: "/director/performance" },
   { icon: Bell, label: "Notice/Announcements", path: "/director/notices" },
   { icon: Calendar, label: "Leave Manager", path: "/director/leaves" },
   { icon: Calendar, label: "Attendance Manager", path: "/director/attendance" },
