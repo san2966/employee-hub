@@ -27,20 +27,23 @@ const DirectorNotifications = () => {
 
   const load = useCallback(async () => {
     const today = new Date().toISOString().slice(0, 10);
-    const [leaves, reqs, quotes, tasks, payments] = await Promise.all([
-      (supabase as any).from("leave_requests").select("id, employee_name, leave_type, from_date, date, status").eq("status", "pending").limit(10),
+    const [leaves, reqs, quotes, tasks, payments, staff] = await Promise.all([
+      (supabase as any).from("leave_requests").select("id, employee_id, leave_type, date, status").eq("status", "pending").limit(10),
       (supabase as any).from("requirements").select("id, title, employee_name, status, created_at").eq("status", "pending").limit(10),
       (supabase as any).from("purchase_quotes").select("id, quote_id, subject, status, created_at").eq("status", "Pending").limit(10),
       (supabase as any).from("tasks").select("id, title, status, due_date").neq("status", "completed").lt("due_date", today).limit(10),
       (supabase as any).from("employee_payments").select("id, employee_name, month, year, hr_status").eq("hr_status", "Pending").limit(10),
+      (supabase as any).from("employees").select("id, name"),
     ]);
 
     const next: Item[] = [];
+    const nameOf = (id?: string | null) =>
+      (staff.data || []).find((e: any) => e.id === id)?.name || "Employee";
     (leaves.data || []).forEach((l: any) =>
       next.push({
         id: `leave-${l.id}`,
         title: "Leave approval pending",
-        description: `${l.employee_name || "Employee"} • ${l.leave_type || "leave"} ${l.from_date || l.date ? `(${formatDate(l.from_date || l.date)})` : ""}`,
+        description: `${nameOf(l.employee_id)} • ${l.leave_type || "leave"}${l.date ? ` (${formatDate(l.date)})` : ""}`,
         icon: CalendarClock,
         tone: "warning",
       }),
