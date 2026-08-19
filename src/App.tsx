@@ -112,6 +112,7 @@ import DirectorAttendance from "./pages/director/DirectorAttendance";
 import DirectorDepartmentTasks from "./pages/director/DirectorDepartmentTasks";
 import DirectorGRManager from "./pages/director/GRManager";
 import DirectorEOD from "./pages/director/EOD";
+import EmployeePerformance from "./pages/director/EmployeePerformance";
 
 // IT Head Module
 import ITHeadLogin from "./pages/ithead/ITHeadLogin";
@@ -183,6 +184,7 @@ const App = () => (
           <Route path="/director/attendance" element={<DirectorAttendance />} />
           <Route path="/director/department-tasks" element={<DirectorDepartmentTasks />} />
           <Route path="/director/gr" element={<DirectorGRManager />} />
+          <Route path="/director/performance" element={<EmployeePerformance />} />
           
           {/* HR Routes */}
           <Route path="/login/hr" element={<HRLogin />} />

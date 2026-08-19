@@ -20,6 +20,8 @@ import {
   Edit
 } from "lucide-react";
 import { formatDate } from "@/lib/dateFormat";
+import EmployeeNotifications from "@/components/employee/EmployeeNotifications";
+import { KpiCard } from "@/components/dashboard/KpiCard";
 
 const EmployeeDashboard = () => {
   const session = JSON.parse(sessionStorage.getItem("employee_session") || "{}");
@@ -30,6 +32,7 @@ const EmployeeDashboard = () => {
     notes, addNote, deleteNote,
     getAssignedTasks, completeAssignedTask,
     getNotices,
+    personalTasks, reports, leaveRequests,
   } = useEmployeeData(employeeId);
   
   const { toast } = useToast();
@@ -133,7 +136,48 @@ const EmployeeDashboard = () => {
 
   return (
     <EmployeeLayout title="Dashboard">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <KpiCard
+          label="Daily Tasks Today"
+          value={personalTasks.filter((t: any) => (t.createdAt || "").slice(0, 10) === new Date().toISOString().slice(0, 10)).length}
+          sub="created today"
+          icon={CheckCircle2}
+          tone="primary"
+        />
+        <KpiCard
+          label="Pending Assigned Tasks"
+          value={assignedTasks.filter((t: any) => t.status !== "completed").length}
+          sub="awaiting completion"
+          icon={Clock}
+          tone="warning"
+        />
+        <KpiCard
+          label="EOD Reports"
+          value={reports.length}
+          sub="submitted overall"
+          icon={FileText}
+          tone="success"
+        />
+        <KpiCard
+          label="Notices"
+          value={notices.length}
+          sub={newNoticeCount > 0 ? `${newNoticeCount} new` : "all read"}
+          icon={Bell}
+          tone="primary"
+        />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <EmployeeNotifications
+          employeeId={employeeId}
+          dailyTasks={personalTasks as any}
+          reports={reports as any}
+          assignedTasks={assignedTasks as any}
+          notices={notices as any}
+          leaveRequests={leaveRequests as any}
+          events={events as any}
+        />
+
         {/* Calendar Section */}
         <Card className="card-corporate">
           <CardHeader className="flex flex-row items-center justify-between">

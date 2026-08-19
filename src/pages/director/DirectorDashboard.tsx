@@ -13,6 +13,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import HolidayCalendar from "@/components/director/HolidayCalendar";
 import DashboardPieCharts from "@/components/director/DashboardPieCharts";
+import DirectorNotifications from "@/components/director/DirectorNotifications";
+import { KpiCard } from "@/components/dashboard/KpiCard";
 
 const DirectorDashboard = () => {
   const { toast } = useToast();
@@ -153,7 +155,16 @@ const DirectorDashboard = () => {
 
   return (
     <DirectorLayout title="Dashboard">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <KpiCard label="Employees" value={employees.length} sub="active in portal" icon={Users} tone="primary" />
+        <KpiCard label="Organizations" value={organizations.length} sub="in pipeline" icon={Building} tone="success" />
+        <KpiCard label="Upcoming Events" value={events.filter(e => e.date >= new Date().toISOString().slice(0, 10)).length} sub="scheduled" icon={Calendar} tone="warning" />
+        <KpiCard label="Notes" value={notes.length} sub="saved" icon={StickyNote} tone="muted" />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <DirectorNotifications />
+
         {/* Calendar Section */}
         <div className="card-corporate p-6">
           <div className="flex items-center justify-between mb-4">
