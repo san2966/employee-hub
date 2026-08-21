@@ -18,9 +18,15 @@ const json = (body: unknown, status = 200) =>
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const backendUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!backendUrl || !serviceRoleKey) {
+    return json({ error: "Business administration service is not configured" }, 500);
+  }
+
   const admin = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    backendUrl,
+    serviceRoleKey,
     { auth: { autoRefreshToken: false, persistSession: false } },
   );
 
@@ -50,7 +56,7 @@ Deno.serve(async (req) => {
       if (!user) return json({ error: "Business Head user could not be created" }, 500);
 
       const { error: profileError } = await admin.from("business_profiles").upsert({
-        user_id: user!.id,
+        user_id: user.id,
         name: "Business Head",
         email: HEAD_EMAIL,
         designation: "business_head",
