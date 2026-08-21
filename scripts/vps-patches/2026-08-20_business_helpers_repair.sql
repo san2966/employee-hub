@@ -41,19 +41,28 @@ CREATE TABLE IF NOT EXISTS public.business_profiles (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
--- 3) HELPER FUNCTIONS (unique dollar tags so no client splits them) -----
+-- 3) HELPER FUNCTIONS ---------------------------------------------------
+-- Some older VPS installations created user_id/created_by/assignee_ids as
+-- text.  Compare identifiers as text at the RLS boundary so this repair can
+-- run safely against both the legacy schema and the current UUID schema.
 CREATE OR REPLACE FUNCTION public.business_designation_of(_uid uuid)
 RETURNS public.business_designation
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $fn_desig$
-  SELECT designation FROM public.business_profiles WHERE user_id = _uid AND is_active LIMIT 1
+  SELECT designation::text::public.business_designation
+  FROM public.business_profiles
+  WHERE user_id::text = _uid::text AND is_active
+  LIMIT 1
 $fn_desig$;
 
 CREATE OR REPLACE FUNCTION public.is_business_member(_uid uuid)
 RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $fn_member$
-  SELECT EXISTS (SELECT 1 FROM public.business_profiles WHERE user_id = _uid AND is_active)
+  SELECT EXISTS (
+    SELECT 1 FROM public.business_profiles
+    WHERE user_id::text = _uid::text AND is_active
+  )
 $fn_member$;
 
 CREATE OR REPLACE FUNCTION public.is_business_head(_uid uuid)
@@ -62,7 +71,9 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $fn_head$
   SELECT EXISTS (
     SELECT 1 FROM public.business_profiles
-    WHERE user_id = _uid AND is_active AND designation = 'business_head'
+    WHERE user_id::text = _uid::text
+      AND is_active
+      AND designation::text = 'business_head'
   )
 $fn_head$;
 
@@ -70,13 +81,20 @@ CREATE OR REPLACE FUNCTION public.business_profile_id_of(_uid uuid)
 RETURNS uuid
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $fn_pid$
-  SELECT id FROM public.business_profiles WHERE user_id = _uid LIMIT 1
+  SELECT id::text::uuid
+  FROM public.business_profiles
+  WHERE user_id::text = _uid::text
+  LIMIT 1
 $fn_pid$;
 
 GRANT EXECUTE ON FUNCTION public.business_designation_of(uuid) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.is_business_member(uuid)      TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.is_business_head(uuid)        TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.business_profile_id_of(uuid)  TO authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION public.business_designation_of(uuid) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.is_business_member(uuid)      FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.is_business_head(uuid)        FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.business_profile_id_of(uuid)  FROM PUBLIC, anon;
 
 -- 4) REMAINING TABLES ---------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.business_followups (
@@ -233,6 +251,69 @@ BEGIN
 END
 $grants$;
 
+-- Reconnect an existing Business Head profile to the matching Auth user.
+-- This repairs the common state where seed_head previously saw the email and
+-- returned early even though business_profiles.user_id held an old user UUID.
+DO $repair_head$
+DECLARE
+  user_id_type text;
+BEGIN
+  SELECT c.udt_name INTO user_id_type
+  FROM information_schema.columns c
+  WHERE c.table_schema = 'public'
+    AND c.table_name = 'business_profiles'
+    AND c.column_name = 'user_id';
+
+  IF EXISTS (
+    SELECT 1 FROM auth.users
+    WHERE lower(email) = 'business-head@vmcc-india.com'
+  ) THEN
+    IF user_id_type = 'uuid' THEN
+      UPDATE public.business_profiles bp
+      SET user_id = au.id,
+          is_active = true,
+          must_change_password = false,
+          updated_at = now()
+      FROM auth.users au
+      WHERE lower(bp.email) = 'business-head@vmcc-india.com'
+        AND lower(au.email) = 'business-head@vmcc-india.com';
+    ELSE
+      UPDATE public.business_profiles bp
+      SET user_id = au.id::text,
+          is_active = true,
+          must_change_password = false,
+          updated_at = now()
+      FROM auth.users au
+      WHERE lower(bp.email) = 'business-head@vmcc-india.com'
+        AND lower(au.email) = 'business-head@vmcc-india.com';
+    END IF;
+
+    IF NOT EXISTS (
+      SELECT 1 FROM public.business_profiles
+      WHERE lower(email) = 'business-head@vmcc-india.com'
+    ) THEN
+      IF user_id_type = 'uuid' THEN
+        INSERT INTO public.business_profiles
+          (user_id, name, email, designation, is_active, must_change_password)
+        SELECT id, 'Business Head', 'business-head@vmcc-india.com',
+               'business_head', true, false
+        FROM auth.users
+        WHERE lower(email) = 'business-head@vmcc-india.com'
+        LIMIT 1;
+      ELSE
+        INSERT INTO public.business_profiles
+          (user_id, name, email, designation, is_active, must_change_password)
+        SELECT id::text, 'Business Head', 'business-head@vmcc-india.com',
+               'business_head', true, false
+        FROM auth.users
+        WHERE lower(email) = 'business-head@vmcc-india.com'
+        LIMIT 1;
+      END IF;
+    END IF;
+  END IF;
+END
+$repair_head$;
+
 -- 6) POLICIES (drop-then-create so re-runs are clean) -------------------
 DROP POLICY IF EXISTS "areas_select" ON public.business_areas;
 CREATE POLICY "areas_select" ON public.business_areas FOR SELECT TO authenticated USING (public.is_business_member(auth.uid()));
@@ -242,10 +323,10 @@ CREATE POLICY "areas_write" ON public.business_areas FOR ALL TO authenticated
 
 DROP POLICY IF EXISTS "profiles_select" ON public.business_profiles;
 CREATE POLICY "profiles_select" ON public.business_profiles FOR SELECT TO authenticated
-  USING (user_id = auth.uid() OR public.is_business_member(auth.uid()));
+  USING (user_id::text = auth.uid()::text OR public.is_business_member(auth.uid()));
 DROP POLICY IF EXISTS "profiles_self_update" ON public.business_profiles;
 CREATE POLICY "profiles_self_update" ON public.business_profiles FOR UPDATE TO authenticated
-  USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+  USING (user_id::text = auth.uid()::text) WITH CHECK (user_id::text = auth.uid()::text);
 DROP POLICY IF EXISTS "profiles_head_write" ON public.business_profiles;
 CREATE POLICY "profiles_head_write" ON public.business_profiles FOR ALL TO authenticated
   USING (public.is_business_head(auth.uid())) WITH CHECK (public.is_business_head(auth.uid()));
@@ -269,8 +350,8 @@ CREATE POLICY "opps_insert" ON public.business_opportunities FOR INSERT TO authe
   WITH CHECK (public.is_business_member(auth.uid()) AND public.business_designation_of(auth.uid()) <> 'director');
 DROP POLICY IF EXISTS "opps_update" ON public.business_opportunities;
 CREATE POLICY "opps_update" ON public.business_opportunities FOR UPDATE TO authenticated
-  USING (public.is_business_head(auth.uid()) OR (public.is_business_member(auth.uid()) AND public.business_designation_of(auth.uid()) <> 'director' AND public.business_profile_id_of(auth.uid()) = ANY (assignee_ids)))
-  WITH CHECK (public.is_business_head(auth.uid()) OR (public.is_business_member(auth.uid()) AND public.business_designation_of(auth.uid()) <> 'director' AND public.business_profile_id_of(auth.uid()) = ANY (assignee_ids)));
+  USING (public.is_business_head(auth.uid()) OR (public.is_business_member(auth.uid()) AND public.business_designation_of(auth.uid()) <> 'director' AND EXISTS (SELECT 1 FROM unnest(assignee_ids) assigned_id WHERE assigned_id::text = public.business_profile_id_of(auth.uid())::text)))
+  WITH CHECK (public.is_business_head(auth.uid()) OR (public.is_business_member(auth.uid()) AND public.business_designation_of(auth.uid()) <> 'director' AND EXISTS (SELECT 1 FROM unnest(assignee_ids) assigned_id WHERE assigned_id::text = public.business_profile_id_of(auth.uid())::text)));
 DROP POLICY IF EXISTS "opps_delete" ON public.business_opportunities;
 CREATE POLICY "opps_delete" ON public.business_opportunities FOR DELETE TO authenticated USING (public.is_business_head(auth.uid()));
 
@@ -289,23 +370,23 @@ CREATE POLICY "btasks_head_write" ON public.business_tasks FOR ALL TO authentica
   USING (public.is_business_head(auth.uid())) WITH CHECK (public.is_business_head(auth.uid()));
 DROP POLICY IF EXISTS "btasks_assignee_update" ON public.business_tasks;
 CREATE POLICY "btasks_assignee_update" ON public.business_tasks FOR UPDATE TO authenticated
-  USING (public.business_profile_id_of(auth.uid()) = ANY (assignee_ids))
-  WITH CHECK (public.business_profile_id_of(auth.uid()) = ANY (assignee_ids));
+  USING (EXISTS (SELECT 1 FROM unnest(assignee_ids) assigned_id WHERE assigned_id::text = public.business_profile_id_of(auth.uid())::text))
+  WITH CHECK (EXISTS (SELECT 1 FROM unnest(assignee_ids) assigned_id WHERE assigned_id::text = public.business_profile_id_of(auth.uid())::text));
 DROP POLICY IF EXISTS "btasks_member_insert" ON public.business_tasks;
 CREATE POLICY "btasks_member_insert" ON public.business_tasks FOR INSERT TO authenticated
   WITH CHECK (public.is_business_member(auth.uid()) AND public.business_designation_of(auth.uid()) <> 'director');
 DROP POLICY IF EXISTS "btasks_owner_delete" ON public.business_tasks;
 CREATE POLICY "btasks_owner_delete" ON public.business_tasks FOR DELETE TO authenticated
-  USING (created_by = auth.uid() OR public.is_business_head(auth.uid()));
+  USING (created_by::text = auth.uid()::text OR public.is_business_head(auth.uid()));
 
 DROP POLICY IF EXISTS "btreports_select" ON public.business_task_reports;
 CREATE POLICY "btreports_select" ON public.business_task_reports FOR SELECT TO authenticated USING (public.is_business_member(auth.uid()));
 DROP POLICY IF EXISTS "btreports_insert" ON public.business_task_reports;
 CREATE POLICY "btreports_insert" ON public.business_task_reports FOR INSERT TO authenticated
-  WITH CHECK (public.is_business_member(auth.uid()) AND created_by = auth.uid());
+  WITH CHECK (public.is_business_member(auth.uid()) AND created_by::text = auth.uid()::text);
 DROP POLICY IF EXISTS "btreports_update" ON public.business_task_reports;
 CREATE POLICY "btreports_update" ON public.business_task_reports FOR UPDATE TO authenticated
-  USING (created_by = auth.uid()) WITH CHECK (created_by = auth.uid());
+  USING (created_by::text = auth.uid()::text) WITH CHECK (created_by::text = auth.uid()::text);
 
 DROP POLICY IF EXISTS "wplans_select" ON public.business_weekly_plans;
 CREATE POLICY "wplans_select" ON public.business_weekly_plans FOR SELECT TO authenticated USING (public.is_business_member(auth.uid()));
@@ -317,8 +398,8 @@ DROP POLICY IF EXISTS "eplans_select" ON public.business_employee_plans;
 CREATE POLICY "eplans_select" ON public.business_employee_plans FOR SELECT TO authenticated USING (public.is_business_member(auth.uid()));
 DROP POLICY IF EXISTS "eplans_self_write" ON public.business_employee_plans;
 CREATE POLICY "eplans_self_write" ON public.business_employee_plans FOR ALL TO authenticated
-  USING (profile_id = public.business_profile_id_of(auth.uid()) OR public.is_business_head(auth.uid()))
-  WITH CHECK (profile_id = public.business_profile_id_of(auth.uid()) OR public.is_business_head(auth.uid()));
+  USING (profile_id::text = public.business_profile_id_of(auth.uid())::text OR public.is_business_head(auth.uid()))
+  WITH CHECK (profile_id::text = public.business_profile_id_of(auth.uid())::text OR public.is_business_head(auth.uid()));
 
 DROP POLICY IF EXISTS "rct_select" ON public.business_rc_tracker;
 CREATE POLICY "rct_select" ON public.business_rc_tracker FOR SELECT TO authenticated USING (public.is_business_member(auth.uid()));
@@ -359,3 +440,20 @@ CREATE INDEX IF NOT EXISTS idx_business_wplans_week ON public.business_weekly_pl
 COMMIT;
 
 NOTIFY pgrst, 'reload schema';
+
+-- Verification output: all values should be true and the UUIDs should match.
+SELECT
+  to_regprocedure('public.is_business_member(uuid)') IS NOT NULL AS member_helper_exists,
+  to_regprocedure('public.is_business_head(uuid)') IS NOT NULL AS head_helper_exists,
+  has_table_privilege('authenticated', 'public.business_profiles', 'SELECT') AS profile_select_granted;
+
+SELECT
+  au.id AS auth_user_id,
+  bp.user_id::text AS profile_user_id,
+  bp.is_active,
+  bp.designation::text AS designation,
+  (bp.user_id::text = au.id::text) AS mapping_matches
+FROM auth.users au
+LEFT JOIN public.business_profiles bp
+  ON lower(bp.email) = lower(au.email)
+WHERE lower(au.email) = 'business-head@vmcc-india.com';

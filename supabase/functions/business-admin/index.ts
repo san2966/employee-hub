@@ -18,9 +18,15 @@ const json = (body: unknown, status = 200) =>
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const backendUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!backendUrl || !serviceRoleKey) {
+    return json({ error: "Business administration service is not configured" }, 500);
+  }
+
   const admin = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    backendUrl,
+    serviceRoleKey,
     { auth: { autoRefreshToken: false, persistSession: false } },
   );
 
@@ -30,15 +36,10 @@ Deno.serve(async (req) => {
 
     // ---------- Public: idempotent seeding of the Business Head account ----------
     if (action === "seed_head") {
-      const { data: existingProfile } = await admin
-        .from("business_profiles")
-        .select("id")
-        .eq("email", HEAD_EMAIL)
-        .maybeSingle();
-      if (existingProfile) return json({ success: true, seeded: false });
-
-      const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      const { data: list, error: listError } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      if (listError) return json({ error: listError.message }, 400);
       let user = list?.users?.find((u) => u.email === HEAD_EMAIL) ?? null;
+      let seeded = false;
 
       if (!user) {
         const { data: created, error } = await admin.auth.admin.createUser({
@@ -49,23 +50,21 @@ Deno.serve(async (req) => {
         });
         if (error) return json({ error: error.message }, 400);
         user = created.user;
-      } else {
-        await admin.auth.admin.updateUserById(user.id, {
-          password: HEAD_PASSWORD,
-          email_confirm: true,
-        });
+        seeded = true;
       }
 
-      const { error: insertError } = await admin.from("business_profiles").insert({
-        user_id: user!.id,
+      if (!user) return json({ error: "Business Head user could not be created" }, 500);
+
+      const { error: profileError } = await admin.from("business_profiles").upsert({
+        user_id: user.id,
         name: "Business Head",
         email: HEAD_EMAIL,
         designation: "business_head",
         is_active: true,
         must_change_password: false,
-      });
-      if (insertError) return json({ error: insertError.message }, 400);
-      return json({ success: true, seeded: true });
+      }, { onConflict: "email" });
+      if (profileError) return json({ error: profileError.message }, 400);
+      return json({ success: true, seeded });
     }
 
     // ---------- Authenticated business-head actions ----------

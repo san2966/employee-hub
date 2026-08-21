@@ -34,11 +34,32 @@ const BusinessLogin = () => {
       });
       if (error) throw new Error("Invalid email or password");
 
-      const { data: profile } = await (supabase as any)
+      let { data: profile, error: profileError } = await (supabase as any)
         .from("business_profiles")
         .select("*")
         .eq("user_id", data.user.id)
         .maybeSingle();
+
+      // Repair a stale Business Head profile mapping left by older VPS seeds,
+      // then retry the profile lookup once with the authenticated session.
+      if (!profile && email.trim().toLowerCase() === "business-head@vmcc-india.com") {
+        const { error: seedError } = await supabase.functions.invoke("business-admin", {
+          body: { action: "seed_head" },
+        });
+        if (!seedError) {
+          const retry = await (supabase as any)
+            .from("business_profiles")
+            .select("*")
+            .eq("user_id", data.user.id)
+            .maybeSingle();
+          profile = retry.data;
+          profileError = retry.error;
+        }
+      }
+
+      if (profileError) {
+        throw new Error(`Business profile could not be loaded: ${profileError.message}`);
+      }
 
       if (!profile) {
         await supabase.auth.signOut();
