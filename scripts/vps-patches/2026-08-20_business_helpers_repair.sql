@@ -91,6 +91,10 @@ GRANT EXECUTE ON FUNCTION public.business_designation_of(uuid) TO authenticated,
 GRANT EXECUTE ON FUNCTION public.is_business_member(uuid)      TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.is_business_head(uuid)        TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.business_profile_id_of(uuid)  TO authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION public.business_designation_of(uuid) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.is_business_member(uuid)      FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.is_business_head(uuid)        FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.business_profile_id_of(uuid)  FROM PUBLIC, anon;
 
 -- 4) REMAINING TABLES ---------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.business_followups (
@@ -283,6 +287,29 @@ BEGIN
       WHERE lower(bp.email) = 'business-head@vmcc-india.com'
         AND lower(au.email) = 'business-head@vmcc-india.com';
     END IF;
+
+    IF NOT EXISTS (
+      SELECT 1 FROM public.business_profiles
+      WHERE lower(email) = 'business-head@vmcc-india.com'
+    ) THEN
+      IF user_id_type = 'uuid' THEN
+        INSERT INTO public.business_profiles
+          (user_id, name, email, designation, is_active, must_change_password)
+        SELECT id, 'Business Head', 'business-head@vmcc-india.com',
+               'business_head', true, false
+        FROM auth.users
+        WHERE lower(email) = 'business-head@vmcc-india.com'
+        LIMIT 1;
+      ELSE
+        INSERT INTO public.business_profiles
+          (user_id, name, email, designation, is_active, must_change_password)
+        SELECT id::text, 'Business Head', 'business-head@vmcc-india.com',
+               'business_head', true, false
+        FROM auth.users
+        WHERE lower(email) = 'business-head@vmcc-india.com'
+        LIMIT 1;
+      END IF;
+    END IF;
   END IF;
 END
 $repair_head$;
@@ -413,3 +440,20 @@ CREATE INDEX IF NOT EXISTS idx_business_wplans_week ON public.business_weekly_pl
 COMMIT;
 
 NOTIFY pgrst, 'reload schema';
+
+-- Verification output: all values should be true and the UUIDs should match.
+SELECT
+  to_regprocedure('public.is_business_member(uuid)') IS NOT NULL AS member_helper_exists,
+  to_regprocedure('public.is_business_head(uuid)') IS NOT NULL AS head_helper_exists,
+  has_table_privilege('authenticated', 'public.business_profiles', 'SELECT') AS profile_select_granted;
+
+SELECT
+  au.id AS auth_user_id,
+  bp.user_id::text AS profile_user_id,
+  bp.is_active,
+  bp.designation::text AS designation,
+  (bp.user_id::text = au.id::text) AS mapping_matches
+FROM auth.users au
+LEFT JOIN public.business_profiles bp
+  ON lower(bp.email) = lower(au.email)
+WHERE lower(au.email) = 'business-head@vmcc-india.com';
