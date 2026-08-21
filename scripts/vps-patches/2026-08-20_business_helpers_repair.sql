@@ -350,8 +350,8 @@ CREATE POLICY "opps_insert" ON public.business_opportunities FOR INSERT TO authe
   WITH CHECK (public.is_business_member(auth.uid()) AND public.business_designation_of(auth.uid()) <> 'director');
 DROP POLICY IF EXISTS "opps_update" ON public.business_opportunities;
 CREATE POLICY "opps_update" ON public.business_opportunities FOR UPDATE TO authenticated
-  USING (public.is_business_head(auth.uid()) OR (public.is_business_member(auth.uid()) AND public.business_designation_of(auth.uid()) <> 'director' AND public.business_profile_id_of(auth.uid())::text = ANY (assignee_ids::text[])))
-  WITH CHECK (public.is_business_head(auth.uid()) OR (public.is_business_member(auth.uid()) AND public.business_designation_of(auth.uid()) <> 'director' AND public.business_profile_id_of(auth.uid())::text = ANY (assignee_ids::text[])));
+  USING (public.is_business_head(auth.uid()) OR (public.is_business_member(auth.uid()) AND public.business_designation_of(auth.uid()) <> 'director' AND EXISTS (SELECT 1 FROM unnest(assignee_ids) assigned_id WHERE assigned_id::text = public.business_profile_id_of(auth.uid())::text)))
+  WITH CHECK (public.is_business_head(auth.uid()) OR (public.is_business_member(auth.uid()) AND public.business_designation_of(auth.uid()) <> 'director' AND EXISTS (SELECT 1 FROM unnest(assignee_ids) assigned_id WHERE assigned_id::text = public.business_profile_id_of(auth.uid())::text)));
 DROP POLICY IF EXISTS "opps_delete" ON public.business_opportunities;
 CREATE POLICY "opps_delete" ON public.business_opportunities FOR DELETE TO authenticated USING (public.is_business_head(auth.uid()));
 
@@ -370,8 +370,8 @@ CREATE POLICY "btasks_head_write" ON public.business_tasks FOR ALL TO authentica
   USING (public.is_business_head(auth.uid())) WITH CHECK (public.is_business_head(auth.uid()));
 DROP POLICY IF EXISTS "btasks_assignee_update" ON public.business_tasks;
 CREATE POLICY "btasks_assignee_update" ON public.business_tasks FOR UPDATE TO authenticated
-  USING (public.business_profile_id_of(auth.uid())::text = ANY (assignee_ids::text[]))
-  WITH CHECK (public.business_profile_id_of(auth.uid())::text = ANY (assignee_ids::text[]));
+  USING (EXISTS (SELECT 1 FROM unnest(assignee_ids) assigned_id WHERE assigned_id::text = public.business_profile_id_of(auth.uid())::text))
+  WITH CHECK (EXISTS (SELECT 1 FROM unnest(assignee_ids) assigned_id WHERE assigned_id::text = public.business_profile_id_of(auth.uid())::text));
 DROP POLICY IF EXISTS "btasks_member_insert" ON public.business_tasks;
 CREATE POLICY "btasks_member_insert" ON public.business_tasks FOR INSERT TO authenticated
   WITH CHECK (public.is_business_member(auth.uid()) AND public.business_designation_of(auth.uid()) <> 'director');
