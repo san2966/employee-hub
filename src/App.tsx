@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import GlobalEventReminder from "@/components/GlobalEventReminder";
+import IdleLogout from "@/components/IdleLogout";
+import { ThemeProvider } from "@/hooks/useTheme";
 
 // Business Module
 import BusinessLogin from "./pages/business/BusinessLogin";
@@ -153,12 +155,14 @@ import OperationsDirectorTasks from "./pages/operations/OperationsDirectorTasks"
 const queryClient = new QueryClient();
 
 const App = () => (
+  <ThemeProvider>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
         <GlobalEventReminder />
+        <IdleLogout />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login/:role" element={<Login />} />
