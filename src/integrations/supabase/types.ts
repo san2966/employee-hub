@@ -900,6 +900,48 @@ export type Database = {
           },
         ]
       }
+      device_login_history: {
+        Row: {
+          account_key: string
+          account_label: string | null
+          browser: string | null
+          created_at: string
+          device_name: string | null
+          device_type: string
+          id: string
+          ip_address: string | null
+          is_application: boolean
+          login_time: string
+          status: string
+        }
+        Insert: {
+          account_key: string
+          account_label?: string | null
+          browser?: string | null
+          created_at?: string
+          device_name?: string | null
+          device_type?: string
+          id?: string
+          ip_address?: string | null
+          is_application?: boolean
+          login_time?: string
+          status?: string
+        }
+        Update: {
+          account_key?: string
+          account_label?: string | null
+          browser?: string | null
+          created_at?: string
+          device_name?: string | null
+          device_type?: string
+          id?: string
+          ip_address?: string | null
+          is_application?: boolean
+          login_time?: string
+          status?: string
+        }
+        Relationships: []
+      }
       director_tasks: {
         Row: {
           completed_at: string | null
