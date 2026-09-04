@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { recordLoginAttempt } from "@/lib/deviceHistory";
 
 interface AuthUser {
   id: string;
@@ -69,9 +70,13 @@ export const useAuth = () => {
       // Store user info in sessionStorage for quick access
       sessionStorage.setItem("authUser", JSON.stringify(user));
 
+      void recordLoginAttempt(`${user.role}:${user.username.toLowerCase()}`, "successful", user.username);
+
       return { success: true, user };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Authentication failed";
+
+      void recordLoginAttempt(`${expectedRole || "user"}:${username.toLowerCase()}`, "failed", username);
       
       setAuthState({
         user: null,
