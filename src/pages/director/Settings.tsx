@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { User, Save } from "lucide-react";
+import DeviceHistoryCard from "@/components/DeviceHistoryCard";
 
 interface DirectorProfile {
   firstName: string;
@@ -153,6 +154,7 @@ const Settings = () => {
           </div>
         </div>
       </div>
+      <div className="mt-6 max-w-6xl mx-auto"><DeviceHistoryCard /></div>
     </DirectorLayout>
   );
 };

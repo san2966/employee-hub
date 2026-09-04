@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Save, Upload } from "lucide-react";
+import DeviceHistoryCard from "@/components/DeviceHistoryCard";
 
 const OperationsSettings = () => {
   const { toast } = useToast();
@@ -103,6 +104,7 @@ const OperationsSettings = () => {
           </Button>
         </div>
       </div>
+      <div className="mt-6 max-w-6xl mx-auto"><DeviceHistoryCard /></div>
     </OperationsLayout>
   );
 };

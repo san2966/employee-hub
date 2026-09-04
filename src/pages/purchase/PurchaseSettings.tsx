@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUploadFile } from "@/hooks/usePurchaseData";
+import DeviceHistoryCard from "@/components/DeviceHistoryCard";
 
 const PurchaseSettings = () => {
   const { toast } = useToast();
@@ -70,6 +71,7 @@ const PurchaseSettings = () => {
           <Button onClick={handleSave} disabled={loading} className="w-full">{loading ? "Saving..." : "Save"}</Button>
         </CardContent>
       </Card>
+      <div className="mt-6 max-w-6xl mx-auto"><DeviceHistoryCard /></div>
     </PurchaseLayout>
   );
 };

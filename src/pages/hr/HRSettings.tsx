@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { Camera, Save } from "lucide-react";
+import DeviceHistoryCard from "@/components/DeviceHistoryCard";
 
 interface HRProfile {
   firstName: string;
@@ -159,6 +160,7 @@ const HRSettings = () => {
           </div>
         </div>
       </div>
+      <div className="mt-6 max-w-6xl mx-auto"><DeviceHistoryCard /></div>
     </HRLayout>
   );
 };

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTenderSettings, uploadTenderFile } from "@/hooks/useTenderData";
 import { User } from "lucide-react";
+import DeviceHistoryCard from "@/components/DeviceHistoryCard";
 
 const TenderSettings = () => {
   const { settings, loading, save } = useTenderSettings();
@@ -66,6 +67,7 @@ const TenderSettings = () => {
           <Button onClick={handleSave} className="w-full" disabled={submitting}>{submitting ? "Saving..." : "Save Settings"}</Button>
         </CardContent>
       </Card>
+      <div className="mt-6 max-w-6xl mx-auto"><DeviceHistoryCard /></div>
     </TenderLayout>
   );
 };
