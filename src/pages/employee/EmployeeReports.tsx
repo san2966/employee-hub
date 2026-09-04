@@ -23,6 +23,7 @@ const EmployeeReports = () => {
   const { toast } = useToast();
   
   const [dialog, setDialog] = useState(false);
+  const [preview, setPreview] = useState<any | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -224,7 +225,11 @@ const EmployeeReports = () => {
                   </thead>
                   <tbody className="divide-y">
                     {filteredReports.map(report => (
-                      <tr key={report.id} className="hover:bg-muted/30">
+                      <tr
+                        key={report.id}
+                        className="hover:bg-muted/30 cursor-pointer"
+                        onClick={() => setPreview(report)}
+                      >
                         <td className="p-4 text-sm">
                           {formatDate(report.date)}
                         </td>
@@ -243,7 +248,7 @@ const EmployeeReports = () => {
                         <td className="p-4 text-sm text-muted-foreground max-w-xs truncate">
                           {report.additionalInfo || "-"}
                         </td>
-                        <td className="p-4">
+                        <td className="p-4" onClick={(e) => e.stopPropagation()}>
                           <Button size="sm" variant="outline" onClick={() => openEdit(report)}>
                             <Pencil className="h-3.5 w-3.5 mr-1" /> Modify
                           </Button>
@@ -256,6 +261,27 @@ const EmployeeReports = () => {
             </CardContent>
           </Card>
         )}
+        {/* Record preview */}
+        <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader><DialogTitle>EOD Report Preview</DialogTitle></DialogHeader>
+            {preview && (
+              <div className="space-y-3 text-sm">
+                <div className="grid grid-cols-2 gap-3">
+                  <div><p className="text-muted-foreground">Date</p><p className="font-medium">{formatDate(preview.date)}</p></div>
+                  <div><p className="text-muted-foreground">Department</p><p className="font-medium">{preview.department || "-"}</p></div>
+                </div>
+                <div><p className="text-muted-foreground">Task</p><p className="font-medium whitespace-pre-wrap">{preview.task || "-"}</p></div>
+                <div><p className="text-muted-foreground">Status</p><p className="font-medium capitalize">{preview.status}</p></div>
+                <div><p className="text-muted-foreground">Description</p><p className="whitespace-pre-wrap">{preview.description || "-"}</p></div>
+                <div><p className="text-muted-foreground">Additional Info</p><p className="whitespace-pre-wrap">{preview.additionalInfo || "-"}</p></div>
+                <Button variant="outline" className="w-full" onClick={() => { const r = preview; setPreview(null); openEdit(r); }}>
+                  <Pencil className="h-3.5 w-3.5 mr-1" /> Modify
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </EmployeeLayout>
   );

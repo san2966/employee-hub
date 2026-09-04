@@ -18,6 +18,7 @@ const EmployeeDailyTasks = () => {
   const { toast } = useToast();
 
   const [dialog, setDialog] = useState(false);
+  const [preview, setPreview] = useState<any | null>(null);
   const [form, setForm] = useState({ subject: "", description: "" });
 
   const handleAdd = async () => {
@@ -85,11 +86,11 @@ const EmployeeDailyTasks = () => {
                 </thead>
                 <tbody className="divide-y">
                   {personalTasks.map(t => (
-                    <tr key={t.id} className="hover:bg-muted/30">
+                    <tr key={t.id} className="hover:bg-muted/30 cursor-pointer" onClick={() => setPreview(t)}>
                       <td className="p-4 text-sm text-muted-foreground">{formatDate(t.createdAt)}</td>
                       <td className="p-4 text-sm font-medium">{t.subject}</td>
                       <td className="p-4 text-sm text-muted-foreground max-w-md">{t.description}</td>
-                      <td className="p-4">
+                      <td className="p-4" onClick={(e) => e.stopPropagation()}>
                         {t.status !== "completed" ? (
                           <div className="flex gap-2">
                             <Button variant="outline" size="sm" onClick={() => handleComplete(t.id)}>
@@ -116,6 +117,20 @@ const EmployeeDailyTasks = () => {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Daily Task Preview</DialogTitle></DialogHeader>
+          {preview && (
+            <div className="space-y-3 text-sm">
+              <div><p className="text-muted-foreground">Date</p><p className="font-medium">{formatDate(preview.createdAt)}</p></div>
+              <div><p className="text-muted-foreground">Task</p><p className="font-medium whitespace-pre-wrap">{preview.subject}</p></div>
+              <div><p className="text-muted-foreground">Description</p><p className="whitespace-pre-wrap">{preview.description}</p></div>
+              <div><p className="text-muted-foreground">Status</p><p className="font-medium capitalize">{preview.status || "pending"}</p></div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </EmployeeLayout>
   );
 };
