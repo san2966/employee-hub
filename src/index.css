@@ -134,6 +134,12 @@
     background: var(--gradient-hero);
   }
 
+  /* Keep hero text legible on the dark hero gradient in dark mode */
+  .dark .gradient-hero,
+  .dark .gradient-hero * {
+    color: hsl(var(--foreground));
+  }
+
   .gradient-primary {
     background: var(--gradient-primary);
   }
