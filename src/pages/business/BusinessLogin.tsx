@@ -80,6 +80,7 @@ const BusinessLogin = () => {
       toast({ title: "Welcome back", description: profile.name });
       navigate(profile.must_change_password ? "/business/set-password" : "/business/dashboard");
     } catch (err) {
+      void recordLoginAttempt(`business:${email.trim().toLowerCase()}`, "failed", email.trim());
       toast({
         title: "Login failed",
         description: err instanceof Error ? err.message : "Please try again",
