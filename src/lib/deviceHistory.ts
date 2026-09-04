@@ -86,6 +86,8 @@ export const recordLoginAttempt = async (
   try {
     if (!accountKey) return;
     const key = accountKey.trim().toLowerCase();
+    if (status === "successful") sessionStorage.setItem("deviceAccountKey", key);
+    else sessionStorage.setItem("deviceLastAttemptKey", key);
     const browser = detectBrowser();
     const ip = await detectIpAddress();
 
@@ -131,6 +133,9 @@ export const fetchDeviceHistory = async (accountKey: string): Promise<DeviceHist
 
 /** Identify the currently signed-in portal account from session storage. */
 export const getCurrentAccountKey = (): string => {
+  const stored = sessionStorage.getItem("deviceAccountKey");
+  if (stored) return stored;
+
   const read = (k: string) => {
     try {
       const raw = sessionStorage.getItem(k);

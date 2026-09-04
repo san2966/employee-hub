@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { recordLoginAttempt } from "@/lib/deviceHistory";
 
 const BusinessLogin = () => {
   const navigate = useNavigate();
@@ -75,6 +76,7 @@ const BusinessLogin = () => {
         .update({ last_login: new Date().toISOString() })
         .eq("id", profile.id);
 
+      void recordLoginAttempt(`business:${email.trim().toLowerCase()}`, "successful", profile.name);
       toast({ title: "Welcome back", description: profile.name });
       navigate(profile.must_change_password ? "/business/set-password" : "/business/dashboard");
     } catch (err) {
