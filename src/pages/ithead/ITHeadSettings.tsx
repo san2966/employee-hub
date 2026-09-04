@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import DeviceHistoryCard from "@/components/DeviceHistoryCard";
 
 const ITHeadSettings = () => {
   const { profile, updateProfile } = useITHeadData();
@@ -191,6 +192,7 @@ const ITHeadSettings = () => {
           </CardContent>
         </Card>
       </div>
+      <div className="mt-6 max-w-6xl mx-auto"><DeviceHistoryCard /></div>
     </ITHeadLayout>
   );
 };

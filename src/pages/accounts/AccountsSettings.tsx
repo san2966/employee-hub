@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Camera, Save, User } from "lucide-react";
+import DeviceHistoryCard from "@/components/DeviceHistoryCard";
 
 interface AccountsProfile {
   firstName: string;
@@ -178,6 +179,7 @@ const AccountsSettings = () => {
           </div>
         </div>
       </div>
+      <div className="mt-6 max-w-6xl mx-auto"><DeviceHistoryCard /></div>
     </AccountsLayout>
   );
 };

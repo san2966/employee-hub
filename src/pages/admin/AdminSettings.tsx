@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Save, User } from "lucide-react";
+import DeviceHistoryCard from "@/components/DeviceHistoryCard";
 
 interface AdminProfile {
   firstName: string;
@@ -188,6 +189,7 @@ const AdminSettings = () => {
           </CardContent>
         </Card>
       </div>
+      <div className="mt-6 max-w-6xl mx-auto"><DeviceHistoryCard /></div>
     </AdminLayout>
   );
 };

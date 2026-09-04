@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { User, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import DeviceHistoryCard from "@/components/DeviceHistoryCard";
 
 interface EmployeeSession {
   employeeId: string;
@@ -219,6 +220,7 @@ const EmployeeSettings = () => {
           </CardContent>
         </Card>
       </div>
+      <div className="mt-6 max-w-6xl mx-auto"><DeviceHistoryCard /></div>
     </EmployeeLayout>
   );
 };

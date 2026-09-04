@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useBusinessAuth, designationLabels } from "@/hooks/useBusinessAuth";
+import DeviceHistoryCard from "@/components/DeviceHistoryCard";
 
 const BusinessSettings = () => {
   const { toast } = useToast();
@@ -61,6 +62,7 @@ const BusinessSettings = () => {
           <Button onClick={changePassword}>Update Password</Button>
         </Card>
       </div>
+      <div className="mt-6 max-w-6xl mx-auto"><DeviceHistoryCard /></div>
     </BusinessLayout>
   );
 };
