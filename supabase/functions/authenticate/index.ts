@@ -206,7 +206,12 @@ Deno.serve(async (req) => {
 
     // Create or get Supabase Auth user
     const authEmail = `${portalUser.id}@portal.internal`;
-    const internalPassword = `portal_${portalUser.id}_${portalUser.role}`;
+    // Single-use, cryptographically random internal password rotated on every login,
+    // so the internal auth credential can never be guessed from portal identifiers.
+    const randomBytes = new Uint8Array(32);
+    crypto.getRandomValues(randomBytes);
+    const internalPassword = Array.from(randomBytes, (b) => b.toString(16).padStart(2, "0")).join("");
+
     let session = null;
     let userId = null;
 
