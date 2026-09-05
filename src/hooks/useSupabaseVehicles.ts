@@ -74,7 +74,7 @@ export const useSupabaseVehicles = () => {
   const updateVehicle = async (id: string, updates: Partial<Vehicle>) => {
     const { error } = await supabase
       .from("vehicles")
-      .update(updates)
+      .update(updates as never)
       .eq("id", id);
 
     if (error) {

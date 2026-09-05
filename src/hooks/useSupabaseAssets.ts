@@ -186,7 +186,7 @@ export const useSupabaseAssets = () => {
   const updateITAsset = async (id: string, updates: Partial<ITAsset>) => {
     const { error } = await supabase
       .from("it_assets")
-      .update(updates)
+      .update(updates as never)
       .eq("id", id);
 
     if (error) {
