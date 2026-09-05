@@ -141,7 +141,7 @@ const BusinessEmployees = () => {
                 <TableCell className="font-medium">{r.name}</TableCell>
                 <TableCell className="text-sm">{r.email}</TableCell>
                 <TableCell className="text-sm">{designationLabels[r.designation as BusinessDesignation]}</TableCell>
-                <TableCell className="text-sm">{areaLabel(r.area_id)}</TableCell>
+                <TableCell className="text-sm">{areasLabel(r)}</TableCell>
                 <TableCell>
                   <Badge variant={r.is_active ? "default" : "secondary"}>
                     {r.is_active ? "Active" : "Not Active"}
