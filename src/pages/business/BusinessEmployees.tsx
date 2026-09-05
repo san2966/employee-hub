@@ -75,19 +75,21 @@ const BusinessEmployees = () => {
   const submit = async () => {
     setSaving(true);
     try {
+      const primaryArea = form.area_ids[0] || null;
       const payload = editing
         ? {
             action: "update_employee", profile_id: editing.id, name: form.name, phone: form.phone,
-            designation: form.designation, area_id: form.area_id || null,
+            designation: form.designation, area_id: primaryArea,
             ...(form.password ? { password: form.password } : {}),
           }
         : {
             action: "create_employee", name: form.name, email: form.email, password: form.password,
-            phone: form.phone, designation: form.designation, area_id: form.area_id || null,
+            phone: form.phone, designation: form.designation, area_id: primaryArea,
           };
       const { data, error } = await supabase.functions.invoke("business-admin", { body: payload });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
+      await saveAreas(editing ? editing.id : undefined, editing ? undefined : form.email);
       toast({ title: editing ? "Employee updated" : "Account created" });
       setOpen(false);
       void refresh();
