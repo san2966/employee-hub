@@ -92,6 +92,18 @@ Deno.serve(async (req) => {
     const { data: userData, error: userError } = await admin.auth.getUser(token);
     if (userError || !userData.user) return json({ error: "Unauthorized" }, 401);
 
+    // Repair a stale profile mapping for the signed-in user only (same verified email).
+    if (action === "repair_self_profile") {
+      const email = (userData.user.email ?? "").toLowerCase();
+      if (!email) return json({ error: "Unauthorized" }, 401);
+      const { error } = await admin
+        .from("business_profiles")
+        .update({ user_id: userData.user.id })
+        .eq("email", email);
+      if (error) return json({ error: error.message }, 400);
+      return json({ success: true });
+    }
+
     const { data: caller } = await admin
       .from("business_profiles")
       .select("id, designation, is_active")
