@@ -89,10 +89,26 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
+type TooltipPayloadItem = {
+  value?: any;
+  name?: any;
+  dataKey?: any;
+  color?: string;
+  payload?: any;
+  [key: string]: any;
+};
+
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
+  Omit<React.ComponentProps<typeof RechartsPrimitive.Tooltip>, "payload" | "label"> &
     React.ComponentProps<"div"> & {
+      active?: boolean;
+      payload?: ReadonlyArray<TooltipPayloadItem>;
+      label?: any;
+      labelFormatter?: (label: any, payload: ReadonlyArray<TooltipPayloadItem>) => React.ReactNode;
+      labelClassName?: string;
+      formatter?: (...args: any[]) => React.ReactNode;
+      color?: string;
       hideLabel?: boolean;
       hideIndicator?: boolean;
       indicator?: "line" | "dot" | "dashed";
