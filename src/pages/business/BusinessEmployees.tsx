@@ -196,13 +196,23 @@ const BusinessEmployees = () => {
               </Select>
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label>Area</Label>
-              <Select value={form.area_id} onValueChange={(v) => setForm({ ...form, area_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Select area" /></SelectTrigger>
-                <SelectContent>
-                  {areas.map((a) => <SelectItem key={a.id} value={a.id}>{a.district}, {a.state}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label>Areas (select one or more)</Label>
+              <div className="border rounded-md max-h-44 overflow-y-auto divide-y">
+                {areas.length === 0 && (
+                  <p className="text-sm text-muted-foreground p-3">No areas yet. Add areas first.</p>
+                )}
+                {areas.map((a: any) => (
+                  <label key={a.id} className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-muted/50">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4"
+                      checked={form.area_ids.includes(a.id)}
+                      onChange={() => toggleArea(a.id)}
+                    />
+                    {a.district}, {a.state}
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
           <DialogFooter>
