@@ -18,7 +18,7 @@ const designations: BusinessDesignation[] = [
   "director", "area_sales_manager", "business_development_manager", "rc_technical",
 ];
 
-const empty = { name: "", email: "", password: "", phone: "", designation: "area_sales_manager", area_id: "" };
+const empty = { name: "", email: "", password: "", phone: "", designation: "area_sales_manager", area_ids: [] as string[] };
 
 const BusinessEmployees = () => {
   const { toast } = useToast();
@@ -29,9 +29,15 @@ const BusinessEmployees = () => {
   const [form, setForm] = useState<any>(empty);
   const [saving, setSaving] = useState(false);
 
-  const areaLabel = (id: string | null) => {
-    const a = areas.find((x) => x.id === id);
-    return a ? `${a.district}, ${a.state}` : "—";
+  const rowAreaIds = (row: any): string[] =>
+    (Array.isArray(row.area_ids) && row.area_ids.length ? row.area_ids : row.area_id ? [row.area_id] : []) as string[];
+
+  const areasLabel = (row: any) => {
+    const names = rowAreaIds(row)
+      .map((id) => areas.find((x) => x.id === id))
+      .filter(Boolean)
+      .map((a: any) => `${a.district}, ${a.state}`);
+    return names.length ? names.join(" | ") : "—";
   };
 
   const openNew = () => { setEditing(null); setForm(empty); setOpen(true); };
@@ -39,27 +45,51 @@ const BusinessEmployees = () => {
     setEditing(row);
     setForm({
       name: row.name, email: row.email, password: "", phone: row.phone || "",
-      designation: row.designation, area_id: row.area_id || "",
+      designation: row.designation, area_ids: rowAreaIds(row),
     });
     setOpen(true);
+  };
+
+  const toggleArea = (id: string) => {
+    setForm((f: any) => ({
+      ...f,
+      area_ids: f.area_ids.includes(id)
+        ? f.area_ids.filter((x: string) => x !== id)
+        : [...f.area_ids, id],
+    }));
+  };
+
+  const saveAreas = async (profileId?: string, email?: string) => {
+    let id = profileId;
+    if (!id && email) {
+      const { data } = await supabase.from("business_profiles").select("id").eq("email", email).maybeSingle();
+      id = data?.id;
+    }
+    if (!id) return;
+    await supabase.from("business_profiles").update({
+      area_ids: form.area_ids,
+      area_id: form.area_ids[0] || null,
+    }).eq("id", id);
   };
 
   const submit = async () => {
     setSaving(true);
     try {
+      const primaryArea = form.area_ids[0] || null;
       const payload = editing
         ? {
             action: "update_employee", profile_id: editing.id, name: form.name, phone: form.phone,
-            designation: form.designation, area_id: form.area_id || null,
+            designation: form.designation, area_id: primaryArea,
             ...(form.password ? { password: form.password } : {}),
           }
         : {
             action: "create_employee", name: form.name, email: form.email, password: form.password,
-            phone: form.phone, designation: form.designation, area_id: form.area_id || null,
+            phone: form.phone, designation: form.designation, area_id: primaryArea,
           };
       const { data, error } = await supabase.functions.invoke("business-admin", { body: payload });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
+      await saveAreas(editing ? editing.id : undefined, editing ? undefined : form.email);
       toast({ title: editing ? "Employee updated" : "Account created" });
       setOpen(false);
       void refresh();
@@ -111,7 +141,7 @@ const BusinessEmployees = () => {
                 <TableCell className="font-medium">{r.name}</TableCell>
                 <TableCell className="text-sm">{r.email}</TableCell>
                 <TableCell className="text-sm">{designationLabels[r.designation as BusinessDesignation]}</TableCell>
-                <TableCell className="text-sm">{areaLabel(r.area_id)}</TableCell>
+                <TableCell className="text-sm">{areasLabel(r)}</TableCell>
                 <TableCell>
                   <Badge variant={r.is_active ? "default" : "secondary"}>
                     {r.is_active ? "Active" : "Not Active"}
@@ -166,13 +196,23 @@ const BusinessEmployees = () => {
               </Select>
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label>Area</Label>
-              <Select value={form.area_id} onValueChange={(v) => setForm({ ...form, area_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Select area" /></SelectTrigger>
-                <SelectContent>
-                  {areas.map((a) => <SelectItem key={a.id} value={a.id}>{a.district}, {a.state}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label>Areas (select one or more)</Label>
+              <div className="border rounded-md max-h-44 overflow-y-auto divide-y">
+                {areas.length === 0 && (
+                  <p className="text-sm text-muted-foreground p-3">No areas yet. Add areas first.</p>
+                )}
+                {areas.map((a: any) => (
+                  <label key={a.id} className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-muted/50">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4"
+                      checked={form.area_ids.includes(a.id)}
+                      onChange={() => toggleArea(a.id)}
+                    />
+                    {a.district}, {a.state}
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
           <DialogFooter>

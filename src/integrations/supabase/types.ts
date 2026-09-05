@@ -532,6 +532,7 @@ export type Database = {
       business_profiles: {
         Row: {
           area_id: string | null
+          area_ids: string[]
           created_at: string
           designation: Database["public"]["Enums"]["business_designation"]
           email: string
@@ -546,6 +547,7 @@ export type Database = {
         }
         Insert: {
           area_id?: string | null
+          area_ids?: string[]
           created_at?: string
           designation: Database["public"]["Enums"]["business_designation"]
           email: string
@@ -560,6 +562,7 @@ export type Database = {
         }
         Update: {
           area_id?: string | null
+          area_ids?: string[]
           created_at?: string
           designation?: Database["public"]["Enums"]["business_designation"]
           email?: string
