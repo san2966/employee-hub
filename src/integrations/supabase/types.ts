@@ -3611,6 +3611,8 @@ export type Database = {
         Returns: Database["public"]["Enums"]["business_designation"]
       }
       business_profile_id_of: { Args: { _uid: string }; Returns: string }
+      current_account_keys: { Args: never; Returns: string[] }
+      current_employee_name: { Args: never; Returns: string }
       current_portal_employee_id: { Args: never; Returns: string }
       delete_email: {
         Args: { message_id: number; queue_name: string }
@@ -3644,6 +3646,10 @@ export type Database = {
         }[]
       }
       get_user_role: { Args: { user_uuid: string }; Returns: string }
+      has_any_role: {
+        Args: { _roles: string[]; _uid: string }
+        Returns: boolean
+      }
       has_role: {
         Args: { check_role: string; user_uuid: string }
         Returns: boolean
