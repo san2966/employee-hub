@@ -29,9 +29,15 @@ const BusinessEmployees = () => {
   const [form, setForm] = useState<any>(empty);
   const [saving, setSaving] = useState(false);
 
-  const areaLabel = (id: string | null) => {
-    const a = areas.find((x) => x.id === id);
-    return a ? `${a.district}, ${a.state}` : "—";
+  const rowAreaIds = (row: any): string[] =>
+    (Array.isArray(row.area_ids) && row.area_ids.length ? row.area_ids : row.area_id ? [row.area_id] : []) as string[];
+
+  const areasLabel = (row: any) => {
+    const names = rowAreaIds(row)
+      .map((id) => areas.find((x) => x.id === id))
+      .filter(Boolean)
+      .map((a: any) => `${a.district}, ${a.state}`);
+    return names.length ? names.join(" | ") : "—";
   };
 
   const openNew = () => { setEditing(null); setForm(empty); setOpen(true); };
@@ -39,9 +45,31 @@ const BusinessEmployees = () => {
     setEditing(row);
     setForm({
       name: row.name, email: row.email, password: "", phone: row.phone || "",
-      designation: row.designation, area_id: row.area_id || "",
+      designation: row.designation, area_ids: rowAreaIds(row),
     });
     setOpen(true);
+  };
+
+  const toggleArea = (id: string) => {
+    setForm((f: any) => ({
+      ...f,
+      area_ids: f.area_ids.includes(id)
+        ? f.area_ids.filter((x: string) => x !== id)
+        : [...f.area_ids, id],
+    }));
+  };
+
+  const saveAreas = async (profileId?: string, email?: string) => {
+    let id = profileId;
+    if (!id && email) {
+      const { data } = await supabase.from("business_profiles").select("id").eq("email", email).maybeSingle();
+      id = data?.id;
+    }
+    if (!id) return;
+    await supabase.from("business_profiles").update({
+      area_ids: form.area_ids,
+      area_id: form.area_ids[0] || null,
+    }).eq("id", id);
   };
 
   const submit = async () => {
