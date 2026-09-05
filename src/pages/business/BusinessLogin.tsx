@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Briefcase, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,11 +15,6 @@ const BusinessLogin = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    // Ensures the default Business Head account exists (idempotent, no-op afterwards)
-    supabase.functions.invoke("business-admin", { body: { action: "seed_head" } }).catch(() => {});
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,9 +38,9 @@ const BusinessLogin = () => {
 
       // Repair a stale Business Head profile mapping left by older VPS seeds,
       // then retry the profile lookup once with the authenticated session.
-      if (!profile && email.trim().toLowerCase() === "business-head@vmcc-india.com") {
+      if (!profile) {
         const { error: seedError } = await supabase.functions.invoke("business-admin", {
-          body: { action: "seed_head" },
+          body: { action: "repair_self_profile" },
         });
         if (!seedError) {
           const retry = await (supabase as any)

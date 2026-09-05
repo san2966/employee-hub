@@ -6,8 +6,9 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const HEAD_EMAIL = "business-head@vmcc-india.com";
-const HEAD_PASSWORD = "Bd-head@100#";
+// No credentials are hardcoded. Bootstrapping requires the BUSINESS_SETUP_TOKEN secret
+// and an explicit email/password supplied by the operator running the setup call.
+
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -34,23 +35,38 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const action = String(body.action || "");
 
-    // ---------- Public: idempotent seeding of the Business Head account ----------
+    // ---------- Protected: one-time seeding of the Business Head account ----------
     if (action === "seed_head") {
+      const setupToken = Deno.env.get("BUSINESS_SETUP_TOKEN");
+      const providedToken = req.headers.get("x-setup-token") ?? "";
+      if (!setupToken || providedToken !== setupToken) {
+        return json({ error: "Unauthorized" }, 401);
+      }
+
+      const headEmail = String(body.email || "").trim().toLowerCase();
+      const headPassword = String(body.password || "");
+      if (!headEmail || headPassword.length < 12) {
+        return json({ error: "A head email and a password of at least 12 characters are required" }, 400);
+      }
+
       const { data: list, error: listError } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
       if (listError) return json({ error: listError.message }, 400);
-      let user = list?.users?.find((u) => u.email === HEAD_EMAIL) ?? null;
+      let user = list?.users?.find((u) => u.email === headEmail) ?? null;
       let seeded = false;
 
       if (!user) {
         const { data: created, error } = await admin.auth.admin.createUser({
-          email: HEAD_EMAIL,
-          password: HEAD_PASSWORD,
+          email: headEmail,
+          password: headPassword,
           email_confirm: true,
           user_metadata: { business_designation: "business_head" },
         });
         if (error) return json({ error: error.message }, 400);
         user = created.user;
         seeded = true;
+      } else {
+        const { error } = await admin.auth.admin.updateUserById(user.id, { password: headPassword });
+        if (error) return json({ error: error.message }, 400);
       }
 
       if (!user) return json({ error: "Business Head user could not be created" }, 500);
@@ -58,14 +74,15 @@ Deno.serve(async (req) => {
       const { error: profileError } = await admin.from("business_profiles").upsert({
         user_id: user.id,
         name: "Business Head",
-        email: HEAD_EMAIL,
+        email: headEmail,
         designation: "business_head",
         is_active: true,
-        must_change_password: false,
+        must_change_password: true,
       }, { onConflict: "email" });
       if (profileError) return json({ error: profileError.message }, 400);
       return json({ success: true, seeded });
     }
+
 
     // ---------- Authenticated business-head actions ----------
     const authHeader = req.headers.get("Authorization") ?? "";
@@ -74,6 +91,18 @@ Deno.serve(async (req) => {
 
     const { data: userData, error: userError } = await admin.auth.getUser(token);
     if (userError || !userData.user) return json({ error: "Unauthorized" }, 401);
+
+    // Repair a stale profile mapping for the signed-in user only (same verified email).
+    if (action === "repair_self_profile") {
+      const email = (userData.user.email ?? "").toLowerCase();
+      if (!email) return json({ error: "Unauthorized" }, 401);
+      const { error } = await admin
+        .from("business_profiles")
+        .update({ user_id: userData.user.id })
+        .eq("email", email);
+      if (error) return json({ error: error.message }, 400);
+      return json({ success: true });
+    }
 
     const { data: caller } = await admin
       .from("business_profiles")
