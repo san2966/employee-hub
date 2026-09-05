@@ -121,7 +121,7 @@ export const useExpensePayments = (employeeId?: string) => {
     if (updates.month && updates.year) {
       patch.date = `${updates.year}-${String(updates.month).padStart(2, "0")}-01`;
     }
-    const { error } = await supabase.from("employee_payments").update(patch).eq("id", id);
+    const { error } = await supabase.from("employee_payments").update(patch as never).eq("id", id);
     if (error) throw error;
     await fetchPayments();
   }, [fetchPayments]);
