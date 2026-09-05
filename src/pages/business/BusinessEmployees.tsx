@@ -18,7 +18,7 @@ const designations: BusinessDesignation[] = [
   "director", "area_sales_manager", "business_development_manager", "rc_technical",
 ];
 
-const empty = { name: "", email: "", password: "", phone: "", designation: "area_sales_manager", area_id: "" };
+const empty = { name: "", email: "", password: "", phone: "", designation: "area_sales_manager", area_ids: [] as string[] };
 
 const BusinessEmployees = () => {
   const { toast } = useToast();
