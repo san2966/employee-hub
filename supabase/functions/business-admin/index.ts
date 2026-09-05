@@ -6,8 +6,9 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const HEAD_EMAIL = "business-head@vmcc-india.com";
-const HEAD_PASSWORD = "Bd-head@100#";
+// No credentials are hardcoded. Bootstrapping requires the BUSINESS_SETUP_TOKEN secret
+// and an explicit email/password supplied by the operator running the setup call.
+
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
