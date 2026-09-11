@@ -83,8 +83,26 @@ const BusinessWeeklyPlan = () => {
   };
 
   const nameOf = (id: string) => staff.find((s) => s.id === id)?.name ?? "—";
+
+  // Only the current month is retained; older plans are purged automatically.
+  const monthStart = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+  }, []);
+  const inThisMonth = (p: any) => (p.plan_date || p.week_start || "") >= monthStart;
+
+  useEffect(() => {
+    void (async () => {
+      await (supabase as any).from("business_weekly_plans").delete().lt("plan_date", monthStart);
+      await (supabase as any).from("business_employee_plans").delete().lt("week_start", monthStart);
+    })();
+  }, [monthStart]);
+
   const current = useMemo(() => plans.filter((p) => p.week_start === weekStart), [plans, weekStart]);
-  const history = useMemo(() => plans.filter((p) => p.week_start !== weekStart), [plans, weekStart]);
+  const history = useMemo(
+    () => plans.filter((p) => p.week_start !== weekStart && inThisMonth(p)),
+    [plans, weekStart, monthStart],
+  );
   const published = current.some((p) => p.published);
 
   // Head: remind every 10 minutes after 17:00 until published.
