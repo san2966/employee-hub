@@ -79,6 +79,30 @@ const collectDbEvents = async (): Promise<Reminder[]> => {
   return out;
 };
 
+const collectBusinessFollowups = async (): Promise<Reminder[]> => {
+  const out: Reminder[] = [];
+  try {
+    const { data } = await (supabase as any)
+      .from("business_opportunities")
+      .select("id,product_name,organization_name,next_followup_at,is_lead")
+      .not("next_followup_at", "is", null);
+    (data || []).forEach((r: any) => {
+      const when = new Date(r.next_followup_at);
+      if (isNaN(when.getTime())) return;
+      out.push({
+        key: `business_opportunities:${r.id}:${when.getTime()}`,
+        title: `${r.is_lead ? "Lead" : "Opportunity"} follow-up — ${r.organization_name || r.product_name || ""}`.trim(),
+        description: r.product_name ? `Product: ${r.product_name}` : undefined,
+        when,
+        source: r.is_lead ? "lead" : "opportunity",
+      });
+    });
+  } catch {
+    /* not a business user */
+  }
+  return out;
+};
+
 const GlobalEventReminder = () => {
   const [queue, setQueue] = useState<Reminder[]>([]);
   const firedRef = useRef<Set<string>>(new Set());
@@ -87,7 +111,11 @@ const GlobalEventReminder = () => {
     let cancelled = false;
 
     const check = async () => {
-      const all = [...collectLocalEvents(), ...(await collectDbEvents())];
+      const all = [
+        ...collectLocalEvents(),
+        ...(await collectDbEvents()),
+        ...(await collectBusinessFollowups()),
+      ];
       if (cancelled) return;
       const now = Date.now();
       const due = all.filter((r) => {

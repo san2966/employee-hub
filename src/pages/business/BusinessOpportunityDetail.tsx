@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { formatDateTime, STATUS_OPTIONS, PRIORITY_OPTIONS, uploadBusinessDoc } from "@/hooks/useBusinessData";
+import { formatDateTime, STATUS_OPTIONS, LEAD_STATUS_OPTIONS, PRIORITY_OPTIONS, uploadBusinessDoc } from "@/hooks/useBusinessData";
 import { useBusinessAuth } from "@/hooks/useBusinessAuth";
 
 const BusinessOpportunityDetail = ({ mode = "opportunity" }: { mode?: "opportunity" | "lead" }) => {
@@ -107,7 +107,9 @@ const BusinessOpportunityDetail = ({ mode = "opportunity" }: { mode?: "opportuni
             {readOnly ? <Badge variant="secondary">{record.status}</Badge> : (
               <Select value={record.status} onValueChange={(v) => patch({ status: v })}>
                 <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>{STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                <SelectContent>
+                  {(record.is_lead ? LEAD_STATUS_OPTIONS : STATUS_OPTIONS).map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
               </Select>
             )}
           </div>
