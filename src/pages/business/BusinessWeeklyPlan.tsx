@@ -177,6 +177,9 @@ const BusinessWeeklyPlan = () => {
         </TabsList>
 
         <TabsContent value="plan" className="space-y-4 mt-4">
+          <p className="text-right text-[11px] text-muted-foreground">
+            Showing current month only · older records are deleted automatically
+          </p>
           <Card className="p-5">
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-semibold">Final Plan · week of {formatDate(weekStart)}</h2>
@@ -287,7 +290,10 @@ const BusinessWeeklyPlan = () => {
           )}
         </TabsContent>
 
-        <TabsContent value="history" className="mt-4">
+        <TabsContent value="history" className="mt-4 space-y-2">
+          <p className="text-right text-[11px] text-muted-foreground">
+            Showing current month only · older records are deleted automatically
+          </p>
           <Card className="p-5 overflow-x-auto">
             <Table>
               <TableHeader>
