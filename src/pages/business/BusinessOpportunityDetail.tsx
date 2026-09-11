@@ -107,7 +107,9 @@ const BusinessOpportunityDetail = ({ mode = "opportunity" }: { mode?: "opportuni
             {readOnly ? <Badge variant="secondary">{record.status}</Badge> : (
               <Select value={record.status} onValueChange={(v) => patch({ status: v })}>
                 <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>{STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                <SelectContent>
+                  {(record.is_lead ? LEAD_STATUS_OPTIONS : STATUS_OPTIONS).map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
               </Select>
             )}
           </div>
