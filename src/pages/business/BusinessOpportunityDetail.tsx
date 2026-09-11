@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { formatDateTime, STATUS_OPTIONS, PRIORITY_OPTIONS, uploadBusinessDoc } from "@/hooks/useBusinessData";
+import { formatDateTime, STATUS_OPTIONS, LEAD_STATUS_OPTIONS, PRIORITY_OPTIONS, uploadBusinessDoc } from "@/hooks/useBusinessData";
 import { useBusinessAuth } from "@/hooks/useBusinessAuth";
 
 const BusinessOpportunityDetail = ({ mode = "opportunity" }: { mode?: "opportunity" | "lead" }) => {

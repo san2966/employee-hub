@@ -66,6 +66,7 @@ export const uploadBusinessDoc = async (file: File, folder: string) => {
 };
 
 export const STATUS_OPTIONS = ["New", "Contacted", "Proposal Sent", "Negotiation"];
+export const LEAD_STATUS_OPTIONS = ["Approval", "Tender", "Supply & Training", "Payment", "Done"];
 export const PRIORITY_OPTIONS = ["Low", "Medium", "High", "Critical"];
 export const SOURCE_OPTIONS = ["Call", "Mail", "Walk-in", "Referral", "Website"];
 export const TASK_STATUS_OPTIONS = ["Pending", "In Process", "Completed", "Overdue", "Cancelled"];
