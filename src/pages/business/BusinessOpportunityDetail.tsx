@@ -141,7 +141,7 @@ const BusinessOpportunityDetail = ({ mode = "opportunity" }: { mode?: "opportuni
           <h2 className="font-semibold mb-3">Follow-up</h2>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="space-y-2">
-              <Label>Date &amp; Time</Label>
+              <Label>Next Follow-up Date &amp; Time</Label>
               <Input type="datetime-local" value={followupAt} onChange={(e) => setFollowupAt(e.target.value)} />
             </div>
             <div className="space-y-2 sm:col-span-2">
